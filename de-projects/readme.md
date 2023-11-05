@@ -1,3 +1,3 @@
 # Data Engineering projects
 
-We will run  1 projects at a time.
+We will run  1 project at a time.
