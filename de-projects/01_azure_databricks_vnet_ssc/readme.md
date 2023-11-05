@@ -39,6 +39,10 @@ Deploy new Azure Databrick Workspace in VNET with NPIP feature and configure the
 ## Prerequisites
 
 1. Azure Subscription. You can start from a [Free](https://azure.microsoft.com/en-us/free/)[ Trial](https://azure.microsoft.com/en-us/free/).
+2. Basic knowledge of Cloud Computing and Microsoft Azure. You can check these trainings:
+   2.1 [Introduction to Microsoft Azure Cloud Services](https://www.coursera.org/learn/microsoft-azure-cloud-services)
+   2.2 [Microsoft Azure Management Tools and Security Solutions](https://www.coursera.org/learn/microsoft-azure-services-lifecycles)
+   2.3 [Microsoft Azure Services and Lifecycles](https://www.coursera.org/learn/microsoft-azure-services-lifecycles)
 
 ## Implementation
 
