@@ -34,7 +34,7 @@ Deploy new Azure Databrick Workspace in VNET with NPIP feature and configure the
 
 **Data exfiltration** occurs when malware and/or a malicious actor carries out an unauthorized data transfer from a computer. It is also commonly called data extrusion or data exportation. Data exfiltration is also considered a form of data theft.
 
-**Azure Service **Principal** - The service principal is an identity created for use with applications, hosted services, and automated tools to access Azure resources. This identity allows the service to authenticate with Azure AD and gain access to specific resources by assigned roles, thereby enabling controlled, programmatic access in a secure manner.
+**Azure Service Principal** - The service principal is an identity created for use with applications, hosted services, and automated tools to access Azure resources. This identity allows the service to authenticate with Azure AD and gain access to specific resources by assigned roles, thereby enabling controlled, programmatic access in a secure manner.
 
 ## Prerequisites
 
@@ -55,7 +55,7 @@ After we start our Azure Subscription we will login to Azure Portal and will cre
 
 Right now we created independent Azure resources and they probably won't work with each other. Moreover, your Databricks workspace is in the private subnet. Our goal is to apply the configuration to be able to access Databricks Workspace and let Databricks Workspace access Azure Storage and Azure Key Vault. 
 
-Materials:
+## Materials:
 - [Network access](https://learn.microsoft.com/en-us/azure/databricks/security/network/)
 - [Manage virtual networks](https://learn.microsoft.com/en-us/azure/databricks/security/network/manage-vpcs)
 - [Deploy Azure Databricks in your Azure virtual network (VNet injection)](https://learn.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/vnet-inject)
