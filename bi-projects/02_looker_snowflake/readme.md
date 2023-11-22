@@ -23,11 +23,11 @@ We will cover these topic.
 1. Set up Looker
 2. Connect Looker to Snowflake
 3. Create Looker Dashboards
-We will run this tutorial [Fabric for Power BI users](https://learn.microsoft.com/en-us/power-bi/fundamentals/fabric-get-started)
 
 ## Materials
 
 - [Looker Demo Video](https://www.youtube.com/watch?v=FBlyD2nCJds)
+- [Course from Google](https://www.cloudskillsboost.google/paths/28)
 
 ## Additional materials:
 - [Udemy course on Looker](https://www.udemy.com/course/looker-learning-tutorial-for-beginners/?utm_source=adwords&utm_medium=udemyads&utm_campaign=Webindex_Catchall_la.EN_cc.CA&utm_term=_._ag_119831896715_._ad_533102824920_._kw__._de_c_._dm__._pl__._ti_dsa-388605466699_._li_9001500_._pd__._&matchtype=&gad_source=1&gclid=CjwKCAiAx_GqBhBQEiwAlDNAZqhaFhAsSidEfJFpmydG-xbp5Puh3729ndnzwPv7C4Z4-rZMju9FshoCTBMQAvD_BwE)
