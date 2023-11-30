@@ -1,4 +1,4 @@
-# Mastering modern data tools: Snowflake Data Warehouse and Hex Notebook
+# Mastering modern data tools: Snowflake DW and Hex Notebook
 
 ## Objective
 
