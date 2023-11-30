@@ -27,14 +27,27 @@ Introduce to the modern data stack, focusing on Snowflake and Hex, by detailing 
 
 ## Implementation
 
-After we start our Azure Subscription we will login to Azure Portal and will create the resources.
+**Introduction to Snowflake Data Warehouse**
+- **Overview of Key Features and Benefits**: A comprehensive look at what Snowflake offers and how it benefits data warehousing.
+- **Understanding Snowflake Architecture**: Delving into the unique aspects of Snowflake's architecture.
 
-1. Create a new Azure Databricks Workspaces with VNET and NPIP (SCC) features - [link](https://learn.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/vnet-inject) to documentation](https://learn.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/vnet-inject). You don't need to spend much time now on configuring the security and network, just create new workspace with VNET/NPIP.
-2. Create Azure Service Principal and use it for granting access between Azure Databricks and Azure Storage Account. 
-3. Create the Azure Storage account and upload any kind of CSV, TXT, or JSON file, we would need this for querying. - [lint to documentation](https://learn.microsoft.com/en-us/azure/databricks/storage/azure-storage). It has many methods and we would like to use Azure Service Principal.
-4. Create Azure Key Vault Secret and store Service Principal Secret - [link to documentation](https://learn.microsoft.com/en-us/azure/key-vault/general/quick-create-portal). The goal to create Databricks Scope and use it as an entry point to Azure Key Vault Secrets - - [link to documentation](https://learn.microsoft.com/en-us/azure/databricks/security/secrets/secret-scopes)
+**Deep Dive into Snowflake Tools**
+- **Hands-on Session with SnowCLI, SnowSQL, and Snowpipe**: Practical exercises to understand and use these tools effectively.
+- **Exploring the Time Travel Feature**: Understanding and utilizing Snowflake's Time Travel capabilities.
 
-Right now we created independent Azure resources and they probably won't work with each other. Moreover, your Databricks workspace is in the private subnet. Our goal is to apply the configuration to be able to access Databricks Workspace and let Databricks Workspace access Azure Storage and Azure Key Vault. 
+**Introduction to Hex Notebook**
+- **Overview of Hex and its Features**: An exploration of what Hex Notebook offers, its functionalities, and benefits.
+- **Collaborative Aspects of Hex Notebook**: Understanding how Hex facilitates teamwork and collaborative data analysis.
+
+**Sample Project Implementation**
+- **Outline of a Sample Project Combining Snowflake and Hex**: Introduction and setup of a real-world project.
+- **Step-by-Step Guidance on Project Implementation**: Detailed instructions and hands-on practice for implementing the project.
+- **Real-Time Data Analysis and Visualization**: Techniques and tools for analyzing and visualizing data in real time.
+
+**Q&A and Interactive Session**
+- **Addressing Queries**: An open session for attendees to ask questions and clarify doubts.
+- **Discussing Real-World Applications**: Conversations about how to apply learnings in practical scenarios.
+
 
 ## Materials:
 - [Snowflake official guides and documentation](https://docs.snowflake.com/)
