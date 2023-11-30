@@ -37,12 +37,12 @@ After we start our Azure Subscription we will login to Azure Portal and will cre
 Right now we created independent Azure resources and they probably won't work with each other. Moreover, your Databricks workspace is in the private subnet. Our goal is to apply the configuration to be able to access Databricks Workspace and let Databricks Workspace access Azure Storage and Azure Key Vault. 
 
 ## Materials:
-- [Network access](https://learn.microsoft.com/en-us/azure/databricks/security/network/)
-- [Manage virtual networks](https://learn.microsoft.com/en-us/azure/databricks/security/network/manage-vpcs)
-- [Deploy Azure Databricks in your Azure virtual network (VNet injection)](https://learn.microsoft.com/en-us/azure/databricks/administration-guide/cloud-configurations/azure/vnet-inject)
-- [Secure cluster connectivity (No Public IP / NPIP)](https://learn.microsoft.com/en-us/azure/databricks/security/network/secure-cluster-connectivity)
+- [Snowflake official guides and documentation](https://docs.snowflake.com/)
+- [Hex tutorials](https://learn.hex.tech/tutorials)
+- [Full Snowflake Youtube tutorial](https://learn.hex.tech/tutorials)
 
-All discussions and weekly meetings will be in the Discord channel - **data-engineering-projects**.
+
+All discussions and weekly meetings are in the Discord channel - **data-engineering-projects**.
 
 
 
