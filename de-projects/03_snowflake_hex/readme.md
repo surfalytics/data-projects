@@ -27,27 +27,22 @@ Introduce to the modern data stack, focusing on Snowflake and Hex, by detailing 
 
 ## Implementation
 
-**Introduction to Snowflake Data Warehouse**
-- **Overview of Key Features and Benefits**: A comprehensive look at what Snowflake offers and how it benefits data warehousing.
-- **Understanding Snowflake Architecture**: Delving into the unique aspects of Snowflake's architecture.
+1.Introduction to Snowflake Data Warehouse
+- Overview of Key Features and Benefits: A comprehensive look at what Snowflake offers and how it benefits data warehousing.
+- Understanding Snowflake Architecture: Delving into the unique aspects of Snowflake's architecture.
 
-**Deep Dive into Snowflake Tools**
-- **Hands-on Session with SnowCLI, SnowSQL, and Snowpipe**: Practical exercises to understand and use these tools effectively.
-- **Exploring the Time Travel Feature**: Understanding and utilizing Snowflake's Time Travel capabilities.
+2.Deep Dive into Snowflake Tools
+- Hands-on Session with SnowCLI, SnowSQL, and Snowpipe: Practical exercises to understand and use these tools effectively.
+- Exploring the Time Travel Feature: Understanding and utilizing Snowflake's Time Travel capabilities.
 
-**Introduction to Hex Notebook**
-- **Overview of Hex and its Features**: An exploration of what Hex Notebook offers, its functionalities, and benefits.
-- **Collaborative Aspects of Hex Notebook**: Understanding how Hex facilitates teamwork and collaborative data analysis.
+3.Introduction to Hex Notebook
+- Overview of Hex and its Features: An exploration of what Hex Notebook offers, its functionalities, and benefits.
+- Collaborative Aspects of Hex Notebook: Understanding how Hex facilitates teamwork and collaborative data analysis.
 
-**Sample Project Implementation**
-- **Outline of a Sample Project Combining Snowflake and Hex**: Introduction and setup of a real-world project.
-- **Step-by-Step Guidance on Project Implementation**: Detailed instructions and hands-on practice for implementing the project.
-- **Real-Time Data Analysis and Visualization**: Techniques and tools for analyzing and visualizing data in real time.
-
-**Q&A and Interactive Session**
-- **Addressing Queries**: An open session for attendees to ask questions and clarify doubts.
-- **Discussing Real-World Applications**: Conversations about how to apply learnings in practical scenarios.
-
+4.Sample Project Implementation
+- Outline of a Sample Project Combining Snowflake and Hex: Introduction and setup of a real-world project.
+- Step-by-Step Guidance on Project Implementation: Detailed instructions and hands-on practice for implementing the project.
+- Real-Time Data Analysis and Visualization: Techniques and tools for analyzing and visualizing data in real time.
 
 ## Materials:
 - [Snowflake official guides and documentation](https://docs.snowflake.com/)
