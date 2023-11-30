@@ -39,7 +39,8 @@ Right now we created independent Azure resources and they probably won't work wi
 ## Materials:
 - [Snowflake official guides and documentation](https://docs.snowflake.com/)
 - [Hex tutorials](https://learn.hex.tech/tutorials)
-- [Full Snowflake Youtube tutorial](https://learn.hex.tech/tutorials)
+- [Full Snowflake Youtube tutorial](https://youtube.com/playlist?list=PLba2xJ7yxHB7SWc4Sm-Sp3uGN74ulI4pS&si=fkLQ9meJ36IwE0gA)
+- [Snowflake vs Databricks](https://youtu.be/VLtq0eeHc14?si=JIFmDrN8OQg6Xvm1)
 
 
 All discussions and weekly meetings are in the Discord channel - **data-engineering-projects**.
