@@ -20,7 +20,7 @@
 
 **Snowflake Architecture**: The Snowflake Architecture is characterized by its multi-cluster, shared data architecture. This innovative design separates compute and storage resources, allowing Snowflake to offer high performance, scalability, and concurrency. It enables users to run multiple workloads without performance degradation and manage data efficiently across the organization.
 
-**Hex Notebook (www.hex.tech)**: Hex Notebook is a modern data workspace that integrates notebooks, SQL, and visualizations. It is designed for collaborative data analysis and project development, offering a user-friendly interface for writing code, executing SQL queries, and creating interactive data visualizations. Hex Notebook facilitates teamwork and streamlines the data analysis process, making it ideal for data scientists, analysts, and engineers.
+**Hex Notebook (www.hex.tech)**: Hex Notebook is a modern data workspace that integrates notebooks, Python, SQL, and visualizations. It is designed for collaborative data analysis and project development, offering a user-friendly interface for writing code, executing SQL queries, and creating interactive data visualizations. Hex Notebook facilitates teamwork and streamlines the data analysis process, making it ideal for data scientists, analysts, and engineers.
 
 ## Prerequisites
 
