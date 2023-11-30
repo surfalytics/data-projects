@@ -2,7 +2,7 @@
 
 ## Objective
 
-Introduce to the modern data stack, focusing on Snowflake and Hex, by detailing their key features and elements, and to provide practical skills through hands-on experience with a real-world project, enabling to effectively utilize these technologies in data warehousing, analysis, and visualization.
+Introduction to the modern data stack, focusing on Snowflake and Hex, by detailing their key features and elements, and obtaining practical skills through hands-on experience with a real-world project, enabling to effectively utilize these technologies in data warehousing, analysis, and visualization.
 
 ## Key Terms
 
