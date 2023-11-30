@@ -24,7 +24,8 @@
 
 ## Prerequisites
 
-
+1. Create Snowflake free trial account: https://signup.snowflake.com/
+2. Create Hex free trial account: https://app.hex.tech/signup
 
 ## Implementation
 
