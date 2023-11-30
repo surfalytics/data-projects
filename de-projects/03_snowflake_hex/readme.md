@@ -2,9 +2,7 @@
 
 ## Objective
 
-* To provide participants with a comprehensive understanding of Snowflake Data Warehouse and Hex Notebook.
-* To equip participants with practical skills in implementing data projects using Snowflake and Hex.
-* To enable participants to apply these tools in real-world data analysis scenarios.
+Introduct to the modern data stack, focusing on Snowflake and Hex, by detailing their key features and elements, and to provide practical skills through hands-on experience with a real-world project, enabling to effectively utilize these technologies in data warehousing, analysis, and visualization.
 
 ## Key Terms
 
