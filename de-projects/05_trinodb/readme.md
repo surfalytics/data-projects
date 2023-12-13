@@ -3,20 +3,14 @@
 ## Objective
 
 Try Trino and deploy it using Docker and Standalone isntallation and then query the data an duse `trino-dbt` connector
-Key Terms
-Snowflake Data Warehouse: Snowflake Data Warehouse is a cloud-based platform that offers a comprehensive suite of features for data warehousing, data lakes, data engineering, data science, and data application development. It is designed for secure sharing and consumption of shared data. Its unique architecture supports various data workloads and enables scalable, flexible, and efficient data storage and analysis.
 
-SnowCLI: SnowCLI is a Command Line Interface tool specifically designed for managing Snowflake. It provides a convenient way for users to interact with Snowflake, perform administrative tasks, manage data, execute queries, and automate workflows directly from the command line.
+## Key Terms
 
-SnowSQL: SnowSQL is a specialized SQL client for Snowflake. It allows users to execute SQL queries against Snowflake data warehouses, manage database objects, and perform various database operations. SnowSQL is designed to leverage Snowflake's capabilities, providing a seamless and optimized experience for running SQL commands.
-
-Snowpipe: Snowpipe is a tool for continuous, automated data ingestion into Snowflake. It enables real-time data loading, allowing users to automatically import data into Snowflake as soon as it becomes available. Snowpipe is essential for scenarios requiring up-to-date data, such as real-time analytics and data streaming.
-
-Time Travel: Time Travel is a unique feature of Snowflake that allows users to access historical data within a defined period. This feature enables users to query past states of data or restore data from a specific point in time, providing significant benefits for data recovery, auditing, and analysis.
-
-Snowflake Architecture: The Snowflake Architecture is characterized by its multi-cluster, shared data architecture. This innovative design separates compute and storage resources, allowing Snowflake to offer high performance, scalability, and concurrency. It enables users to run multiple workloads without performance degradation and manage data efficiently across the organization.
-
-Hex Notebook (www.hex.tech): Hex Notebook is a modern data workspace that integrates notebooks, Python, SQL, and visualizations. It is designed for collaborative data analysis and project development, offering a user-friendly interface for writing code, executing SQL queries, and creating interactive data visualizations. Hex Notebook facilitates teamwork and streamlines the data analysis process, making it ideal for data scientists, analysts, and engineers.
+Trino is an open source, distributed SQL query engine. It was designed and written
+from the ground up to efficiently query data against disparate data sources of all sizes,
+ranging from gigabytes to petabytes. Trino breaks the false choice between having fast
+analytics using an expensive commercial solution or using a slow “free” solution that
+requires excessive hardware.
 
 ## Prerequisites
 
