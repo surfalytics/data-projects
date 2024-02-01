@@ -1,4 +1,4 @@
-# Header 
+# Getting Started with Soda for Data Warehouse 
 
 ## About Soda
 Soda (https://www.soda.io/) is a tool used for data quality checking and monitoring. To automate the search for bad-quality data.
