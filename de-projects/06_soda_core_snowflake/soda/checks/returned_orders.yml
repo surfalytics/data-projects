@@ -1,0 +1,6 @@
+checks for RETURNED_ORDERS:
+# Built-in metrics:
+  - row_count > 0
+
+# Referential integrity
+  - values in (order_id) must exist in orders (order_id)

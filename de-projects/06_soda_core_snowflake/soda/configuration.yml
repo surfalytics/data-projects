@@ -1,0 +1,16 @@
+data_source snowflake:
+  type: snowflake
+  username: ${SNOWFLAKE_USER}
+  password: ${SNOWFLAKE_PASSWORD}
+  account: ${SNOWFLAKE_ACCOUNT}
+  database: SUPERSTORE
+  schema: RAW
+  warehouse: WH_SUPERSTORE
+  connection_timeout: 240
+  session_params:
+    QUERY_TAG: soda-queries
+    QUOTED_IDENTIFIERS_IGNORE_CASE: false
+#soda_cloud: - this block required when using soda cloud
+#  host: cloud.us.soda.io
+#  api_key_id: ${soda_api_key_id}
+#  api_key_secret: ${soda_api_key_secret}
