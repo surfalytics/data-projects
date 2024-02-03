@@ -33,6 +33,12 @@ root
  |    |-- element: string (containsNull = true)
  ```
 
+ If you download the Spark Archiver than you can use `spark-submit`:
+
+ ```bash
+ spark-submit define_schema_example.py
+ ```
+
 ## Check Row
 
 ```python
@@ -132,4 +138,49 @@ root
  |-- Location: string (nullable = true)
  |-- RowID: string (nullable = true)
  |-- Delay: float (nullable = true)
+```
+
+### Projection and Filters
+
+A projection in relational parlance is a way to return only the rows matching a certain relational condition by using filters.
+- select()
+- filter() or where()
+
+
+```python
+# In Python
+few_fire_df = (fire_df
+               .select("IncidentNumber", "AvailableDtTm", "CallType")
+               .where(col("CallType") != "Medical Incident"))
+few_fire_df.show(5, truncate=False)
+```
+
+```python
+# In Python, filter for only distinct non-null CallTypes from all 
+(fire_df
+ .select("CallType")
+ .where(col("CallType").isNotNull())
+ .distinct()
+ .show(10, False))
+```
+
+### Renaming, adding, dropping columns
+
+> Note: DataFrame transformations are immutable
+
+```python
+# date operations
+fire_ts_df = (new_fire_df
+  .withColumn("IncidentDate", F.to_timestamp(F.col("CallDate"), "MM/dd/yyyy"))
+  .drop("CallDate") 
+  .withColumn("OnWatchDate", F.to_timestamp(F.col("WatchDate"), "MM/dd/yyyy"))
+  .drop("WatchDate") 
+  .withColumn("AvailableDtTS", F.to_timestamp(F.col("AvailableDtTm"), 
+  "MM/dd/yyyy hh:mm:ss a"))
+  .drop("AvailableDtTm"))
+
+# Select the converted columns
+(fire_ts_df
+  .select("IncidentDate", "OnWatchDate", "AvailableDtTS")
+  .show(5, False))
 ```
