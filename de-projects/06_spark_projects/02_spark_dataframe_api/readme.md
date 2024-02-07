@@ -184,3 +184,15 @@ fire_ts_df = (new_fire_df
   .select("IncidentDate", "OnWatchDate", "AvailableDtTS")
   .show(5, False))
 ```
+
+## Installing and Using the Jupyter Extension for VS Code
+
+On Windows, it will bring a way more level of comfort working with PySpark if you use the "Jupyter" extension for VS Code. It is similar to working with Python / pandas in Jupyter Notebook where you can run code chunks in separate cells.
+
+The complete software trio to work with PySpark on Windows laptop is: VS Code, Jupyter extension, and WSL. 
+
+To install the "Jupyter" extension in VS Code:
+ - Click Extensions
+ - In the search string, type in "Jupyter"
+ - Click the first appeared extension called "Jupyter", then click Install
+ - Once installation is done, you can create files with the "ipynb" extension and write your PySpark code in cells. For getting started code with PySpark in Jupyter, you can refer to the "sf_fire.ipynb" file.
