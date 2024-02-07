@@ -33,12 +33,6 @@ root
  |    |-- element: string (containsNull = true)
  ```
 
- If you download the Spark Archiver than you can use `spark-submit`:
-
- ```bash
- spark-submit define_schema_example.py
- ```
-
 ## Check Row
 
 ```python
@@ -140,47 +134,14 @@ root
  |-- Delay: float (nullable = true)
 ```
 
-### Projection and Filters
+## Installing and Using the Jupyter Extension for VS Code
 
-A projection in relational parlance is a way to return only the rows matching a certain relational condition by using filters.
-- select()
-- filter() or where()
+On Windows, it will bring a way more level of comfort working with PySpark if you use the "Jupyter" extension for VS Code. It is similar to working with Python / pandas in Jupyter Notebook where you can run code chunks in separate cells.
 
+The complete software trio to work with PySpark on Windows laptop is: VS Code, Jupyter extension, and WSL. 
 
-```python
-# In Python
-few_fire_df = (fire_df
-               .select("IncidentNumber", "AvailableDtTm", "CallType")
-               .where(col("CallType") != "Medical Incident"))
-few_fire_df.show(5, truncate=False)
-```
-
-```python
-# In Python, filter for only distinct non-null CallTypes from all 
-(fire_df
- .select("CallType")
- .where(col("CallType").isNotNull())
- .distinct()
- .show(10, False))
-```
-
-### Renaming, adding, dropping columns
-
-> Note: DataFrame transformations are immutable
-
-```python
-# date operations
-fire_ts_df = (new_fire_df
-  .withColumn("IncidentDate", F.to_timestamp(F.col("CallDate"), "MM/dd/yyyy"))
-  .drop("CallDate") 
-  .withColumn("OnWatchDate", F.to_timestamp(F.col("WatchDate"), "MM/dd/yyyy"))
-  .drop("WatchDate") 
-  .withColumn("AvailableDtTS", F.to_timestamp(F.col("AvailableDtTm"), 
-  "MM/dd/yyyy hh:mm:ss a"))
-  .drop("AvailableDtTm"))
-
-# Select the converted columns
-(fire_ts_df
-  .select("IncidentDate", "OnWatchDate", "AvailableDtTS")
-  .show(5, False))
-```
+To install the "Jupyter" extension in VS Code:
+ - Click Extensions
+ - In the search string, type in "Jupyter"
+ - Click the first appeared extension called "Jupyter", then click Install
+ - Once installation is done, you can create files with the "ipynb" extension and write your PySpark code in cells. For getting started code with PySpark in Jupyter, you can refer to the "sf_fire.ipynb" file.
