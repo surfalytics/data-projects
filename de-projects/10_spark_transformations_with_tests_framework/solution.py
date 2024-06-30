@@ -1,113 +1,10 @@
 # This solution is not ideal. Functionally, it works, but retirns wrong result.
+# functools.lru_cache is a decorator in Python that allows you to cache the results of function calls. LRU stands for "Least Recently Used," which means that the cache will store a fixed number of results, and if the cache is full, it will remove the least recently used result to make room for a new one.
+# Using lru_cache can significantly improve the performance of your program, especially if you have functions that are called frequently with the same arguments. By caching the results, you avoid redundant computations and reduce the time complexity of your functions.
+# Style Guide: https://github.com/palantir/pyspark-style-guide
+# Coalesce: Coalesce reduces the number of partitions in a DataFrame without shuffling the data. It is efficient for reducing the number of partitions when you know that the target number of partitions is lower.
+# Repartition: Repartition reshuffles the data across the specified number of partitions, evenly distributing the data. This can be useful for increasing or decreasing the number of partitions to improve performance for specific operations.
 
-Dmitry
-dimoobraznii_91655
-Online
-
-Dmitry — Today at 10:13 AM
-DE Assignments 1:
-
-Spark ML Logs Transformer
-Your first task as a newly hired data engineer is to implement a simple ETL process on a logs stream, produced by data scientists in their machine learning experiments.
-
-Data
-Inside  you will find a part of this stream in JSONL format, i.e. a single, valid JSON object per line.
-
-The log object consists of the following fields:
-
- 
-a string-based unique indentifier,
-an int-based identifier of the experiment, in which this log was produced,
-an int-based identifier of the metric, of which this log represents the value,
-a deprecated boolean representing whether the log is valid or not (not used),
-a date when the log was produced,
-a date when the log was written to the stream,
-a consecutive identifier inside the experiment representing the order,
-a value of the metric.
-You can find the corresponding experiments names in  file.
-
-On the other hand, metric names are well-known inside the company, so you have to memorize them on your own:  means  and  is .
-
-Tasks
-Your task is to implement an ETL pipeline, which reads an input logs stream, merges additional information, transforms the data and finally, stores it in a new format.
-
-Part 1: Data loaders
-In  implement the following functions:
-
- 
-it should accept a path to a JSONL file, as defined in the Data section above, and returns a Spark  object containing logs data,
-it should accept a path to a CSV file and returns a Spark  object containing  and  columns,
-it should returns a Spark  object containing two rows and two columns, as defined in the Data section above.
-Part 2: Merge data sources
-Having the data loaded, your task is to merge the results into a single . Implement  function which accepts s from the previous task, and returns a new  with all three tables merged, using  and  as foreign keys.
-
-Part 3: Filter invalid logs
-Some of the logs were ingested into the stream too late. We don't want that kind of behavior, and your task is to filter out logs, which were injected later than some specified number of hours after the creation date. Implement  method.
-
-Part 4: Calculate experiment's statistics
-Once you filtered out invalid logs, your task is to calculate final metrics for each metric in each experiment. The final metric value consists of the  and  values for each metric in each experiment. The expected  should consists of at least following columns:
-
- 
-name of the experiment,
-name of the metric,
-max  of the  in the ,
-min  of the  in the .
-Part 5: Save transformed data
-Finally, the calculated statistics have to be saved in Parquet format. Ideally, the data should be partitioned by  column, so the analysis of the statistics in the future will be more efficient.
-Dmitry — Today at 10:14 AM
-h
-Attachment file type: archive
-devskiller-code-FHW4-WWG7-DAHE-S0F.zip
-12.31 KB
-Dmitry — Today at 10:34 AM
-functools.lru_cache is a decorator in Python that allows you to cache the results of function calls. LRU stands for "Least Recently Used," which means that the cache will store a fixed number of results, and if the cache is full, it will remove the least recently used result to make room for a new one.
-
-Using lru_cache can significantly improve the performance of your program, especially if you have functions that are called frequently with the same arguments. By caching the results, you avoid redundant computations and reduce the time complexity of your functions.
-Dmitry — Today at 11:29 AM
-Style Guide: https://github.com/palantir/pyspark-style-guide
-GitHub
-GitHub - palantir/pyspark-style-guide: This is a guide to PySpark c...
-This is a guide to PySpark code style presenting common situations and the associated best practices based on the most frequent recurring topics across the PySpark repos we&#39;ve encountered. ...
-GitHub - palantir/pyspark-style-guide: This is a guide to PySpark c...
-Dmitry — Today at 11:41 AM
-https://towardsdatascience.com/optimizing-output-file-size-in-apache-spark-5ce28784934c
-Medium
-Optimizing Output File Size in Apache Spark
-A Comprehensive Guide on Managing Partitions, Repartition, and Coealesce Operations
-Definitions:
-Coalesce: Coalesce reduces the number of partitions in a DataFrame without shuffling the data. It is efficient for reducing the number of partitions when you know that the target number of partitions is lower.
-Repartition: Repartition reshuffles the data across the specified number of partitions, evenly distributing the data. This can be useful for increasing or decreasing the number of partitions to improve performance for specific operations.
-
-Application to Your Example:
-For your example, if you need to reduce the number of partitions before writing the data to Parquet, coalesce is preferable because it avoids the full shuffle that repartition would incur, making it more efficient.
-
-Here's how you can apply coalesce before saving the DataFrame:
-
-def save_to_parquet(data: DataFrame, output_path: str) -> None:
-    """
-    Save the DataFrame to Parquet format partitioned by metricId.
-
-    Args:
-        data (DataFrame): The DataFrame containing the final scores.
-        output_path (str): The output path where the Parquet files will be saved.
-    """
-    # Reduce the number of partitions to 1 before writing, to avoid small files
-    data = data.coalesce(1)
-    data.write.partitionBy("metricId").parquet(output_path)
-
-# Example usage:
-# logs_df = load_logs(Path("path_to_logs.json"))
-# experiments_df = load_experiments(Path("path_to_experiments.csv"))
-# metrics_df = load_metrics()
-# joined_df = join_tables(logs_df, experiments_df, metrics_df)
-# filtered_df = filter_late_logs(joined_df, hours=12)
-# final_scores_df = calculate_experiment_final_scores(filtered_df)
-# save_to_parquet(final_scores_df, "output_path_to_parquet")
-
-
-In this case, coalesce(1) is used to reduce the number of partitions to 1, ensuring that the Parquet files are written efficiently without creating too many small files. If you have a large dataset, you might want to coalesce to a higher number of partitions, depending on the size and your performance needs.
-Dmitry — Today at 11:54 AM
-Solution:
 from functools import lru_cache
 from pathlib import Path
 from pyspark.sql import Row
@@ -212,13 +109,29 @@ def load_metrics() -> DataFrame:
 Collapse
 message.txt
 8 KB
+
 Dmitry — Today at 12:20 PM
 @Max  @Aizhan  you can try to reproduce it
+[12:26 PM]
 I see this example of value:
 {"logId":"5f2d8f15ea79f5621549e397","expId":0,"metricId":0,"valid":false,"createdAt":"2020-07-19T12:35:38","ingestedAt":"2020-07-19T16:08:11","step":4,"value":0.1}
 
 but there are more values that are smaller, and only difference is time difference, maybe the problem, that we need to do the time difference vice versa:) any way highly recommend to do this on your own
+
+Message "DE Assignments 1:"
 ﻿
+
+
+
+
+ONLINE — 2
+
+Dmitry
+
+Max
+OFFLINE — 1
+
+Aizhan
 from functools import lru_cache
 from pathlib import Path
 from pyspark.sql import Row
@@ -438,6 +351,4 @@ def save(data: DataFrame, output_path: Path) -> None:
 
     """
     data.write.partitionBy("metricId").parquet(str(output_path))
-message.txt
-8 KB
 
