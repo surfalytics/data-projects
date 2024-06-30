@@ -9,8 +9,7 @@ test_packages = [
 setup(
     name="ml-logs-transformer",
     version="1.0.0",
-    author="Devskiller.com",
-    author_email="support@devskiller.com",
+    author="Surfalytics",
     packages=find_packages(),
     install_requires=[
         "pyspark==3.0.0",
