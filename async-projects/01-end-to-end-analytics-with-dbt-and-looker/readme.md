@@ -226,3 +226,45 @@ Optionally, you can add more than one fact table.
 10. Create a data model (Physical and Logics) (star schema) with Dbeaver or Lucid or anything you like. Check the definitions and examples.
 
 11. Make sure you have a great CI with `pre-commit` that checks files and dbt and sql linting. Share PR with the discord and ask for a real Code Review.
+
+## Week 7
+
+By week 7, we should have dbt project in our local IDE and also published in GitHub. The `pre-commit` will make sure code is accurate and running everytime we are creating a commit locally and insied GitHub Actions (Continious Integration). Inside data warehouse we should have DEV and PROD copy of data and models. It means we can do changes safely and test without breaking our production. 
+
+For our local dbt setup, I want to add couple more useful things:
+1. Adding nice dbt feature [deffer](https://docs.getdbt.com/reference/node-selection/defer). Example of command run:
+
+```bash
+dbt run --target dev --defer --state ./prod_artifacts/ --select fact_mrr_time_series   
+```
+This command has `--target dev` i.e. will run against DEV, and I want to run fact table. If I have dependenices for this model dbt will look up them and failed, if I don't have table in DEV scehma. `--defer` will help dbt to lookup the PROD tables instead and we don't need to build the whole DEV jsut for us. Save money, storage and time! 
+
+How dbt will know about proper tables names and schemas? Using this part `--state ./prod_artifacts/`. I've created the folder `prod_artifacts` and drop the dbt artfifacts into the folder. I am using these commands:
+
+```bash
+dbt docs generate --target prod
+rm ./prod_artifacts/catalog.json
+rm ./prod_artifacts/manifest.json
+mv ./target/catalog.json ./target/manifest.json ./prod_artifacts/
+```
+
+You need to understand this powerfull concept.
+
+2. `makefile` to have shortcuts for CLI commands. You can read what is it [here](https://blog.det.life/what-is-a-makefile-and-how-i-use-it-in-a-dbt-project-703b922be2ef).
+
+Example for command above:
+
+```bash
+prod-artifacts:
+ dbt docs generate --target prod
+	rm ./prod_artifacts/catalog.json
+	rm ./prod_artifacts/manifest.json
+	mv ./target/catalog.json ./target/manifest.json ./prod_artifacts/
+```
+
+3. We have to leverage concept of Slowly Change Dimensions. Check this [blog post](https://sarathd.medium.com/slowly-changing-dimensions-using-dbt-snapshots-2a46727f0d39#:~:text=Understanding%20the%20SCD%20Type%202,the%20same%20record%20over%20time.) or similar. Let's focus on Product Dimension. Assume, we want to change the Product name to something else. This is a good question for data professional, how do we want to handle changes? 
+
+Let's think what else missing to make this a production solution?
+
+1. Create a Physical Data model our our Fact and Dim tables
+1. We should create a BI Dashboard for end users. We can use Power BI, Tableau, Looker. Let's focus on Looker and we will use my [Rock Your Data](https://rockyourdata.looker.com/login) instance. I will share creds in discord. You should cr
