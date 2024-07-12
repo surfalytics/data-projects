@@ -262,9 +262,25 @@ prod-artifacts:
 	mv ./target/catalog.json ./target/manifest.json ./prod_artifacts/
 ```
 
-3. We have to leverage concept of Slowly Change Dimensions. Check this [blog post](https://sarathd.medium.com/slowly-changing-dimensions-using-dbt-snapshots-2a46727f0d39#:~:text=Understanding%20the%20SCD%20Type%202,the%20same%20record%20over%20time.) or similar. Let's focus on Product Dimension. Assume, we want to change the Product name to something else. This is a good question for data professional, how do we want to handle changes? 
+3. We have to leverage concept of Slowly Change Dimensions. Check this [blog post](https://sarathd.medium.com/slowly-changing-dimensions-using-dbt-snapshots-2a46727f0d39#:~:text=Understanding%20the%20SCD%20Type%202,the%20same%20record%20over%20time.) or similar. Let's focus on Product Dimension. Assume, we want to change the Product name to something else. This is a good question for data professional, how do we want to handle changes?
+
+We can insert new order into source table, something like:
+
+> Please update table, columns and values for the insert, I am using real example. The key change here is product name changes from `Xerox 1999` to `Xerox v2`
+
+```sql
+INSERT INTO <YOUR TABLE> (
+  Row_ID, Order_ID, Order_Date, Ship_Date, Ship_Mode, Customer_ID, Customer_Name, Segment, Country_Region, City, State, Postal_Code, Region, Product_ID, Category, Sub_Category, Product_Name, Sales, Quantity, Discount, Profit
+) VALUES (
+  93, 'CA-2019-149587', '2019-01-31', '2019-02-05', 'Second Class', 'KB-16315', 'Karl Braun', 'Consumer', 'United States', 'Minneapolis', 'Minnesota', 55407, 'Central', 'OFF-PA-10003177', 'Office Supplies', 'Paper', 'Xerox 1999', 12.96, 2, 0, 6.2208
+);
+```
+
+It means, that both `Xerox 1999` and `Xerox v2`. For SCD 1, we would overwrite just in DIM PRODUCTS, but we want SCD 2, you and you need kep both versions with couple extra columns. Depens on sales date, it will be one of them in reporting. 
+
+Update the PRODUCT DIM to make sure it is SCD 2. (PS remember this is one of the most popular interview question!)
 
 Let's think what else missing to make this a production solution?
 
-1. Create a Physical Data model our our Fact and Dim tables
-1. We should create a BI Dashboard for end users. We can use Power BI, Tableau, Looker. Let's focus on Looker and we will use my [Rock Your Data](https://rockyourdata.looker.com/login) instance. I will share creds in discord. You should cr
+1. Create a Physical Data model our our Fact and Dim tables. You can use free trial of SQLDBM or you can use Dbeaver to create the [Physical Data model](https://dbeaver.com/docs/dbeaver/Custom-Diagrams/).
+2. We should create a BI Dashboard for end users. We can use Power BI, Tableau, Looker. Let's focus on Looker and we will use my [Rock Your Data](https://rockyourdata.looker.com/login) instance. I will share creds in discord. You should cr
