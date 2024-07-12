@@ -283,4 +283,12 @@ Update the PRODUCT DIM to make sure it is SCD 2. (PS remember this is one of the
 Let's think what else missing to make this a production solution?
 
 1. Create a Physical Data model our our Fact and Dim tables. You can use free trial of SQLDBM or you can use Dbeaver to create the [Physical Data model](https://dbeaver.com/docs/dbeaver/Custom-Diagrams/).
-2. We should create a BI Dashboard for end users. We can use Power BI, Tableau, Looker. Let's focus on Looker and we will use my [Rock Your Data](https://rockyourdata.looker.com/login) instance. I will share creds in discord. You should cr
+2. We should create a BI Dashboard for end users. We can use Power BI, Tableau, Looker. Let's focus on Looker and we will use my [Rock Your Data](https://rockyourdata.looker.com/login) instance. I will share creds in discord. You should leverage this project [Looker Project](https://github.com/surfalytics/data-projects/blob/main/bi-projects/02_looker_snowflake/readme.md). You can check [example of implementation from Maksim](https://medium.com/@kazarmax/creating-a-superstore-kpi-dashboard-using-looker-and-snowflake-73fec857132d).
+
+> Looker can be integrated with your own repo for a project. Everyone should create their own connection to data warehouse (postgres) and then create a new project.
+
+This is the focus for this week.
+
+Next week, we should start think, how to put dbt into container and host somewhere as well as schedule with the GitHub Actons.
+
+
