@@ -2,7 +2,6 @@
 
 Repos of students with example:
 - From Aizhan https://github.com/aizhannna/data-projects/tree/main
-- 
 
 ## Week 1
 
@@ -291,4 +290,81 @@ This is the focus for this week.
 
 Next week, we should start think, how to put dbt into container and host somewhere as well as schedule with the GitHub Actons.
 
+## Week 8
 
+Last week we focused on creating Physical Model and Looker BI. 
+
+Let's now think about production use case for dbt. Obviosly, we can just install dbt to remote machine. It will be expensive in case of remote virtual machine that is running 24/7. Moreover, in case of failure, our ETL will be down. That's why dbt usually are hosting in containers. 
+
+You should be already aware what is container from Module 0 - [Just Enough Docker](https://www.youtube.com/watch?v=MCY9Jw_Sa4g).
+
+In this week, we will start to use dbt container. We can create our own container and install `dbt-core` for Postgres or we can try to leverage existing [pre-built images](https://github.com/dbt-labs/dbt-core/pkgs/container/dbt-postgres):
+
+```
+$ docker pull ghcr.io/dbt-labs/dbt-postgres:1.8.2
+```
+
+Our goal is to make sure we can run a container on local machine with dbt inside and let us use this container for executing dbt commands against our Postgres Data Warehouse.
+
+When you succeed with this you can move towards next step of Continious Integration (CI). We already should have simple `pre-commit` that is running with every Pull Request to help avoid silly mistakes in code and code formating either SQL or Python. 
+
+Now, we want to move to the next level of testing - test our dbt models against real data. In other words, we will use GitHub Actions to spin up container and execute dbt models against `CI` schema, run models, run tests and shutdown. This is why we need CI.
+
+For example, you can change a model and then you want to test it:
+- You create a Feature Branch changing model_b
+- You create a PR to main with those changes
+- The PR triggers a GitHub action
+- The action creates a dedicated CI schema to run <dbt build -s 'state:modified+' --defer --state path/to/artifacts --target ci_schema>
+- The command will run and test the modified (and downstream) models in the dedicated schema
+- The PR can be approved if all of them are built successfully.
+- The dedicated schema can be dropped.
+
+You can use [dbt clone](https://docs.getdbt.com/reference/commands/clone) to clone the production models. But the most important is this command [The "state" method](https://docs.getdbt.com/reference/node-selection/methods)
+
+For example, for CI GitHub Actions we can have something like this (this is random set of commands):
+
+```
+name: CI_action
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  CI_job:
+    runs-on: ubuntu-latest
+
+....
+
+    - name: Copy manifest.json prod artifacts
+      run: |
+        <command>
+    
+
+    - name: Run dbt debug
+      run: |
+        dbt debug --target pr
+
+    - name: Run dbt deps
+      run: |
+        dbt deps --target pr
+
+    - name: Run dbt build
+      run: |
+        if [ -f "./manifest.json" ]; then
+          dbt build -s 'state:modified+' --defer --state ./ --target pr 
+        else
+          dbt build --target pr
+        fi
+
+```
+
+Helpful resources:
+
+[How we sped up our CI runs by 10x using Slim CI](https://discourse.getdbt.com/t/how-we-sped-up-our-ci-runs-by-10x-using-slim-ci/2603)
+[How to Create CI/CD Pipelines for dbt Core](https://paulfry999.medium.com/v0-4-pre-chatgpt-how-to-create-ci-cd-pipelines-for-dbt-core-88e68ab506dd)
+
+Just to iterate, the goals are:
+1. Take a docker container locally to be able run your models.
+2. Leverage this container to run the models in CI process and only run for models that we want to test and run in the dedicated schema.
