@@ -1,4 +1,4 @@
-# adzuna_etl_aws
+# Building complete ETL pipeline with AWS
 
 ## Prerequisites
 For working on the project, everyone needs the following things installed / available before the webinar:
@@ -12,6 +12,3 @@ For working on the project, everyone needs the following things installed / avai
  
 Try to follow the instructions from here - https://medium.com/@kazarmax/from-api-to-dashboard-building-an-end-to-end-etl-pipeline-with-aws-3c1f4048676d before the webinar
 write questions / faced issues (if there are any)
-
-Building an End-to-End ETL Pipeline with AWS using Adzuna public API
-For detailed description of the project implementation, see https://medium.com/@kazarmax/from-api-to-dashboard-building-an-end-to-end-etl-pipeline-with-aws-3c1f4048676d 
