@@ -92,25 +92,22 @@ def move_s3_object(bucket, source_key, destination_key):
 
 
 def lambda_handler(event, context):
-    logger.info("Getting details from triggered event of created file in s3 ...")
-    for record in event['Records']:
-        s3_bucket = record['s3']['bucket']['name']
-        s3_object = record['s3']['object']['key']
+    # Get the S3 object key from the Step Function input
+    s3_object = event['s3ObjectKeyTransformed']  # Input from previous function (Step Function)
     
-        logger.info(f"s3_bucket: {s3_bucket}")
-        logger.info(f"s3_object: {s3_object}")
-        
-        s3_uri = f's3://{s3_bucket}/{s3_object}'
-        logger.info(f"S3 URI of newly added file: {s3_uri}")
-        
-        query = QUERY_TEMPLATE.format(s3_uri=s3_uri, iam_role=REDSHIFT_IAM_ROLE, region=REDSHIFT_REGION)
-        logger.info(f"Redshift query to execute: {query}")
+    s3_bucket = "adzuna-etl-project" 
+    s3_uri = f's3://{s3_bucket}/{s3_object}'
     
-        logger.info("Started importing data from csv file in s3 and merging to dw table")
-        execute_redshift_query(query_str=query)
+    logger.info(f"S3 URI of transformed file: {s3_uri}")
         
-        # Moving migrated file to another folder in s3
-        source_key = s3_object
-        source_file_name = source_key.split('/')[2]
-        destination_key = "transformed_data/migrated/" + source_file_name
-        move_s3_object(s3_bucket, source_key, destination_key)
+    query = QUERY_TEMPLATE.format(s3_uri=s3_uri, iam_role=REDSHIFT_IAM_ROLE, region=REDSHIFT_REGION)
+    logger.info(f"Redshift query to execute: {query}")
+
+    logger.info("Started importing data from csv file in s3 and merging to dw table")
+    execute_redshift_query(query_str=query)
+    
+    # Moving migrated file to another folder in s3
+    source_key = s3_object
+    source_file_name = source_key.split('/')[2]
+    destination_key = "transformed_data/migrated/" + source_file_name
+    move_s3_object(s3_bucket, source_key, destination_key)
