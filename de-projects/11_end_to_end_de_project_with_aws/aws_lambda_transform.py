@@ -25,9 +25,12 @@ def put_object_to_s3(bucket, key, data_df):
         # Upload CSV content to S3
         s3.put_object(Bucket=bucket, Key=key, Body=content)
         logger.info(f"File successfully uploaded to {bucket}/{key}")
+        
+        return key
 
     except Exception as e:
         logger.error(f"Error occurred while uploading file to {bucket}/{key}: {str(e)}")
+        return None
 
 
 def delete_s3_object(bucket_name, object_key):
@@ -86,29 +89,32 @@ def lambda_handler(event, context):
     
     # Processing raw data
     logger.info("# Started processing raw data files")
-    s3 = boto3.client('s3')
 
-    logger.info("Getting details from triggered event of created file in s3 ...")
-    for record in event['Records']:
-        s3_bucket = record['s3']['bucket']['name']
-        s3_object = record['s3']['object']['key']
+    # Process the raw data file provided by the extract lambda function
+    logger.info("Processing raw data file from previous Step Function output")
+
+    # Get the S3 object key from Step Function's output
+    s3_bucket = "adzuna-etl-project"  
+    s3_object = event['s3ObjectKey']  # Get object key from Step Function output
     
-        logger.info(f"s3_bucket: {s3_bucket}")
-        logger.info(f"s3_object: {s3_object}")
-        
-        s3_object_data = s3.get_object(Bucket=s3_bucket, Key=s3_object)
-        content = s3_object_data['Body']
-        json_raw_data = json.loads(content.read())
+    logger.info(f"Processing S3 object {s3_object} from bucket {s3_bucket}")
+    
+    # Retrieve the raw data from S3 
+    s3_object_data = s3.get_object(Bucket=s3_bucket, Key=s3_object)
+    content = s3_object_data['Body']
+    json_raw_data = json.loads(content.read())
 
-        # Transforming retrieved json data and storing it back to another s3 folder "transformed_data"
-        logger.info(f"Started processing {s3_object} file ...")
-        current_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        jobs_transformed_data = get_parsed_raw_jobs_data(json_raw_data)
-        s3_destination_key = f"transformed_data/to_migrate/adzuna_transformed_data_{current_timestamp}.csv"
-        put_object_to_s3(s3_bucket, s3_destination_key, jobs_transformed_data)
+    # Transforming retrieved json data and storing it back to another s3 folder "transformed_data"
+    logger.info(f"Started processing {s3_object} file ...")
+    current_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    jobs_transformed_data = get_parsed_raw_jobs_data(json_raw_data)
+    s3_destination_key = f"transformed_data/to_migrate/adzuna_transformed_data_{current_timestamp}.csv"
+    created_object_key = put_object_to_s3(s3_bucket, s3_destination_key, jobs_transformed_data)
 
-        # Moving raw files from unprocessed to processed folder inside s3
-        source_key = s3_object
-        source_file_name = source_key.split('/')[2]
-        destination_key = "raw_data/processed/" + source_file_name
-        move_s3_object(s3_bucket, source_key, destination_key)
+    # Moving raw files from unprocessed to processed folder inside s3
+    source_key = s3_object
+    source_file_name = source_key.split('/')[2]
+    destination_key = "raw_data/processed/" + source_file_name
+    move_s3_object(s3_bucket, source_key, destination_key)
+    
+    return created_object_key

@@ -73,7 +73,7 @@ def lambda_handler(event, context):
     file_name = f"adzuna_raw_data_{current_timestamp}.json"
     logger.info(f"File name to store raw data: {file_name}")
     
-    # Storing Adzuna json raw data to AWS S3
+    # Storing Spotify json raw data to AWS S3
     logger.info("Storing Adzuna json raw data to AWS S3")
     client = boto3.client('s3')
     file_key = f"raw_data/to_process/{file_name}"
@@ -84,6 +84,8 @@ def lambda_handler(event, context):
             Body=json.dumps(all_job_postings)
         )
         logger.info(f"File {file_key} successfully created in bucket {BUCKET}.")
+        return file_key
     
     except Exception as e:
         logger.error(f"Error occurred while creating file: {str(e)}")
+        return None

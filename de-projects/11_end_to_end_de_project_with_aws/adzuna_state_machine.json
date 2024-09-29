@@ -1,0 +1,56 @@
+{
+  "StartAt": "ExtractDataFromAPI",
+  "States": {
+    "ExtractDataFromAPI": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789123:function:lambda_adzuna_extract_data:$LATEST",
+      "Next": "TransformData",
+      "ResultPath": "$.s3ObjectKeyExtract",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureState"
+        }
+      ]
+    },
+    "TransformData": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789123:function:lambda_adzuna_transform_data:$LATEST",
+      "Parameters": {
+        "s3ObjectKey.$": "$.s3ObjectKeyExtract"
+      },
+      "Next": "LoadDataToRedshift",
+      "ResultPath": "$.s3ObjectKeyTransformed",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureState"
+        }
+      ]
+    },
+    "LoadDataToRedshift": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:123456789123:function:lambda_adzuna_load_data:$LATEST",
+      "Parameters": {
+        "s3ObjectKeyTransformed.$": "$.s3ObjectKeyTransformed"
+      },
+      "End": true,
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "FailureState"
+        }
+      ]
+    },
+    "FailureState": {
+      "Type": "Fail",
+      "Cause": "An error occurred in the ETL process"
+    }
+  }
+}
