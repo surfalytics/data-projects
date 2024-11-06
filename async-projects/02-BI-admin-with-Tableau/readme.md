@@ -136,6 +136,152 @@ Other things to try on Tableau Server:
 
 Next week will be final and we will talk about CLI and Python clients, Tableau API and some other Admin duties such as back ups, monitoring services and scalability.
 
+# Week 4
+
+This week we'll focus on automation, monitoring, and advanced administration tasks that every BI Admin should know. These skills are essential for managing large-scale Tableau Server deployments and will make you stand out in interviews.
+
+Let's explore the following areas:
+
+## Command Line Tools and APIs
+
+1. Learn and practice with [tabcmd](https://help.tableau.com/current/server/en-us/tabcmd.htm):
+   - Create a script to automate publishing workbooks
+   - Export views to PDF for scheduled distribution
+   - Create and manage users/groups via command line
+   - Refresh extracts using tabcmd
+
+2. Explore [Tableau Server Client (Python)](https://tableau.github.io/server-client-python/):
+   - Install TSC library: `pip install tableauserverclient`
+   - Write scripts to:
+     - List all workbooks and their owners
+     - Download workbooks programmatically
+     - Automate user management
+     - Query server status
+
+3. Work with [Tableau REST API](https://help.tableau.com/current/api/rest_api/en-us/REST/rest_api.htm):
+   - Create a simple application that:
+     - Authenticates with your server
+     - Lists available sites
+     - Gets workbook information
+     - Manages permissions
+
+## Backup and Disaster Recovery
+
+1. Implement [backup strategies](https://help.tableau.com/current/server/en-us/backup_restore.htm):
+   - Schedule regular backups using `tsm maintenance backup`
+   - Test restore procedures in a separate environment
+   - Document backup retention policies
+   - Create a disaster recovery plan
+
+2. Practice backup scenarios:
+   - Full server backup
+   - Site-only backup
+   - Selective backup of specific resources
+   - Restore testing
+
+## Monitoring and Performance
+
+1. Set up [Tableau Server Monitoring](https://help.tableau.com/current/server/en-us/monitor_server.htm):
+   - Configure email alerts for system events
+   - Monitor key metrics:
+     - Resource usage
+     - User activity
+     - Background tasks
+   - Use Admin Views for insights
+
+2. Learn to use [Administrative Views](https://help.tableau.com/current/server/en-us/adminview.htm):
+   - Traffic to Views
+   - Background Tasks for Extracts
+   - Stats for Load Times
+   - Server Disk Space
+
+3. Implement [Resource Monitoring Tool (RMT)](https://help.tableau.com/current/server/en-us/rmt-intro.htm):
+   - Install and configure RMT
+   - Set up monitoring dashboards
+   - Configure alerts
+   - Analyze historical performance data
+
+## Log Analysis and Troubleshooting
+
+1. Work with [Tableau Server Logs](https://help.tableau.com/current/server/en-us/logs_overview.htm):
+   - Understand log locations and types
+   - Use `tsm maintenance ziplogs` for log collection
+   - Practice log analysis for common issues
+   - Create a log rotation policy
+
+2. Use [Built-in Tools](https://help.tableau.com/current/server/en-us/troubleshoot_main.htm):
+   - Server Status page
+   - Background Tasks
+   - Queue Status
+
+## Performance Optimization
+
+1. Learn [Workbook Performance](https://help.tableau.com/current/pro/desktop/en-us/performance_tips.htm):
+   - Use Tableau Performance Recorder
+   - Analyze slow dashboards
+   - Implement performance improvements
+   - Document best practices for users
+
+2. Practice [Server Optimization](https://help.tableau.com/current/server/en-us/server_process_concepts.htm):
+   - Configure process topology
+   - Optimize cache settings
+   - Tune JVM settings
+   - Implement extract refresh strategies
+
+## Site Management and Customization
+
+1. Create and manage [multiple sites](https://help.tableau.com/current/server/en-us/sites_add.htm):
+   - Configure site settings
+   - Implement different authentication methods
+   - Set up content migration between sites
+
+2. Customize [Server Appearance](https://help.tableau.com/current/server/en-us/customize.htm):
+   - Add custom logo
+   - Modify sign-in page
+   - Configure server-wide announcements
+  
+## Exercise
+
+Create a comprehensive "Day in the Life of a BI Admin" project that combines multiple aspects:
+
+1. Write automation scripts that:
+   - Check server health
+   - Generate daily reports
+   - Manage user access
+   - Handle routine maintenance
+
+2. Create a monitoring dashboard that shows:
+   - Server performance metrics
+   - User activity patterns
+   - Extract refresh status
+   - Disk space usage
+
+3. Document your disaster recovery plan:
+   - Backup procedures
+   - Restore processes
+   - Emergency contacts
+   - Escalation procedures
+
+4. Build a "Server Health Check" workbook that includes:
+   - Performance metrics
+   - Usage statistics
+   - Security audit information
+   - Capacity planning data
+
+Remember to document everything you do in your blog or GitHub repository. These artifacts will be valuable for your portfolio and future job interviews.
+
+> Pro tip: Create a "BI Admin Playbook" that documents all your procedures, scripts, and best practices. This is incredibly valuable for interviews and shows you understand enterprise-level BI administration. 
+
+Next steps after this course:
+1. Consider getting [Tableau Server Certified](https://www.tableau.com/learn/certification/server-certified-associate)
+2. Join the [Tableau Community Forums](https://community.tableau.com/) to learn from other admins
+3. Write a blog post about Tableau Server Admin duties
+4. Practice explaining your admin experience in interview scenarios
+5. Make sure you are aware about Tableau Server options: [Tableau Server on Windows](https://help.tableau.com/current/server/en-us/install_config_top.htm), [Tableau Server on Linux](https://help.tableau.com/current/offline/en-gb/tableau_server_linux.pdf), [Tableau Server Cloud](https://www.tableau.com/products/cloud-bi).
+6. Make sure you are aware about scalablity of Tableau Server and available options: [Distributed and High Availability Tableau Server Installations](https://help.tableau.com/current/server/en-us/distrib_ha.htm),
+
+
+
 
 
 
