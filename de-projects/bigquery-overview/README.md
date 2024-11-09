@@ -1,5 +1,6 @@
 # Table of Contents
 
+- [Introduction](#introduction)
 - [Databases vs. Data Warehouses vs. Data Lakes](#databases-vs-data-warehouses-vs-data-lakes)
   - [Databases](#databases)
   - [Data Warehouses](#data-warehouses)
