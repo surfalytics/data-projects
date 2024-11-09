@@ -1,3 +1,26 @@
+# Table of Contents
+
+- [Databases vs. Data Warehouses vs. Data Lakes](#databases-vs-data-warehouses-vs-data-lakes)
+  - [Databases](#databases)
+  - [Data Warehouses](#data-warehouses)
+  - [Data Lakes](#data-lakes)
+  - [Summary](#summary)
+- [BigQuery Overview](#bigquery-overview)
+- [Architecture](#architecture)
+- [BigQuery vs Snowflake](#bigquery-vs-snowflake)
+  - [Architecture](#architecture-1)
+  - [Scalability](#scalability)
+  - [Performance](#performance)
+  - [Pricing](#pricing)
+- [How to get started with BigQuery?](#how-to-get-started-with-bigquery)
+  - [BigQuery Sandbox](#bigquery-sandbox)
+- [Storage Overview. How to partition and cluster data?](#storage-overview-how-to-partition-and-cluster-data)
+  - [Resource Model](#resource-model)
+  - [Partitioning](#partitioning)
+    - [Partitioning: Hands-on](#partitioning-hands-on)
+  - [Clustering](#clustering)
+    - [Clustering: Hands-On](#clustering-hands-on)
+
 ## **Databases vs. Data Warehouses vs. Data Lakes**
 
 As data volumes grow, choosing the right storage solution is crucial. Databases, data warehouses, and data lakes each offer unique advantages and serve different needs. Let’s explore their key differences, architectures, and strengths.
