@@ -113,6 +113,8 @@ Under the hood, BigQuery employs a vast set of multi-tenant services driven by l
 
 Snowflake and BigQuery both offer decoupled storage and compute resources that can elastically scale to meet all your mission-critical workload requirements. But they also have slightly different architectures.
 
+![image](https://github.com/user-attachments/assets/26bb44f0-d491-4c85-8a70-70b1e7e3e020)
+
 **Snowflake** has a [three-layer architecture](https://docs.snowflake.com/en/user-guide/intro-key-concepts.html#snowflake-architecture).
 
 - Centralized storage layer: Uses cloud storage infrastructure from platforms such as AWS, Microsoft Azure, and GCP to store all your data records persistently, without any losses.
@@ -332,3 +334,7 @@ Few things to note when using clustering:
 
 - Clustering does not provide strict cost guarantees before running the query. Notice in the results above with clustering, query validation reported processing of 286.1MB but actually query processed only 275.2MB of data.
 - Use clustering only when you need more granularity than partitioning alone allows.
+
+### CodeLab: Partitioning & Clustering
+
+https://codelabs.developers.google.com/codelabs/gcp-bq-partitioning-and-clustering/#0
