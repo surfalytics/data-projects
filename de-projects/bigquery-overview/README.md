@@ -4,6 +4,8 @@ As data volumes grow, choosing the right storage solution is crucial. Databases,
 
 ![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/f43b44f6-8c31-4817-aada-e92f878c350c/image.png)
 
+![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/f43b44f6-8c31-4817-aada-e92f878c350c/image.png)
+
 ### Databases
 
 Databases are designed for quick, transactional operations, making them ideal for real-time business applications. Common examples include MySQL, PostgreSQL, and MongoDB.
