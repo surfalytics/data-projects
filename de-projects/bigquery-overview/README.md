@@ -21,6 +21,10 @@
   - [Clustering](#clustering)
     - [Clustering: Hands-On](#clustering-hands-on)
 
+## **Introduction**
+
+In this lesson, we’ll dive into Google BigQuery’s essentials, exploring how it’s designed for big data analytics and how it compares to other tools like Snowflake. You’ll learn practical techniques to optimize your queries with partitioning and clustering, keeping performance high and costs low. Plus, we’ll guide you on getting started with BigQuery for free, so you can start running queries right away. By the end, you’ll have a solid foundation to use BigQuery effectively in your own data projects.
+
 ## **Databases vs. Data Warehouses vs. Data Lakes**
 
 As data volumes grow, choosing the right storage solution is crucial. Databases, data warehouses, and data lakes each offer unique advantages and serve different needs. Let’s explore their key differences, architectures, and strengths.
