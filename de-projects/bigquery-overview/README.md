@@ -35,7 +35,8 @@ Each solution serves specific purposes: databases for transactions, data warehou
 
 ## BigQuery Overview
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/36ef759d-c903-4af3-9f93-8de2dcf59c46/image.png)
+![image](https://github.com/user-attachments/assets/41e9d672-5344-49a1-8fa5-c75e50bd1d1e)
+
 
 [BigQuery](https://airbyte.com/connectors/bigquery) is a serverless data warehouse that was released in 2011 by Google
 
@@ -49,11 +50,13 @@ Each solution serves specific purposes: databases for transactions, data warehou
 
 BigQuery’s serverless architecture decouples storage and compute and allows them to scale independently on demand. This is very different from traditional node-based cloud data warehouse solutions or on-premise massively parallel processing (MPP) systems.
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/2d669db3-cb6c-4d76-9f37-4edd4fdae7c2/image.png)
+![image](https://github.com/user-attachments/assets/f625aaee-ca66-4713-8197-3bbd42767bb7)
+
 
 Under the hood, BigQuery employs a vast set of multi-tenant services driven by low-level Google infrastructure technologies like [Dremel, Colossus, Jupiter and Borg](https://cloud.google.com/blog/big-data/2016/01/bigquery-under-the-hood).
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/43d60c40-1a74-46ee-9b7e-b0fbbf965395/image.png)
+![image](https://github.com/user-attachments/assets/d58052ed-3940-4efd-96f5-fc089714eedf)
+
 
 **Compute is [Dremel](https://research.google.com/pubs/pub36632.html), a large multi-tenant cluster that executes SQL queries.**
 
@@ -75,7 +78,8 @@ Under the hood, BigQuery employs a vast set of multi-tenant services driven by l
 
 ## BigQuery vs Snowflake
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/2c2aaf99-ed66-4a48-b088-26631f47937c/image.png)
+![image](https://github.com/user-attachments/assets/de5a3bfd-91c5-4d42-a992-3e13d652a85d)
+
 
 ### Architecture
 
@@ -89,21 +93,25 @@ Snowflake and BigQuery both offer decoupled storage and compute resources that c
 
 Snowflake’s unique three-layered architecture offers the data management simplicity of a shared-disk architecture along with the scalability of a shared-nothing architecture.
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/37eda418-d156-4a8f-8048-3f83b6eb45bd/image.png)
+![image](https://github.com/user-attachments/assets/718e274f-8f59-441e-9e0d-fd62dfe10415)
+
 
 ### Scalability
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/98fc7deb-7639-44e2-ac98-c9c5532250b3/image.png)
+![image](https://github.com/user-attachments/assets/318aa49b-2fff-40f8-afa8-8d1a0c247b19)
+
 
 ### Performance
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/8a5cc032-7c8b-45cb-87aa-24a8ef9b8694/image.png)
+![image](https://github.com/user-attachments/assets/9a18541b-8c7c-4f32-bda5-15aaff96a968)
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/77e93f9d-ecbc-40fb-9422-07f94cfd4194/image.png)
+
+![image](https://github.com/user-attachments/assets/68d950ed-f78b-4bbb-a643-cfc483b89587)
+
 
 ### Pricing
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/0f208c0b-774e-4996-9de4-7f3d20937981/image.png)
+![image](https://github.com/user-attachments/assets/b6224531-0fe7-4342-bf9a-5d11e352737b)
 
 ## **How to get started with BigQuery?**
 
@@ -139,11 +147,12 @@ ORDER BY year ASC, month ASC;
 
 Folder structure: project, dataset, and table - helps you structure your information logically
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/e9957967-14ab-4540-bbe2-fb8a6252cc63/image.png)
+![image](https://github.com/user-attachments/assets/a47f31d1-83e6-46e3-b144-4200fa55b3eb)
+
 
 BigQuery uses columnar storage, storing each column in a separate file block, making it ideal for OLAP use cases. Unlike traditional databases like MySQL, which store data row-by-row for OLTP tasks, BigQuery supports efficient data streaming, updates, and deletions. It allows unlimited data mutations (INSERT, UPDATE, MERGE, DELETE).
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/8f994f50-e07d-43b5-9558-eceb3de39c04/image.png)
+![image](https://github.com/user-attachments/assets/d6faa897-cc0c-4c8c-915a-204474f558a8)
 
 BigQuery uses variations and advancements on columnar storage. Internally, BigQuery stores data in a proprietary columnar format called [Capacitor](https://cloud.google.com/blog/products/gcp/inside-capacitor-bigquerys-next-generation-columnar-storage-format), which has a number of benefits for data warehouse workloads. 
 
@@ -151,13 +160,13 @@ You can load data into BigQuery at [no cost](https://cloud.google.com/bigquery/
 
 - If you have a table or partition modified in the last 90 days, it is considered as active storage and incurs a monthly charge for data stored at BigQuery storage rates.
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/58f2c216-34d9-40fb-9645-b4b63670c0f9/image.png)
+![image](https://github.com/user-attachments/assets/bda5ede4-b90e-493c-ab15-2cad383b3e29)
 
 ### **Partitioning**
 
 A partitioned table is a special table that is divided into segments, called partitions, that make it easier to manage and query your data. You can typically split large tables into many smaller partitions using data ingestion time or `TIMESTAMP/DATE` column or an `INTEGER` column.
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/556facae-22ed-4ec5-8c3e-be911dea56b6/image.png)
+![image](https://github.com/user-attachments/assets/423d0f32-d790-4680-9479-ae4d72f3fa00)
 
 BigQuery supports following ways to create partitioned tables:
 
@@ -246,7 +255,7 @@ WHERE
 
 In BigQuery, clustering organizes table data based on specified columns, ideally high-cardinality and non-temporal columns. Data is sorted by clustering column values into storage blocks. BigQuery automatically re-clusters data when new data is added, maintaining order without extra cost or user intervention.
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/aa915f5a-e31a-4c9d-8d7c-b6bf149859ef/image.png)
+![image](https://github.com/user-attachments/assets/c9ad7d05-521c-42cb-ba7d-79e33f116e65)
 
 Clustering improves query performance, especially for filter and aggregation queries, by allowing BigQuery to skip unnecessary data scans. Clustering can be applied to both partitioned and non-partitioned tables, allowing partitioning by `DATE` or `TIMESTAMP` and clustering on up to four other columns.
 
