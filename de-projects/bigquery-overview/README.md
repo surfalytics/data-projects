@@ -2,9 +2,8 @@
 
 As data volumes grow, choosing the right storage solution is crucial. Databases, data warehouses, and data lakes each offer unique advantages and serve different needs. Let’s explore their key differences, architectures, and strengths.
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/f43b44f6-8c31-4817-aada-e92f878c350c/image.png)
+![image](https://github.com/user-attachments/assets/b00457ad-3807-45c6-ae08-c7d98fb5764b)
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/6dccb1f7-9d58-43c2-abcc-2fe9b4b83793/f43b44f6-8c31-4817-aada-e92f878c350c/image.png)
 
 ### Databases
 
