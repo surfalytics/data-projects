@@ -1,7 +1,6 @@
+# What is PyArrow
 
 PyArrow is like a super-fast data handling tool that helps you work with large amounts of data efficiently. Think of it as a high-speed train for your data compared to regular Python's local bus service.
-
-
 
 > The Arrow columnar format includes a language-agnostic in-memory data structure specification, metadata serialization, and a protocol for serialization and generic data transport. It provides analytical performance and data locality guarantees in exchange for comparatively more expensive mutation operations.
 
@@ -48,3 +47,21 @@ Reference:
 - [Arrow Columnar Format Documentation](https://arrow.apache.org/docs/format/Columnar.html)
 - [An analysis of the strengths and weaknesses of Apache Arrow](https://dbmsmusings.blogspot.com/2018/03/an-analysis-of-strengths-and-weaknesses.html)
 - [Apache Arrow: Overview](https://vutr.substack.com/p/i-spent-6-hours-learning-apache-arrow)
+
+
+# Hands-On
+
+## Install Poetry
+
+```bash
+pipx install poetry
+export PATH="$HOME/.local/bin:$PATH"
+
+cd de-projects/13_pyarrow_inro  
+
+# isntall
+poetry install
+
+# activate
+poetry shell
+```
