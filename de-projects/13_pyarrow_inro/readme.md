@@ -64,4 +64,6 @@ poetry install
 
 # activate
 poetry shell
+
+python3 ny_tax_parquet.py
 ```
