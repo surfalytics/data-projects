@@ -1,0 +1,36 @@
+[tool.poetry]
+name = "pyarrow-project"
+version = "0.1.0"
+description = "Data processing with PyArrow"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.12"
+pyarrow = "^14.0.1"
+pandas = "^2.1.0"
+numpy = "^1.24.0"
+duckdb = "^0.9.2"  # Optional: for DuckDB integration
+pyiceberg = "^0.5.1"  # Optional: for Apache Iceberg integration
+fastparquet = "^2023.10.1"  # Optional: alternative parquet engine
+requests = "^2.31.0"  # For downloading data
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+black = "^23.7.0"
+isort = "^5.12.0"
+flake8 = "^6.1.0"
+jupyter = "^1.0.0"  # Optional: for notebooks
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyx?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
