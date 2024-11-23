@@ -4,6 +4,10 @@ PyArrow is like a super-fast data handling tool that helps you work with large a
 
 > The Arrow columnar format includes a language-agnostic in-memory data structure specification, metadata serialization, and a protocol for serialization and generic data transport. It provides analytical performance and data locality guarantees in exchange for comparatively more expensive mutation operations.
 
+Terms:
+
+- The primary tabular data representation in Arrow is the Arrow table. The Arrow table is a two-dimensional tabular representation in which columns are Arrow chunked arrays. The interface for Arrow in Python is PyArrow. 
+
 Key Benefits of PyArrow:
 - Speed: Much faster than regular Python for data operations
 - Memory efficiency: Uses less RAM
@@ -57,7 +61,7 @@ Reference:
 pipx install poetry
 export PATH="$HOME/.local/bin:$PATH"
 
-cd de-projects/13_pyarrow_inro  
+cd de-projects/13_pyarrow_intro  
 
 # isntall
 poetry install
