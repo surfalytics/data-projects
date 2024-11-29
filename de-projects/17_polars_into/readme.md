@@ -67,15 +67,17 @@ PySpark:
 import polars as pl
 
 # Read a CSV
-df = pl.read_csv('data.csv')
+df = pl.read_csv('orders.csv')
 
 # Transform data
 result = (df
-    .filter(pl.col('value') > 10)
-    .groupby('category')
-    .agg(pl.sum('value'))
+    .filter(pl.col('Sales') > 10)
+    .group_by('Product Category')
+    .agg(pl.col('Sales').sum())
 )
 ```
+
+[What is Polar Shape](https://medium.com/@chrismccully/intro-to-polar-shapes-77251125ae8e)
 
 ### Polars and PyArrow
 
@@ -114,22 +116,19 @@ import pyarrow.parquet as pq
 import polars as pl
 
 # Read parquet with PyArrow
-arrow_table = pq.read_table('data.parquet')
+arrow_table = pq.read_table('analyticsfile.parquet')
 
 # Convert to Polars for processing
 polars_df = pl.from_arrow(arrow_table)
 
 # Do data processing in Polars
-result = polars_df.filter(pl.col('value') > 10)
+result = polars_df.filter(pl.col('column0') == 'Alan')
 ```
 
 #### Example with PARQUET file
 
 Requires:
 
-```bash
-pip install pyarrow polars requests
-```
 
 ```python
 import pyarrow.parquet as pq
@@ -168,7 +167,7 @@ def process_with_polars(arrow_table):
     stats = long_trips.group_by('PULocationID').agg([
         pl.col('trip_distance').mean().alias('avg_distance'),
         pl.col('total_amount').mean().alias('avg_total_amount'),
-        pl.count().alias('trip_count')
+        pl.len().alias('trip_count')
     ])
     
     return stats
@@ -232,7 +231,7 @@ def read_and_process_parquet():
     location_stats = long_trips.group_by('PULocationID').agg([
         pl.col('trip_distance').mean().alias('avg_distance'),
         pl.col('total_amount').mean().alias('avg_total_amount'),
-        pl.count().alias('trip_count')
+        pl.len().alias('trip_count')
     ])
     
     # Sort by number of trips in descending order
@@ -253,5 +252,5 @@ The advantages of using Polars directly:
 
 - Simpler code
 - Native performance optimizations
-- Integrated lazy execution
+- Integrated [lazy execution](https://stackoverflow.com/questions/76612163/what-are-the-advantages-of-a-polars-lazyframe-over-a-dataframe) 
 - Less dependency juggling
