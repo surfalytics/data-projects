@@ -1,4 +1,4 @@
-# Syrfalytics Projects
+# Surfalytics Projects
 
 We are planning to do interesting data projects with Surfalytics community.
 
