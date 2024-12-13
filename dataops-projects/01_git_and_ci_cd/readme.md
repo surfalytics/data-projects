@@ -300,6 +300,8 @@ jobs:
       # Checkout the code
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # Set up Python environment
       - name: Set up Python
@@ -319,23 +321,17 @@ jobs:
           # Show pre-commit version
           pre-commit --version
 
-          # List all hooks
-          pre-commit hooks
-
-          # Run pre-commit on all files with verbose output
-          pre-commit run --all-files --verbose
-
-        # Always run this step even if previous steps fail
-        continue-on-error: true
-
-      # Optional: Check for specific hook failures
-      - name: Check for pre-commit failures
+      # Run pre-commit on all files changed between the current branch and main
+      - name: Run pre-commit on all changed files
         run: |
-          if [ -f pre-commit-report.json ]; then
-            echo "Pre-commit hooks found issues:"
-            cat pre-commit-report.json
-            exit 1
+          # Get the list of files changed between the current branch and main
+          files=$(git diff --name-only origin/main)
+          if [ -n "$files" ]; then
+            pre-commit run --files $files
+          else
+            echo "No modified files to check."
           fi
+
 ```
 
 It shoudl run pre-commit for all files in branch on every push.
