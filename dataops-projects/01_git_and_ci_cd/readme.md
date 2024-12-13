@@ -276,7 +276,7 @@ dataops-projects/01_git_and_ci_cd/queries/analysis.sql formatted.
 Now we want to make sure it is working remote. We should run same checks as soon as code is pushing to the remote.
 
 ```bash
-touch .github/pre-commit.yml
+touch .github/workflows/pre-commit.yml
 ```
 
 GitHub Actions pipeline
@@ -310,17 +310,32 @@ jobs:
       # Install dependencies and pre-commit hooks
       - name: Install dependencies
         run: |
-          python -m venv venv
-          . venv/bin/activate
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install pre-commit
-          pre-commit install --install-hooks
 
       # Run pre-commit hooks
       - name: Run pre-commit hooks
         run: |
-          # Run pre-commit on all files in the repository
-          pre-commit run --all-files
+          # Show pre-commit version
+          pre-commit --version
+
+          # List all hooks
+          pre-commit hooks
+
+          # Run pre-commit on all files with verbose output
+          pre-commit run --all-files --verbose
+
+        # Always run this step even if previous steps fail
+        continue-on-error: true
+
+      # Optional: Check for specific hook failures
+      - name: Check for pre-commit failures
+        run: |
+          if [ -f pre-commit-report.json ]; then
+            echo "Pre-commit hooks found issues:"
+            cat pre-commit-report.json
+            exit 1
+          fi
 ```
 
 It shoudl run pre-commit for all files in branch on every push.

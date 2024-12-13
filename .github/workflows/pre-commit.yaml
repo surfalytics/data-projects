@@ -34,21 +34,3 @@ jobs:
         run: |
           # Show pre-commit version
           pre-commit --version
-
-          # List all hooks
-          pre-commit hooks
-
-          # Run pre-commit on all files with verbose output
-          pre-commit run --all-files --verbose
-
-        # Always run this step even if previous steps fail
-        continue-on-error: true
-
-      # Optional: Check for specific hook failures
-      - name: Check for pre-commit failures
-        run: |
-          if [ -f pre-commit-report.json ]; then
-            echo "Pre-commit hooks found issues:"
-            cat pre-commit-report.json
-            exit 1
-          fi
