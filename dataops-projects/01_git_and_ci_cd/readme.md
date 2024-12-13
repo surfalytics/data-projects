@@ -322,3 +322,5 @@ jobs:
           # Run pre-commit on all files in the repository
           pre-commit run --all-files
 ```
+
+It shoudl run pre-commit for all files in branch on every push.
