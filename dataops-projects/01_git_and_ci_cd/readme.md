@@ -340,7 +340,11 @@ jobs:
 
 It shoudl run pre-commit for all files in branch on every push.
 
-We can also add the UNIT test to make sure the result is matching. We would need to add another workflow:
+We can also add the INTEGRATION test to make sure the result is matching. We would need to add another workflow:
+
+> 	Integration Test: Tests how multiple components (e.g., your script, the DuckDB engine, and Docker) work together. Ensures that the entire pipeline produces the expected result.
+
+> Unit tests are designed to test small, isolated pieces of code (like functions or methods) in isolation, without involving external systems or environments. They ensure that individual components of your application work as expected.
 
 ```yaml
 name: Verify DuckDB Output
@@ -365,7 +369,7 @@ jobs:
       # Build the Docker container (USE YOUR PATH)
       - name: Build Docker Image
         run: |
-          docker build -t duckdb-data-analysis -f .dataops-projects/01_git_and_ci_cd/.docker/.dockerignore .
+          docker build -t duckdb-data-analysis -f .dataops-projects/01_git_and_ci_cd/.docker/Dockerfile .
 
       # Run the Docker container and capture the output
       - name: Run Docker Container
@@ -400,3 +404,9 @@ jobs:
             exit 1
           fi
 ```
+
+
+## Deploy the image with Continius Deployment
+
+
+## Cut a Release
