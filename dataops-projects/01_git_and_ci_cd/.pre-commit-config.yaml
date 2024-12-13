@@ -1,0 +1,17 @@
+repos:
+  # YAML Linter (yamllint)
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.31.0
+    hooks:
+      - id: yamllint
+        files: \.ya?ml$
+
+  # SQL Formatter (sqlfmt)
+  - repo: https://github.com/tconbeer/sqlfmt
+    rev: v0.24.0
+    hooks:
+      - id: sqlfmt
+        name: sqlfmt
+        entry: sqlfmt
+        language: python
+        files: \.sql$

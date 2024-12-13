@@ -1,0 +1,25 @@
+# Pre-commit that runs locally
+fail_fast: false
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: check-yaml
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        files: '\.(yaml|yml)$'
+
+  # SQL Formatter (sqlfmt)
+  - repo: https://github.com/tconbeer/sqlfmt
+    rev: v0.24.0
+    hooks:
+      - id: sqlfmt
+        name: sqlfmt
+        entry: sqlfmt
+        language: python
+        files: \.sql$

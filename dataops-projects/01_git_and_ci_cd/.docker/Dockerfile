@@ -20,15 +20,12 @@ RUN wget https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-li
 && chmod +x duckdb \
 && mv duckdb /usr/local/bin/ \
 && rm duckdb_cli-linux-aarch64.zip
-    
+
 # Set working directory
 WORKDIR /app
 
 # Copy project files
 COPY . .
-
-# Copy project files
-COPY .docker/scripts ./scripts
 
 # Make scripts executable
 RUN chmod +x scripts/*.sh
