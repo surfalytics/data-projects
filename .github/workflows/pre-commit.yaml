@@ -34,3 +34,14 @@ jobs:
         run: |
           # Show pre-commit version
           pre-commit --version
+
+      # Run pre-commit on all files changed between the current branch and main
+      - name: Run pre-commit on all changed files
+        run: |
+          # Get the list of files changed between the current branch and main
+          files=$(git diff --name-only origin/main)
+          if [ -n "$files" ]; then
+            pre-commit run --files $files
+          else
+            echo "No modified files to check."
+          fi
