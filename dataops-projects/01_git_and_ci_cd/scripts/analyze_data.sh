@@ -27,4 +27,4 @@ duckdb "${DB_FILE}" -c ".read ${SQL_FILE}"
 # Display results
 echo "\nAnalysis complete. Results saved in /app/output/top_20_locations.csv."
 echo "\nTop 5 locations by total cases:"
-head -n 6 /app/output/top_20_locations.csv
+head -n 6 /app/top_20_locations.csv

@@ -165,7 +165,7 @@ help:
 Let's start from adding the PR template in the root folder of repo
 
 ```bash
-touch pr-template.yaml
+touch pull_request_template.md
 ```
 
 PR template
@@ -182,12 +182,11 @@ PR template
 ---
 # Diligence
 
--[ ] I have checked affected models for appropriate tests and metadata
--[ ] Project has been built locally
--[ ] Project has been tested locally
--[ ] Each model has YAML file with model description, tests
--[ ] dbt CI pass
-
+- [ ] I have checked affected models for appropriate tests and metadata
+- [ ] Project has been built locally
+- [ ] Project has been tested locally
+- [ ] Each model has YAML file with model description, tests
+- [ ] dbt CI pass
 ```
 
 ```bash
@@ -220,13 +219,21 @@ Adding file `.pre-commit-config.yaml`
 
 
 ```yaml
+# Pre-commit that runs locally
+fail_fast: false
+
 repos:
-  # YAML Linter (yamllint)
-  - repo: https://github.com/adrienverge/yamllint
-    rev: v1.31.0
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
     hooks:
-      - id: yamllint
-        files: \.ya?ml$
+      - id: trailing-whitespace
+      - id: check-yaml
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        files: '\.(yaml|yml)$'
 
   # SQL Formatter (sqlfmt)
   - repo: https://github.com/tconbeer/sqlfmt
@@ -335,7 +342,6 @@ jobs:
           else
             echo "No modified files to check."
           fi
-
 ```
 
 It shoudl run pre-commit for all files in branch on every push.
