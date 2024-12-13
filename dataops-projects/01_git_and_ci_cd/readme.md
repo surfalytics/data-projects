@@ -297,11 +297,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code
+      # Checkout the code and fetch all branches
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Ensure the full history is fetched, not just the last commit
 
       # Set up Python environment
       - name: Set up Python
@@ -314,6 +314,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pre-commit
+
+      # Fetch the main branch to ensure it's available for comparison
+      - name: Fetch main branch
+        run: git fetch origin main
 
       # Run pre-commit hooks
       - name: Run pre-commit hooks
@@ -335,3 +339,64 @@ jobs:
 ```
 
 It shoudl run pre-commit for all files in branch on every push.
+
+We can also add the UNIT test to make sure the result is matching. We would need to add another workflow:
+
+```yaml
+name: Verify DuckDB Output
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verify-duckdb:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Build the Docker container (USE YOUR PATH)
+      - name: Build Docker Image
+        run: |
+          docker build -t duckdb-data-analysis -f .dataops-projects/01_git_and_ci_cd/.docker/.dockerignore .
+
+      # Run the Docker container and capture the output
+      - name: Run Docker Container
+        id: run-container
+        run: |
+          # Run the container and capture output to a file
+          docker run --rm duckdb-data-analysis > output.txt
+          # Print the captured output
+          cat output.txt
+
+      # Verify the output matches the expected result
+      - name: Verify DuckDB Output
+        run: |
+          # Define the expected output
+          expected_output= "┌─────────────────┬───────────────┬─────────────┐
+                            │ total_locations │ earliest_date │ latest_date │
+                            │      int64      │     date      │    date     │
+                            ├─────────────────┼───────────────┼─────────────┤
+                            │             243 │ 2020-01-01    │ 2024-08-14  │
+                            └─────────────────┴───────────────┴─────────────┘"
+
+          # Compare the actual output with the expected output
+          actual_output=$(cat output.txt | grep -A4 "total_locations")
+          if [ "$actual_output" = "$expected_output" ]; then
+            echo "Output matches expected values."
+          else
+            echo "Output does not match expected values!"
+            echo "Actual output:"
+            echo "$actual_output"
+            echo "Expected output:"
+            echo "$expected_output"
+            exit 1
+          fi
+```
