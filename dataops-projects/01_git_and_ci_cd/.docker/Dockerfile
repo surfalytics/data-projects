@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and install DuckDB CLI
-RUN wget https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-linux-aarch64.zip \
+RUN wget https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-linux-arch64.zip \
 && unzip duckdb_cli-linux-aarch64.zip \
 && chmod +x duckdb \
 && mv duckdb /usr/local/bin/ \
