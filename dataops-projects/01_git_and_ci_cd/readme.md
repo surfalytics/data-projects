@@ -375,7 +375,7 @@ jobs:
       # Build the Docker container (USE YOUR PATH)
       - name: Build Docker Image
         run: |
-          docker build -t duckdb-data-analysis -f .dataops-projects/01_git_and_ci_cd/.docker/Dockerfile .
+          docker build -t duckdb-data-analysis -f .docker/Dockerfile .
 
       # Run the Docker container and capture the output
       - name: Run Docker Container
@@ -390,25 +390,24 @@ jobs:
       - name: Verify DuckDB Output
         run: |
           # Define the expected output
-          expected_output= "┌─────────────────┬───────────────┬─────────────┐
-                            │ total_locations │ earliest_date │ latest_date │
-                            │      int64      │     date      │    date     │
-                            ├─────────────────┼───────────────┼─────────────┤
-                            │             243 │ 2020-01-01    │ 2024-08-14  │
-                            └─────────────────┴───────────────┴─────────────┘"
+            expected_output="│ total_locations │ earliest_date │ latest_date │
+          │      int64      │     date      │    date     │
+          ├─────────────────┼───────────────┼─────────────┤
+          │             243 │ 2020-01-01    │ 2024-08-14  │
+          └─────────────────┴───────────────┴─────────────┘"
 
-          # Compare the actual output with the expected output
-          actual_output=$(cat output.txt | grep -A4 "total_locations")
-          if [ "$actual_output" = "$expected_output" ]; then
-            echo "Output matches expected values."
-          else
-            echo "Output does not match expected values!"
-            echo "Actual output:"
-            echo "$actual_output"
-            echo "Expected output:"
-            echo "$expected_output"
-            exit 1
-          fi
+            # Compare the actual output with the expected output
+            actual_output=$(cat output.txt | grep -A4 "total_locations")
+            if [ "$actual_output" = "$expected_output" ]; then
+              echo "Output matches expected values."
+            else
+              echo "Output does not match expected values!"
+              echo "Actual output:"
+              echo "$actual_output"
+              echo "Expected output:"
+              echo "$expected_output"
+              exit 1
+            fi
 ```
 
 
