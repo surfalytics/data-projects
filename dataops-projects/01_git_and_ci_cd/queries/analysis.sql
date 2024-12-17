@@ -16,7 +16,7 @@ LIMIT 20;
 
 -- Output results to CSV
 COPY (SELECT * FROM location_summary)
-TO '/app/top_20_locations.csv'
+TO '/app/output/top_20_locations.csv'
 WITH (HEADER, DELIMITER ',');
 
 -- Generate some statistics
