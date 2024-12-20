@@ -410,8 +410,319 @@ jobs:
             fi
 ```
 
+> Note: For example, my local hardware is ARM and GitHub runner is AMD. We should adjust the docker to run on both use cases bu updating single command inside `Docker` file:
+
+```bash
+# Download and install DuckDB CLI dynamically based on system architecture
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        echo "Installing DuckDB CLI for x86_64 (amd64)"; \
+        wget https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-linux-amd64.zip; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        echo "Installing DuckDB CLI for ARM64 (aarch64)"; \
+        wget https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-linux-aarch64.zip; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    unzip duckdb_cli-linux-*.zip && \
+    chmod +x duckdb && \
+    mv duckdb /usr/local/bin/ && \
+    rm duckdb_cli-linux-*.zip
+```
+
+Now, if we will run it, it will succedded
+
+### Combine Jobs into single pipeline
+
+You may noticed, that jobs are starting in parallel. We want to chain them. Let's add the new file `combined-pipeline.yml`:
+
+```yml
+name: Combined Pre-commit and Verify DuckDB Output
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  # Pre-commit job
+  pre-commit:
+    name: Run Pre-commit Hooks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Ensure full history is fetched
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pre-commit
+
+      - name: Fetch main branch
+        run: git fetch origin main
+
+      - name: Run pre-commit hooks
+        run: |
+          pre-commit --version
+
+      - name: Run pre-commit on all changed files
+        run: |
+          files=$(git diff --name-only origin/main)
+          if [ -n "$files" ]; then
+            pre-commit run --files $files
+          else
+            echo "No modified files to check."
+          fi
+
+  # DuckDB verification job
+  verify-duckdb:
+    name: Verify DuckDB Output
+    runs-on: ubuntu-latest
+    needs: pre-commit  # Ensures this runs after pre-commit job
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        run: |
+          docker build -t duckdb-data-analysis -f .docker/Dockerfile .
+
+      - name: Run Docker Container
+        id: run-container
+        run: |
+          docker run --rm duckdb-data-analysis > output.txt
+          cat output.txt
+
+      - name: Verify DuckDB Output
+        run: |
+          expected_output="│ total_locations │ earliest_date │ latest_date │
+          │      int64      │     date      │    date     │
+          ├─────────────────┼───────────────┼─────────────┤
+          │             243 │ 2020-01-01    │ 2024-08-14  │
+          └─────────────────┴───────────────┴─────────────┘"
+
+          actual_output=$(cat output.txt | grep -A4 "total_locations")
+          if [ "$actual_output" = "$expected_output" ]; then
+            echo "Output matches expected values."
+          else
+            echo "Output does not match expected values!"
+            echo "Actual output:"
+            echo "$actual_output"
+            echo "Expected output:"
+            echo "$expected_output"
+            exit 1
+          fi
+```
 
 ## Deploy the image with Continius Deployment
 
+Next, we want to control what is happening after the code review. Assume, we reviewed the code and we are ready to appove it.
+We can now control what will happen after we click button Merge. At least, the code will be merged into the `main` branch a.k.a. our production branch.
+
+Let's assume, that we have an external application that is running in production. It is using last voersion of docker container. It means we don't care about th code and `main`. We only care about the Docker Image.
+
+Docker Imgae is stored in Registry. We can use Docker Hub or GitHub Registry.
+
+Now, we want to make sure that after we merged code, the image is pushed to the Registry. We will create a new GitHub Action to do so.
+
+We will use Docker Hub: https://hub.docker.com/, you may need an account.
+
+```yaml
+  # Publish job
+  publish:
+    name: Publish Docker Image
+    runs-on: ubuntu-latest
+    needs: verify-duckdb # Ensures this runs after verification job
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Determine Image Tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" == "push" ]; then
+            echo "tag=latest" >> $GITHUB_ENV
+          elif [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "tag=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          else
+            echo "tag=dev-${{ github.sha }}" >> $GITHUB_ENV
+          fi
+
+      - name: Build Docker Image
+        run: |
+          docker build -t dimoobraznii/duckdb-data-analysis:${{ env.tag }} -f .docker/Dockerfile .
+
+      - name: Push Docker Image
+        run: |
+          docker push dimoobraznii/duckdb-data-analysis:${{ env.tag }}
+```
+
+
+
+Testing:
+
+```bash
+docker pull
+docker run
+```
 
 ## Cut a Release
+
+We want now leverage feature of Releases and tag our images before publish.
+
+```yml
+name: Combined Pre-commit, Verify DuckDB Output, and Publish Image
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  release:
+    types:
+      - published  # Trigger when a release is published
+  workflow_dispatch: # Manual trigger for convenience
+
+jobs:
+  # Pre-commit job
+  pre-commit:
+    name: Run Pre-commit Hooks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pre-commit
+
+      - name: Fetch main branch
+        run: git fetch origin main
+
+      - name: Run pre-commit hooks
+        run: |
+          files=$(git diff --name-only origin/main)
+          if [ -n "$files" ]; then
+            pre-commit run --files $files
+          else
+            echo "No modified files to check."
+          fi
+
+  # DuckDB verification job
+  verify-duckdb:
+    name: Verify DuckDB Output
+    runs-on: ubuntu-latest
+    needs: pre-commit
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build Docker Image
+        run: |
+          docker build -t duckdb-data-analysis -f .docker/Dockerfile .
+
+      - name: Run Docker Container
+        id: run-container
+        run: |
+          docker run --rm duckdb-data-analysis > output.txt
+          cat output.txt
+
+      - name: Verify DuckDB Output
+        run: |
+          expected_output="│ total_locations │ earliest_date │ latest_date │
+          │      int64      │     date      │    date     │
+          ├─────────────────┼───────────────┼─────────────┤
+          │             243 │ 2020-01-01    │ 2024-08-14  │
+          └─────────────────┴───────────────┴─────────────┘"
+
+          actual_output=$(cat output.txt | grep -A4 "total_locations")
+          if [ "$actual_output" = "$expected_output" ]; then
+            echo "Output matches expected values."
+          else
+            echo "Output does not match expected values!"
+            echo "Actual output:"
+            echo "$actual_output"
+            echo "Expected output:"
+            echo "$expected_output"
+            exit 1
+          fi
+
+  # Publish job
+  publish:
+    name: Publish Docker Image
+    runs-on: ubuntu-latest
+    needs: verify-duckdb
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Determine Image Tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+          elif [ "${{ github.ref_type }}" == "tag" ]; then
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_ENV
+          elif [ "${{ github.event_name }}" == "push" ]; then
+            echo "tag=latest" >> $GITHUB_ENV
+          elif [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "tag=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          fi
+
+      - name: Build Docker Image
+        run: |
+          docker build -t your-dockerhub-username/duckdb-data-analysis:${{ env.tag }} -f .docker/Dockerfile .
+
+      - name: Push Docker Image
+        run: |
+          docker push your-dockerhub-username/duckdb-data-analysis:${{ env.tag }}
+```
+
+
+
+## Blue Green Deplyment
+
+1. Docker Images are built and pushed to GHCR.
+2. Deployment to a target platform (e.g., Kubernetes) happens in two stages:
+  2.1 Blue: Stable version (current production).
+  2.2 Green: New version (deployment candidate).
+3. Switch traffic to Green after verification.
+
