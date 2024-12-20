@@ -537,43 +537,52 @@ Docker Imgae is stored in Registry. We can use Docker Hub or GitHub Registry.
 
 Now, we want to make sure that after we merged code, the image is pushed to the Registry. We will create a new GitHub Action to do so.
 
+We will use Docker Hub: https://hub.docker.com/, you may need an account.
+
 ```yaml
-publish-docker:
-    name: Publish Docker Image to GHCR
+  # Publish job
+  publish:
+    name: Publish Docker Image
     runs-on: ubuntu-latest
-    needs: verify-duckdb
-    permissions:
-      contents: read
-      packages: write
+    needs: verify-duckdb # Ensures this runs after verification job
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Log in to GitHub Container Registry
-        run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and Push Docker Image
+      - name: Determine Image Tag
+        id: tag
         run: |
-          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/duckdb-data-analysis:latest
-          docker build -t $IMAGE_NAME -f .docker/Dockerfile .
-          docker push $IMAGE_NAME
+          if [ "${{ github.event_name }}" == "push" ]; then
+            echo "tag=latest" >> $GITHUB_ENV
+          elif [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "tag=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          else
+            echo "tag=dev-${{ github.sha }}" >> $GITHUB_ENV
+          fi
+
+      - name: Build Docker Image
+        run: |
+          docker build -t dimoobraznii/duckdb-data-analysis:${{ env.tag }} -f .docker/Dockerfile .
+
+      - name: Push Docker Image
+        run: |
+          docker push dimoobraznii/duckdb-data-analysis:${{ env.tag }}
 ```
 
-GitHub requires a Personal Access Token (PAT) with the write:packages and read:packages permissions to push Docker images.
-Create a token in GitHub:
 
-1. Go to Settings → Developer settings → Personal Access Tokens.
-2. Generate a new token with:
-  2.1 `write:packages`
-  2.2 `read:packages`
-3. Save this token securely.
 
 Testing:
 
 ```bash
-docker pull ghcr.io/<your-username>/duckdb-data-analysis:latest
-docker run --rm ghcr.io/<your-username>/duckdb-data-analysis
+docker pull
+docker run
 ```
 
 ## Cut a Release
@@ -581,49 +590,133 @@ docker run --rm ghcr.io/<your-username>/duckdb-data-analysis
 We want now leverage feature of Releases and tag our images before publish.
 
 ```yml
+name: Combined Pre-commit, Verify DuckDB Output, and Publish Image
+
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
-  release:
-    types: [published] # Trigger on release creation
   push:
-    tags:
-      - 'v*' # Trigger on version tags (e.g., v1.0.0)
+    branches:
+      - main
+  release:
+    types:
+      - published  # Trigger when a release is published
+  workflow_dispatch: # Manual trigger for convenience
 
-....
-publish-docker-release:
-    name: Publish Versioned Docker Image
+jobs:
+  # Pre-commit job
+  pre-commit:
+    name: Run Pre-commit Hooks
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' || github.ref_type == 'tag'
-    needs: verify-duckdb
-    permissions:
-      contents: read
-      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pre-commit
+
+      - name: Fetch main branch
+        run: git fetch origin main
+
+      - name: Run pre-commit hooks
+        run: |
+          files=$(git diff --name-only origin/main)
+          if [ -n "$files" ]; then
+            pre-commit run --files $files
+          else
+            echo "No modified files to check."
+          fi
+
+  # DuckDB verification job
+  verify-duckdb:
+    name: Verify DuckDB Output
+    runs-on: ubuntu-latest
+    needs: pre-commit
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Log in to GitHub Container Registry
+      - name: Build Docker Image
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker build -t duckdb-data-analysis -f .docker/Dockerfile .
 
-      - name: Build and Push Docker Image (Versioned)
+      - name: Run Docker Container
+        id: run-container
         run: |
-          VERSION_TAG=${{ github.event.release.tag_name || github.ref_name }}
-          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/duckdb-data-analysis:${VERSION_TAG}
-          echo "Building versioned image: $IMAGE_NAME"
-          docker build -t $IMAGE_NAME -f .docker/Dockerfile .
-          docker push $IMAGE_NAME
+          docker run --rm duckdb-data-analysis > output.txt
+          cat output.txt
+
+      - name: Verify DuckDB Output
+        run: |
+          expected_output="│ total_locations │ earliest_date │ latest_date │
+          │      int64      │     date      │    date     │
+          ├─────────────────┼───────────────┼─────────────┤
+          │             243 │ 2020-01-01    │ 2024-08-14  │
+          └─────────────────┴───────────────┴─────────────┘"
+
+          actual_output=$(cat output.txt | grep -A4 "total_locations")
+          if [ "$actual_output" = "$expected_output" ]; then
+            echo "Output matches expected values."
+          else
+            echo "Output does not match expected values!"
+            echo "Actual output:"
+            echo "$actual_output"
+            echo "Expected output:"
+            echo "$expected_output"
+            exit 1
+          fi
+
+  # Publish job
+  publish:
+    name: Publish Docker Image
+    runs-on: ubuntu-latest
+    needs: verify-duckdb
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Determine Image Tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+          elif [ "${{ github.ref_type }}" == "tag" ]; then
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_ENV
+          elif [ "${{ github.event_name }}" == "push" ]; then
+            echo "tag=latest" >> $GITHUB_ENV
+          elif [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "tag=pr-${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+          fi
+
+      - name: Build Docker Image
+        run: |
+          docker build -t your-dockerhub-username/duckdb-data-analysis:${{ env.tag }} -f .docker/Dockerfile .
+
+      - name: Push Docker Image
+        run: |
+          docker push your-dockerhub-username/duckdb-data-analysis:${{ env.tag }}
 ```
 
 
-```bash
-docker pull ghcr.io/<owner>/duckdb-data-analysis:v1.0.0
-```
 
 ## Blue Green Deplyment
 
