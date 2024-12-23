@@ -53,7 +53,7 @@ Using terminal, we can go into the folder:
 cd dataops-projects/01_git_and_ci_cd
 ```
 
-> Ideally we should create a new repo in GitHub and place conten of the `01_git_and_ci_cd ` folder into the repo. Got to github, create new repo and copy files into the repo.
+> Ideally we should create a new repo in GitHub and place content of the `01_git_and_ci_cd ` folder into the repo. Go to github, create new repo and copy files into the repo.
 
 Make sure we have duckdb
 
@@ -62,7 +62,7 @@ duckdb --version
 v1.1.3 19864453f7
 ```
 
-If now, we can [download](https://duckdb.org/docs/installation/).
+If not, we can [download](https://duckdb.org/docs/installation/) it.
 
 Let's download the file:
 
@@ -278,7 +278,7 @@ sqlfmt...................................................................Failed
 dataops-projects/01_git_and_ci_cd/queries/analysis.sql formatted.
 ```
 
-## Enforce the quality in GitHub with Continius Integration
+## Enforce the quality in GitHub with Continuous Integration
 
 Now we want to make sure it is working remote. We should run same checks as soon as code is pushing to the remote.
 
@@ -344,7 +344,7 @@ jobs:
           fi
 ```
 
-It shoudl run pre-commit for all files in branch on every push.
+It should run pre-commit for all files in branch on every push.
 
 We can also add the INTEGRATION test to make sure the result is matching. We would need to add another workflow:
 
@@ -410,7 +410,7 @@ jobs:
             fi
 ```
 
-> Note: For example, my local hardware is ARM and GitHub runner is AMD. We should adjust the docker to run on both use cases bu updating single command inside `Docker` file:
+> Note: For example, my local hardware is ARM and GitHub runner is AMD. We should adjust the docker to run on both use cases by updating single command inside `Docker` file:
 
 ```bash
 # Download and install DuckDB CLI dynamically based on system architecture
@@ -526,14 +526,14 @@ jobs:
           fi
 ```
 
-## Deploy the image with Continius Deployment
+## Deploy the image with Continuous Deployment
 
-Next, we want to control what is happening after the code review. Assume, we reviewed the code and we are ready to appove it.
+Next, we want to control what is happening after the code review. Assume, we reviewed the code and we are ready to approve it.
 We can now control what will happen after we click button Merge. At least, the code will be merged into the `main` branch a.k.a. our production branch.
 
-Let's assume, that we have an external application that is running in production. It is using last voersion of docker container. It means we don't care about th code and `main`. We only care about the Docker Image.
+Let's assume, that we have an external application that is running in production. It is using last version of docker container. It means we don't care about the code and `main`. We only care about the Docker Image.
 
-Docker Imgae is stored in Registry. We can use Docker Hub or GitHub Registry.
+Docker Image is stored in Registry. We can use Docker Hub or GitHub Registry.
 
 Now, we want to make sure that after we merged code, the image is pushed to the Registry. We will create a new GitHub Action to do so.
 
@@ -718,7 +718,7 @@ jobs:
 
 
 
-## Blue Green Deplyment
+## Blue Green Deployment
 
 1. Docker Images are built and pushed to GHCR.
 2. Deployment to a target platform (e.g., Kubernetes) happens in two stages:
