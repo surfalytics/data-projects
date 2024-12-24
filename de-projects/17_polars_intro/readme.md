@@ -89,7 +89,7 @@ PyArrow:
 - Not a full data manipulation library
 - Mainly handles data storage and interchange
 
-Polars: 
+Polars:
 
 - A full-featured DataFrame library for data manipulation
 - Built on top of Apache Arrow
@@ -156,32 +156,32 @@ def read_with_pyarrow(filename):
 def process_with_polars(arrow_table):
     # Convert PyArrow Table to Polars DataFrame
     polars_df = pl.from_arrow(arrow_table)
-    
+
     # Example processing: Filter trips longer than 10 miles
     long_trips = polars_df.filter(
-        (pl.col('trip_distance') > 10) & 
+        (pl.col('trip_distance') > 10) &
         (pl.col('total_amount') > 50)
     )
-    
+
     # Calculate some statistics
     stats = long_trips.group_by('PULocationID').agg([
         pl.col('trip_distance').mean().alias('avg_distance'),
         pl.col('total_amount').mean().alias('avg_total_amount'),
         pl.len().alias('trip_count')
     ])
-    
+
     return stats
 
 def main():
     # Download the file
     filename = download_parquet_file(PARQUET_URL)
-    
+
     # Read with PyArrow
     arrow_table = read_with_pyarrow(filename)
-    
+
     # Process with Polars
     result = process_with_polars(arrow_table)
-    
+
     # Display results
     print(result)
 
@@ -213,30 +213,30 @@ def download_parquet_file(url, filename='yellow_tripdata_2023-01.parquet'):
 def read_and_process_parquet():
     # Download the file
     filename = download_parquet_file(PARQUET_URL)
-    
+
     # Read Parquet file directly with Polars
     # Option 1: Read entire file into memory
     df = pl.read_parquet(filename)
-    
+
     # Option 2: Lazy reading (for larger files)
     # df = pl.scan_parquet(filename)
-    
+
     # Example processing: Filter and aggregate
     long_trips = df.filter(
-        (pl.col('trip_distance') > 10) & 
+        (pl.col('trip_distance') > 10) &
         (pl.col('total_amount') > 50)
     )
-    
+
     # Calculate statistics by pickup location
     location_stats = long_trips.group_by('PULocationID').agg([
         pl.col('trip_distance').mean().alias('avg_distance'),
         pl.col('total_amount').mean().alias('avg_total_amount'),
         pl.len().alias('trip_count')
     ])
-    
+
     # Sort by number of trips in descending order
     result = location_stats.sort('trip_count', descending=True)
-    
+
     return result
 
 # Run the function and print results
@@ -252,5 +252,5 @@ The advantages of using Polars directly:
 
 - Simpler code
 - Native performance optimizations
-- Integrated [lazy execution](https://stackoverflow.com/questions/76612163/what-are-the-advantages-of-a-polars-lazyframe-over-a-dataframe) 
+- Integrated [lazy execution](https://stackoverflow.com/questions/76612163/what-are-the-advantages-of-a-polars-lazyframe-over-a-dataframe)
 - Less dependency juggling
