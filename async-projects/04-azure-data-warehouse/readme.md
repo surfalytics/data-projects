@@ -459,3 +459,112 @@ Create an Alert Rule
 - You can configure alerts **per pipeline**.
 - Assign **Severity levels** (Sev 0 - Sev 4).
 - Integrate with ITSM systems (PagerDuty, ServiceNow, Slack) using Webhooks.
+
+
+## Week 3: Soft Deletes and External API Integration
+
+### 🎯 Goals
+
+- Handle **soft deletes** by identifying removed customers during full sync and flagging them as deleted in Snowflake.
+- Start ingesting data from a **public REST API (GitHub)** into Snowflake using ADF.
+- Explore more advanced **merge logic** and **data comparison** techniques.
+
+---
+
+### 🏗️ Tasks Breakdown
+
+#### 1. Modify `customers` Table to Track Deletions
+
+We’ll handle full sync for `customers`, and flag any records that are no longer in the source.
+
+```sql
+ALTER TABLE raw.azure_sql.customers
+ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE,
+ADD COLUMN deleted_ts TIMESTAMP_LTZ;
+```
+
+#### 2. Updated MERGE Procedure for customers with Soft Delete Logic
+
+In our Stored Procedure, we’ll:
+
+Merge incoming rows from `tmp_customers`.
+
+Mark customers that exist in `final` but not in `tmp` as `is_deleted = TRUE`.
+
+```sql
+CREATE OR REPLACE PROCEDURE raw.azure_sql.sp_merge_customers()
+RETURNS STRING
+LANGUAGE SQL
+AS
+$$
+-- Step 1: Upsert (INSERT or UPDATE)
+MERGE INTO raw.azure_sql.customers AS target
+USING raw.azure_sql.tmp_customers AS source
+ON target.customer_id = source.customer_id
+WHEN MATCHED THEN
+    UPDATE SET 
+        name = source.name,
+        email = source.email,
+        created_at = source.created_at,
+        is_deleted = FALSE,
+        deleted_ts = NULL,
+        etl_timestamp_utc = CURRENT_TIMESTAMP()
+WHEN NOT MATCHED THEN
+    INSERT (
+        customer_id,
+        name,
+        email,
+        created_at,
+        is_deleted,
+        deleted_ts,
+        etl_timestamp_utc
+    )
+    VALUES (
+        source.customer_id,
+        source.name,
+        source.email,
+        source.created_at,
+        FALSE,
+        NULL,
+        CURRENT_TIMESTAMP()
+    );
+
+-- Step 2: Mark soft-deleted customers
+UPDATE raw.azure_sql.customers
+SET is_deleted = TRUE,
+    deleted_ts = CURRENT_TIMESTAMP()
+WHERE customer_id NOT IN (
+    SELECT customer_id FROM raw.azure_sql.tmp_customers
+);
+$$;
+```
+
+#### 3. External API Ingestion: GitHub Example
+
+We’ll now use ADF to fetch public data from a REST API (GitHub) and stage it in Snowflake.
+
+Steps:
+
+Create ADF Web Activity or REST Dataset with:
+
+```bash
+URL: https://api.github.com/repos/octocat/Hello-World/commits?per_page=100
+Method: GET
+Dump the response to Blob Storage (as JSON).
+```
+
+You can test in CLI JSON respond for API:
+
+```bash
+curl -s "https://api.github.com/repos/octocat/Hello-World/commits?per_page=100
+```
+
+Use Copy Activity or Snowflake COPY INTO to ingest the file into a raw table.
+
+Add basic parsing logic (flatten arrays, extract fields).
+
+> 📌 This introduces the concept of semi-structured ETL and JSON handling.
+
+As a result, you should:
+1. Update customers' tables and procedures to handle data deletion. For testing purpose, you need to delete a single `customer_id` from SQL Server.
+2. Using public GitHub API, we should leverage ADF and ingest data into Snowflake.
