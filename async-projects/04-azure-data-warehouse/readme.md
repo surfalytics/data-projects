@@ -567,4 +567,126 @@ Add basic parsing logic (flatten arrays, extract fields).
 
 As a result, you should:
 1. Update customers' tables and procedures to handle data deletion. For testing purpose, you need to delete a single `customer_id` from SQL Server.
-2. Using public GitHub API, we should leverage ADF and ingest data into Snowflake.
+2. Using the public GitHub API, we should leverage ADF and ingest data into Snowflake.
+
+## Week 4: CosmosDB NoSQL Database Integration
+
+In this week, we will work with Microsoft NoSQL database. Read about [CosmosDB](https://learn.microsoft.com/en-us/azure/cosmos-db/introduction)
+
+Azure Cosmos DB is Microsoft’s globally distributed, multi-model NoSQL database designed for OLTP (online transactional processing) scenarios. It is highly available (99.999%), horizontally scalable, and offers low-latency reads/writes across the globe.
+
+✅ Key Features:
+- NoSQL / Document-based (JSON format by default)
+- Multi-region replication
+- Guaranteed <10ms latency for reads and writes
+- Multiple APIs: SQL (Core), MongoDB, Cassandra, Gremlin, Table
+- Auto-scaling throughput (RU/s)
+- TTL (time to live) and change feed support
+
+In Data Engineering, CosmosDB is often treated as a source OLTP system that feeds data into an OLAP (analytics) system like Snowflake, Synapse, or Databricks.
+
+📈 Data Engineering Use Case Example
+Let’s say you're building a Customer 360 view:
+
+- Cosmos DB stores app-generated data: purchases, behavior logs, sessions
+- Azure SQL stores CRM data
+- Snowflake stores marketing data
+
+Your data pipeline:
+- Extract data from Cosmos DB (via ADF, Synapse, or custom Spark job)
+- Flatten/clean the JSON documents
+- Merge into bronze → silver → gold Snowflake tables
+- Join with CRM and marketing data
+- Build dashboards in Looker or Power BI
+
+In our case, we will just ingest sample CosmosDB data into Snowflake using an existing pattern. The closest alternative could be MongoDB database.
+
+### 🎯 Goals
+
+- Create a **NoSQL** database using **Azure Cosmos DB**
+- Add a sample **container** with documents (JSON format)
+- Ingest CosmosDB data into **Snowflake** using ADF
+- Use **Synapse Analytics** as an intermediary layer to query CosmosDB efficiently
+
+
+
+
+
+---
+
+### 🏗️ Tasks Breakdown
+
+---
+
+#### 1. Create Azure Cosmos DB (NoSQL API)
+
+1. Go to the **Azure Portal** → **Create a Resource** → Search for `Cosmos DB`.
+2. Choose **Azure Cosmos DB for NoSQL**.
+3. Fill in:
+   - **Resource Group**
+   - **Account Name** (e.g., `cosmosdw-week4`)
+   - **Region** (choose closest to you)
+4. Set **Capacity Mode** → *Provisioned throughput*
+5. Leave defaults, click **Review + Create**, then **Create**
+
+> 🔹 Cosmos DB for NoSQL uses document (JSON-based) storage and can be queried using SQL-like syntax.
+
+---
+
+#### 2. Create Sample Container and Data
+
+1. Go to your Cosmos DB account → **Data Explorer**
+2. Click **New Container**
+   - Database Name: `orders_db`
+   - Container Name: `orders_container`
+   - Partition Key: `/customer_id`
+   - Throughput: 400 RU/s (default)
+3. Add sample documents:
+
+```json
+{
+  "id": "order_1001",
+  "customer_id": "cust_01",
+  "product_id": "prod_01",
+  "quantity": 2,
+  "total_price": 199.98,
+  "order_date": "2023-03-05T14:30:00Z",
+  "status": "Shipped"
+}
+```
+
+
+
+> 🔁 Add 5–10 sample orders with different id, customer_id, status, and order_date
+
+#### 3. Create ADF Pipeline to Load CosmosDB → Snowflake
+
+In Snowflake add new schema in database `RAW`: `cosmsodb`. And create two new tables
+- `tmp_orders`
+- `orders`
+
+Add a new Snowflake Stored Procedure that will MERGE `tmp_orders` into `orders`.
+
+In Azure Data Factory, create a new pipeline.
+
+Add a Copy Activity:
+- Source: Azure Cosmos DB (configure Linked Service with CosmosDB account keys)
+    - Dataset: select database + container (orders_db.orders_container)
+- Target: Snowflake (Linked Service with Snowflake)
+    - Dataset: `tmp_orders
+
+The goal is to load data into Snowflake from CosmosDB table using same approach with `watermark` table.
+
+
+#### 4. Use Synapse Analytics to query Cosmosdb container and load data into Snowflake
+
+Use this guide [Configure and use Azure Synapse Link for Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/configure-synapse-link) to switch your pipeline to Synapse Analytics.
+
+Read about Synapse Link - [What is Azure Synapse Link for Azure Cosmos DB?](https://learn.microsoft.com/en-us/azure/cosmos-db/synapse-link)
+
+#### Deliverables for Week 4
+✅ Cosmos DB account with orders_container created and populated
+✅ ADF pipeline that stages data and loads it into Snowflake
+✅ Stored Procedure in Snowflake that handles ingestion logic
+✅ Synapse query that connects to CosmosDB and extracts live data
+
