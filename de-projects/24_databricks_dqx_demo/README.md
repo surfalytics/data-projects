@@ -5,6 +5,11 @@ To run in databricks notebook, use the `dqx_demo_notebook.ipynb` file
 To run locally in VS Code, use the `dqx_demo_notebook.ipynb` file
 
 
+#### Prerequisites
+
+Databricks Free Edition account
+
+
 #### Configuring remote connection to Databricks in VS Code
 
 1. Install UV package manager
