@@ -1,0 +1,13 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "adzuna-etl"
+version = "0.1.0"
+description = "Adzuna ETL with airflow and databricks"
+readme = "readme.md"
+requires-python = "~=3.12"
+
+[tool.hatch.build.targets.wheel]
+packages = ["scripts"]
