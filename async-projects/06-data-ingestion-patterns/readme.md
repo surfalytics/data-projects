@@ -6,7 +6,7 @@ A comprehensive 6-week project exploring multiple data ingestion approaches usin
 
 Goal: Load data into Snowflake using multiple approaches and understand different data ingestion patterns.
 
-Duration: 6 weeks
+Duration: 6 weeks (core) + 2 optional weeks (Airflow orchestration)
 
 Data Source: GitHub API (free tier)
 Target: Snowflake (6-month free trial)
@@ -20,7 +20,7 @@ Cloud Platform: AWS (free tier)
 - ⏳ [Snowflake trial account](https://www.coursera.org/professional-certificates/snowflake-generative-ai) (6 months free via Coursera).
 - ⏳ Docker container
 
-You would need AWS and Snowlfake starting week 3.
+You would need AWS and Snowflake starting week 3.
 
 > Tip: Use Claude Code or Cursor to accelerate development. They can help with AWS CLI commands to create roles, resources, and more.
 
@@ -113,7 +113,7 @@ Bottom line: APIs are like having a helpful friend who goes and gets data for yo
 - Week 5: Direct data warehouse integration
 
 ### Implementation 5: AWS Batch + Step Functions
-- Week 5: Scheduled batch processing
+- Week 6: Scheduled batch processing
 
 ### Implementation 6: AWS Glue + Athena
 - Week 6: Data lake approach with PySpark
@@ -121,7 +121,7 @@ Bottom line: APIs are like having a helpful friend who goes and gets data for yo
 ### Implementation 7: Fivetran (No-Code)
 - Week 6: Managed data integration platform
 
-### Implementation 7: Using Airflow for Orchestration
+### Implementation 8: Using Airflow for Orchestration
 - Week 7: Using local Airflow to run the Python code
 - Week 8: Using managed Airflow to run 
 
@@ -208,7 +208,73 @@ Think of it like this: It's like giving someone a shopping list so they can buy 
 - Handle API rate limiting gracefully
 - Document all steps and findings
 
+## Week 2: Docker Containerization
 
+### Goals
+- Containerize the Python application
+- Create reproducible environment
+- Set up requirements.txt and Dockerfile
+- Test containerized data extraction
+
+### Development Tasks
+
+1. Update Requirements File
+
+What you need to do:
+- Update your existing "requirements.txt" from Week 1
+- Add `python-dotenv` to the list for managing environment variables securely
+- Your final requirements.txt should include:
+  - requests
+  - boto3
+  - pandas
+  - python-dotenv
+
+> Tip: Run `pip install python-dotenv` and then `pip freeze > requirements.txt` to update the file with exact versions.
+
+2. Create Dockerfile
+
+What Dockerfile does: It's like a recipe that tells Docker how to build a container with everything your program needs to run.
+
+What you need to do:
+- Create a file called "Dockerfile"
+- Tell it to use Python 3.11 as the base
+- Set up a working directory called "app"
+- Copy your requirements.txt file
+- Install all the Python libraries from requirements.txt
+- Copy your Python code into the container
+- Tell it what command to run when the container starts
+
+Think of it like this: It's like writing instructions for someone to build a complete kitchen with all the tools and ingredients needed to cook your specific dish, then package it all up in a box.
+
+3. Environment Configuration
+   - Create `.env` file for sensitive data
+   - Add `.env` to `.gitignore`
+   - Create `.env.example` template
+
+4. Docker Commands
+
+What these commands do: They tell Docker to build your container and run your program inside it.
+
+What you need to do:
+- Build your container: `docker build -t github-data-extractor .`
+  - This creates a container image with your program and all its dependencies
+- Run your container: `docker run --env-file .env github-data-extractor`
+  - This starts your container and runs your data extraction program
+- Debug mode: `docker run -it --env-file .env github-data-extractor bash`
+  - This lets you go inside the container to troubleshoot if something goes wrong
+
+Think of it like this: Building is like constructing a house, running is like moving in and living there, and debug mode is like being able to walk around inside the house to see what's happening.
+
+### Deliverables
+- [ ] Dockerfile and requirements.txt
+- [ ] Environment configuration files
+- [ ] Containerized application working locally
+- [ ] Documentation for running the container
+
+### Success Criteria
+- Container runs successfully with environment variables
+- Data extraction works in containerized environment
+- Easy to reproduce and share the setup
 
 ---
 
