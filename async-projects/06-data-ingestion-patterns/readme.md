@@ -28,9 +28,9 @@ You would need AWS and Snowflake starting week 3.
 
 ## Architecture Overview
 
-![Data Ingestion Architecture](https://via.placeholder.com/800x400/4A90E2/FFFFFF?text=Data+Ingestion+Architecture)
+![Data Ingestion Architecture](https://placehold.co/800x400/4A90E2/FFFFFF/png?text=Data+Ingestion+Architecture)
 
-*Create your own architecture diagram using [draw.io](http://draw.io) or similar tools*
+*Create your own architecture diagram using [draw.io](http://draw.io), [Excalidraw](https://excalidraw.com/), or similar tools*
 
 ## Data Source Definition
 
