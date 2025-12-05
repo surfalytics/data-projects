@@ -1,0 +1,23 @@
+# Example Terraform Variables File
+# Copy this file to terraform.tfvars and customize the values
+
+environment  = "dev"
+project_name = "terraform-101"
+
+tags = {
+  ManagedBy = "Terraform"
+  Project   = "DataOps"
+  Team      = "Data-Engineering"
+}
+
+# Cloud Provider Variables (uncomment as needed)
+
+# AWS Example
+# aws_region = "us-east-1"
+
+# GCP Example
+# gcp_project_id = "my-project-id"
+# gcp_region     = "us-central1"
+
+# Azure Example
+# azure_location = "eastus"
