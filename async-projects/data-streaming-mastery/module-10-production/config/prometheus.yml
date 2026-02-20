@@ -1,0 +1,21 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+scrape_configs:
+  # Scrape Kafka JMX Exporter metrics
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka:7071']
+        labels:
+          cluster: 'module10-cluster'
+          instance: 'kafka-broker-1'
+    scrape_interval: 10s
+    metrics_path: /metrics
+
+  # Scrape Prometheus itself for health monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s

@@ -1,0 +1,18 @@
+# Faust Streaming - maintained community fork (NOT robinhood/faust)
+faust-streaming>=0.11.0
+
+# Kafka client for the event producer
+confluent-kafka>=2.3.0
+
+# Fake data generation for testing
+faker>=22.0.0
+
+# HTTP server support (used by Faust web views)
+aiohttp>=3.9.0
+
+# RocksDB state backend for Faust tables
+# NOTE: python-rocksdb can be difficult to install on some platforms.
+# On macOS: brew install rocksdb && pip install python-rocksdb
+# On Ubuntu: apt-get install librocksdb-dev && pip install python-rocksdb
+# If RocksDB is unavailable, Faust falls back to an in-memory store.
+# python-rocksdb>=0.7.0

@@ -1,0 +1,4 @@
+confluent-kafka
+prometheus-client
+requests
+faker

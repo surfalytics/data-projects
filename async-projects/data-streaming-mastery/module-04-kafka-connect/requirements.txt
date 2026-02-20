@@ -1,0 +1,4 @@
+confluent-kafka==2.3.0
+requests==2.31.0
+mysql-connector-python==8.2.0
+faker==20.1.0

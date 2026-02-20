@@ -1,0 +1,39 @@
+{
+  "name": "ecommerce-mysql-source",
+  "config": {
+    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+    "tasks.max": "1",
+
+    "database.hostname": "mysql",
+    "database.port": "3306",
+    "database.user": "root",
+    "database.password": "debezium",
+    "database.server.id": "184054",
+
+    "topic.prefix": "ecommerce",
+
+    "database.include.list": "ecommerce",
+    "table.include.list": "ecommerce.customers,ecommerce.addresses,ecommerce.products,ecommerce.orders,ecommerce.order_items,ecommerce.inventory",
+
+    "schema.history.internal.kafka.bootstrap.servers": "kafka:29092",
+    "schema.history.internal.kafka.topic": "schema-changes.ecommerce",
+
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "true",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "true",
+
+    "include.schema.changes": "true",
+    "snapshot.mode": "initial",
+
+    "tombstones.on.delete": "true",
+    "column.include.list": "",
+
+    "decimal.handling.mode": "double",
+    "time.precision.mode": "connect",
+
+    "heartbeat.interval.ms": "10000",
+
+    "provide.transaction.metadata": "false"
+  }
+}

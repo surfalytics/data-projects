@@ -1,0 +1,196 @@
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # Zookeeper: Required for Kafka broker coordination
+  # ---------------------------------------------------------------------------
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    hostname: zookeeper
+    container_name: flink-zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Kafka: Message broker for streaming data
+  # ---------------------------------------------------------------------------
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    hostname: kafka
+    container_name: flink-kafka
+    depends_on:
+      zookeeper:
+        condition: service_started
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:29092"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Flink JobManager: Coordinates Flink jobs (master)
+  # ---------------------------------------------------------------------------
+  jobmanager:
+    image: flink:1.17-scala_2.12-java11
+    hostname: jobmanager
+    container_name: flink-jobmanager
+    ports:
+      - "8081:8081"
+    command: jobmanager
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: jobmanager
+        taskmanager.numberOfTaskSlots: 4
+        parallelism.default: 2
+        execution.checkpointing.interval: 60000
+        execution.checkpointing.mode: EXACTLY_ONCE
+        execution.checkpointing.timeout: 600000
+        execution.checkpointing.min-pause: 500
+        state.backend: hashmap
+        state.checkpoints.dir: file:///opt/flink/checkpoints
+        state.savepoints.dir: file:///opt/flink/savepoints
+        rest.flamegraph.enabled: true
+    volumes:
+      - flink-checkpoints:/opt/flink/checkpoints
+      - flink-savepoints:/opt/flink/savepoints
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/overview"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Flink TaskManager: Executes Flink tasks (worker)
+  # ---------------------------------------------------------------------------
+  taskmanager:
+    image: flink:1.17-scala_2.12-java11
+    hostname: taskmanager
+    container_name: flink-taskmanager
+    depends_on:
+      jobmanager:
+        condition: service_started
+    command: taskmanager
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: jobmanager
+        taskmanager.numberOfTaskSlots: 4
+        parallelism.default: 2
+        execution.checkpointing.interval: 60000
+        execution.checkpointing.mode: EXACTLY_ONCE
+        execution.checkpointing.timeout: 600000
+        execution.checkpointing.min-pause: 500
+        state.backend: hashmap
+        state.checkpoints.dir: file:///opt/flink/checkpoints
+        state.savepoints.dir: file:///opt/flink/savepoints
+    volumes:
+      - flink-checkpoints:/opt/flink/checkpoints
+      - flink-savepoints:/opt/flink/savepoints
+    scale: 1
+
+  # ---------------------------------------------------------------------------
+  # MySQL: Source database for CDC exercises
+  # ---------------------------------------------------------------------------
+  mysql:
+    image: debezium/example-mysql:2.4
+    hostname: mysql
+    container_name: flink-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: debezium
+      MYSQL_USER: mysqluser
+      MYSQL_PASSWORD: mysqlpw
+      MYSQL_DATABASE: inventory
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pdebezium"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Flink SQL Client: Interactive SQL shell with connector JARs
+  # ---------------------------------------------------------------------------
+  sql-client:
+    image: flink:1.17-scala_2.12-java11
+    hostname: sql-client
+    container_name: flink-sql-client
+    depends_on:
+      jobmanager:
+        condition: service_started
+      kafka:
+        condition: service_started
+      mysql:
+        condition: service_started
+    command: >
+      bash -c "
+        echo 'Downloading connector JARs...' &&
+        mkdir -p /opt/flink/lib/connectors &&
+        curl -fSL -o /opt/flink/lib/flink-sql-connector-kafka-1.17.2.jar
+          https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka/1.17.2/flink-sql-connector-kafka-1.17.2.jar &&
+        curl -fSL -o /opt/flink/lib/flink-connector-jdbc-3.1.1-1.17.jar
+          https://repo1.maven.org/maven2/org/apache/flink/flink-connector-jdbc/3.1.1-1.17/flink-connector-jdbc-3.1.1-1.17.jar &&
+        curl -fSL -o /opt/flink/lib/flink-sql-connector-mysql-cdc-2.4.2.jar
+          https://repo1.maven.org/maven2/com/ververica/flink-sql-connector-mysql-cdc/2.4.2/flink-sql-connector-mysql-cdc-2.4.2.jar &&
+        curl -fSL -o /opt/flink/lib/mysql-connector-java-8.0.33.jar
+          https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.33/mysql-connector-j-8.0.33.jar &&
+        echo 'All JARs downloaded. Starting SQL Client...' &&
+        /opt/flink/bin/sql-client.sh
+      "
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: jobmanager
+        rest.address: jobmanager
+        rest.port: 8081
+        execution.checkpointing.interval: 60000
+        execution.checkpointing.mode: EXACTLY_ONCE
+        state.backend: hashmap
+    volumes:
+      - ./sql:/opt/flink/sql-scripts
+    stdin_open: true
+    tty: true
+
+  # ---------------------------------------------------------------------------
+  # Kafka UI: Web interface for Kafka monitoring
+  # ---------------------------------------------------------------------------
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    hostname: kafka-ui
+    container_name: flink-kafka-ui
+    depends_on:
+      kafka:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: flink-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      DYNAMIC_CONFIG_ENABLED: "true"
+
+volumes:
+  flink-checkpoints:
+  flink-savepoints:
+  mysql-data:

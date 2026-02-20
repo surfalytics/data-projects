@@ -1,0 +1,41 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          instance: 'prometheus'
+
+  # Kafka JMX metrics (if JMX exporter is available)
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka:9101']
+        labels:
+          instance: 'kafka-broker-1'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    # This will fail silently if JMX exporter is not configured
+    # which is expected in the default setup.
+
+  # Kafka Connect metrics
+  - job_name: 'kafka-connect'
+    static_configs:
+      - targets: ['kafka-connect:8083']
+        labels:
+          instance: 'kafka-connect'
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # Grafana metrics
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+        labels:
+          instance: 'grafana'
+    metrics_path: /metrics
