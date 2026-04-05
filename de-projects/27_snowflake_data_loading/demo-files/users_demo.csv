@@ -1,0 +1,21 @@
+UserId,FirstName,LastName,Email,Phone,Country,IsActive,CreatedAt,UpdatedAt
+U-1001,James,Harrington,james.harrington@contoso.com,+1-416-555-0191,Canada,TRUE,2023-01-15 08:32:11,2024-03-10 14:22:05
+U-1002,Sofia,Mendes,sofia.mendes@fabrikam.com,+1-514-555-0284,Canada,TRUE,2023-02-20 09:11:44,2024-03-10 14:22:05
+U-1003,Liam,O'Brien,liam.obrien@adventure-works.com,+44-20-7946-0391,United Kingdom,FALSE,2023-03-05 11:45:00,2024-01-08 09:05:33
+U-1004,Yuki,Tanaka,yuki.tanaka@northwind.com,+81-3-5555-0482,Japan,TRUE,2023-03-18 15:22:30,2024-03-10 14:22:05
+U-1005,Aisha,Okonkwo,aisha.okonkwo@tailspintoys.com,+234-1-555-0573,Nigeria,TRUE,2023-04-01 07:55:18,2024-03-10 14:22:05
+U-1006,Ethan,Kowalski,ethan.kowalski@wideworldimport.com,+48-22-555-0664,Poland,TRUE,2023-04-14 13:10:07,2024-03-10 14:22:05
+U-1007,Priya,Sharma,priya.sharma@woodgrove.com,+91-22-5550-0755,India,FALSE,2023-05-02 10:33:52,2024-02-14 11:30:00
+U-1008,Carlos,Reyes,carlos.reyes@contoso.com,+52-55-5550-0846,Mexico,TRUE,2023-05-20 16:44:29,2024-03-10 14:22:05
+U-1009,Ingrid,Svensson,ingrid.svensson@fabrikam.com,+46-8-5550-0937,Sweden,TRUE,2023-06-08 08:09:13,2024-03-10 14:22:05
+U-1010,Mohamed,Al-Rashid,m.alrashid@northwind.com,+971-4-555-1028,UAE,TRUE,2023-06-25 12:17:45,2024-03-10 14:22:05
+U-1011,Emma,Leclerc,emma.leclerc@adventure-works.com,+33-1-5550-1119,France,TRUE,2023-07-03 09:50:22,2024-03-10 14:22:05
+U-1012,Noah,Fitzgerald,noah.fitzgerald@tailspintoys.com,+353-1-5550-1200,Ireland,FALSE,2023-07-19 14:28:38,2024-01-22 16:45:00
+U-1013,Fatima,Benali,fatima.benali@wideworldimport.com,+212-5-5550-1391,Morocco,TRUE,2023-08-06 11:03:57,2024-03-10 14:22:05
+U-1014,Lucas,Mueller,lucas.mueller@woodgrove.com,+49-30-5550-1482,Germany,TRUE,2023-08-22 15:39:14,2024-03-10 14:22:05
+U-1015,Zara,Patel,zara.patel@contoso.com,+44-161-5550-1573,United Kingdom,TRUE,2023-09-10 08:21:06,2024-03-10 14:22:05
+U-1016,Diego,Hernandez,diego.hernandez@fabrikam.com,+34-91-5550-1664,Spain,TRUE,2023-09-27 13:55:41,2024-03-10 14:22:05
+U-1017,Amara,Diallo,amara.diallo@northwind.com,+221-33-5550-1755,Senegal,FALSE,2023-10-14 10:12:29,2024-02-05 10:00:00
+U-1018,Oliver,Thompson,oliver.thompson@adventure-works.com,+61-2-5550-1846,Australia,TRUE,2023-10-31 07:44:53,2024-03-10 14:22:05
+U-1019,Mei,Zhang,mei.zhang@tailspintoys.com,+86-21-5550-1937,China,TRUE,2023-11-18 16:30:17,2024-03-10 14:22:05
+U-1020,Aleksei,Volkov,aleksei.volkov@wideworldimport.com,+7-495-5550-2028,Russia,TRUE,2023-12-05 12:08:44,2024-03-10 14:22:05
