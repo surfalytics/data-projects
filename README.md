@@ -19,6 +19,7 @@ We will sync in Discord weekly and talk over the projects as well as publish in 
 ├── dataops-projects
 │   ├── 01_git_and_ci_cd
 │   └── 02_terraform_101
+│   └── 03_metabase_on_aws_ecs
 └── de-projects
     ├── 01_azure_databricks_vnet_ssc
     ├── 02_dbt_core_snowflake
