@@ -101,7 +101,7 @@ sudo apt-get install -y python3 python3-pip python3-venv
 Create a dedicated virtual environment for the course:
 
 ```bash
-cd data-streaming-mastery
+cd 07-data-streaming-mastery
 python3 -m venv .venv
 source .venv/bin/activate    # macOS / Linux
 # .venv\Scripts\activate     # Windows PowerShell
@@ -145,7 +145,7 @@ python3 --version
 docker run --rm hello-world
 
 # Test Docker Compose with the course stack (quick smoke test)
-cd data-streaming-mastery
+cd 07-data-streaming-mastery
 docker compose config --quiet && echo "Compose file is valid"
 ```
 

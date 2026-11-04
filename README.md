@@ -7,12 +7,18 @@ We will sync in Discord weekly and talk over the projects as well as publish in 
 
 ## List of Analytics Data Engineer projects
 
+Self-paced projects with level, roles and cost: see the [async projects catalog](async-projects/README.md).
+
 ```bash
 .
 ├── async-projects
 │   ├── 01-end-to-end-analytics-with-dbt-and-looker
 │   ├── 02-BI-admin-with-Tableau
-│   └── 03-Open-Source-BI-with-Metabase
+│   ├── 03-Open-Source-BI-with-Metabase
+│   ├── 04-azure-data-warehouse
+│   ├── 05-getting-started-with-databricks
+│   ├── 06-data-ingestion-patterns
+│   └── 07-data-streaming-mastery
 ├── bi-projects
 │   ├── 01_bi_dashboard_with_microsoft_fabric
 │   └── 02_looker_snowflake
