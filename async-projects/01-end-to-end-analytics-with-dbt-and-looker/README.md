@@ -5,7 +5,7 @@ level: "Intermediate"
 roles: ["Analytics Engineer", "Data Engineer", "BI Developer"]
 duration: "8 assignments, ~1-8 hours each"
 cost: "Free"
-tools: ["Postgres", "Docker", "DBeaver", "dbt Core", "pre-commit", "GitHub Actions", "Looker"]
+tools: ["Neon Postgres", "Docker", "DBeaver", "dbt Core", "pre-commit", "GitHub Actions", "Looker"]
 status: "Ready"
 ---
 
@@ -42,12 +42,12 @@ A business has sales data in Excel files. You will load it into a Postgres data 
 
 | Tool | Used for | Free option |
 |---|---|---|
-| Postgres (Azure or Docker) | Data warehouse | yes (Docker) |
+| [Neon](https://neon.com) (serverless Postgres) | Data warehouse | yes (Free plan, no credit card) |
 | DBeaver | SQL client, data load, ER diagrams | yes |
 | dbt Core + `dbt-postgres` | Transformations, tests, docs | yes |
 | pre-commit, sqlfluff, sqlfmt | Lint and format code | yes |
 | GitHub + GitHub Actions | Code, pull requests, CI | yes |
-| Docker | Local Postgres, dbt container | yes |
+| Docker | dbt container | yes |
 | Looker | BI dashboard | no (shared instance, credentials in Discord) |
 
 ## Architecture
@@ -57,8 +57,8 @@ The diagram is at the top of this page. Source file: [`images/architecture.excal
 Data flow:
 
 1. Superstore Excel files (`data/Orders.xls`, `data/People.xls`, `data/Returns.xls`) are the source.
-2. You load them with DBeaver into Postgres, schema `stg` (raw tables).
-3. dbt Core builds bronze, silver and gold models in Postgres. Gold is a star schema: `fct_sales` plus `dim_*` tables.
+2. You load them with DBeaver into Neon Postgres, schema `stg` (raw tables).
+3. dbt Core builds bronze, silver and gold models in Neon Postgres. Gold is a star schema: `fct_sales` plus `dim_*` tables.
 4. pre-commit and GitHub Actions check every pull request. CI runs dbt in a Docker container against a CI schema.
 5. Looker connects to the gold layer and shows the dashboard.
 
@@ -75,7 +75,8 @@ Data flow:
 
 - GitHub account.
 - Software: VS Code (or similar IDE), Git, Python 3.11+, Docker Desktop, DBeaver Community.
-- Discord access to Surfalytics, if you use the shared Azure Postgres or Looker.
+- A free [Neon](https://neon.com) account. You create it in Assignment 2.
+- Discord access to Surfalytics, for the shared Looker instance.
 - Basic SQL. New to Git, CLI or Docker? Start with [Surfalytics Module 0](https://www.youtube.com/watch?v=LJIiCLu2gr8&list=PLNCDg7zJiXhP5Z_-TXUdorz2n7sjYHHKE&index=1).
 
 ## Assignments
@@ -111,52 +112,36 @@ Work at your own pace. Each assignment shows the expected time.
 **Steps:**
 
 1. Copy the 3 files into a `data/` folder in your repo: `data/Orders.xls`, `data/People.xls`, `data/Returns.xls`.
-2. Get a Postgres database. Pick one option.
+2. Create a free Postgres database on Neon.
+   1. Sign up at [neon.com](https://neon.com). The Free plan has no time limit and needs no credit card.
+   2. Create a new project. Name it `surfalytics-dw`. Pick the region closest to you. Use the latest Postgres version.
+   3. Neon creates a default database `neondb` and an owner role for you. We use this database.
+   4. Click **Connect** on the project dashboard. Turn off **Connection pooling** to get a direct connection.
+   5. Copy the host, database, role (user) and password. Keep them private.
 
-   **Option A: shared Azure Postgres.**
-   - Ask in Discord for host, database, username and password.
-   - Port: `5432`.
-   - Azure Postgres uses TLS/SSL by default. We do not need it. Disable SSL in DBeaver connection properties.
-
-   **Option B: local Postgres in Docker.** Use this to work alone.
-
-   ```bash
-   docker run -d \
-     --name surfalytics-pg \
-     -e POSTGRES_USER=postgres \
-     -e POSTGRES_PASSWORD=postgres \
-     -p 5432:5432 \
-     -v surfalytics_pg_data:/var/lib/postgresql/data \
-     postgres:16
-   ```
-
-   Check that it runs:
-
-   ```bash
-   docker ps --filter name=surfalytics-pg
-   ```
+   Free plan limits:
+   - 1 GB storage per project. Superstore needs only a few MB.
+   - Compute stops after 5 minutes without queries. The next query starts it again in a few seconds.
 
 3. Connect with DBeaver.
    1. Open DBeaver.
    2. Click **New Database Connection** (toolbar, top left), or **Database > New Database Connection**.
    3. Select **PostgreSQL**. Click **Next**.
-   4. Enter the connection details:
+   4. Enter the connection details from the Neon **Connect** window:
 
-      | Field | Option A (Azure) | Option B (Docker) |
-      |---|---|---|
-      | Host | Ask in Discord | `localhost` |
-      | Port | `5432` | `5432` |
-      | Database | Ask in Discord | `postgres` |
-      | Username | Ask in Discord | `postgres` |
-      | Password | Ask in Discord | `postgres` |
-      | SSL | Disable | Not needed |
+      | Field | Value |
+      |---|---|
+      | Host | `ep-xxxx-xxxx.<region>.aws.neon.tech` (no `-pooler` in the name) |
+      | Port | `5432` |
+      | Database | `neondb` |
+      | Username | the role from Neon, for example `neondb_owner` |
+      | Password | the password from Neon |
 
-   5. Click **Test Connection**, then **Finish**.
-4. Create your database and schema:
+   5. Open the **SSL** tab. Check **Use SSL**. Set **SSL mode** to `require`. Neon accepts only SSL connections.
+   6. Click **Test Connection**, then **Finish**.
+4. Create the schema for raw data:
 
    ```sql
-   CREATE DATABASE surfalytics_dw_<your_unique_name>;
-   -- reconnect to the new database, then:
    CREATE SCHEMA stg;
    ```
 
@@ -168,7 +153,7 @@ Work at your own pace. Each assignment shows the expected time.
 
 **Done when:**
 
-- [ ] You can connect to your database in DBeaver.
+- [ ] You can connect to your Neon database in DBeaver.
 - [ ] `stg.orders`, `stg.returns`, `stg.people` exist and have rows.
 - [ ] Row counts match the Excel files.
 - [ ] The DDL and steps are in your repo.
@@ -176,6 +161,8 @@ Work at your own pace. Each assignment shows the expected time.
 **Hints:**
 
 - DBeaver can import CSV: right-click the table > **Import Data**. Save each Excel file as CSV first.
+- You can also run DDL in the **SQL Editor** in the Neon console.
+- Connection error about SSL? Check that SSL mode is `require`.
 - Column names for `orders` (from the source file): `Row_ID, Order_ID, Order_Date, Ship_Date, Ship_Mode, Customer_ID, Customer_Name, Segment, Country_Region, City, State, Postal_Code, Region, Product_ID, Category, Sub_Category, Product_Name, Sales, Quantity, Discount, Profit`.
 - You can name the schema `raw` instead of `stg`. Then raw = bronze source, and dbt builds the next layers.
 
@@ -200,7 +187,35 @@ Work at your own pace. Each assignment shows the expected time.
 6. Add 2 technical columns to each model:
    - `dwh_id`: a unique key. Use the `dbt_utils.generate_surrogate_key` macro.
    - `etl_timestamp`: the load time. Use `current_timestamp`.
-7. Define `dev` and `prod` targets in `profiles.yml`. Each target writes to its own schema (or database).
+7. Define `dev` and `prod` targets in `profiles.yml`. Each target writes to its own schema. Example for Neon:
+
+   ```yaml
+   superstore:            # must match `profile:` in dbt_project.yml
+     target: dev
+     outputs:
+       dev:
+         type: postgres
+         host: ep-xxxx-xxxx.<region>.aws.neon.tech
+         port: 5432
+         user: neondb_owner
+         password: "{{ env_var('NEON_PASSWORD') }}"
+         dbname: neondb
+         schema: dev
+         sslmode: require
+         threads: 4
+       prod:
+         type: postgres
+         host: ep-xxxx-xxxx.<region>.aws.neon.tech
+         port: 5432
+         user: neondb_owner
+         password: "{{ env_var('NEON_PASSWORD') }}"
+         dbname: neondb
+         schema: prod
+         sslmode: require
+         threads: 4
+   ```
+
+   Set the password in your shell with `export NEON_PASSWORD=...`. Do not commit passwords.
 8. Run the models in each target:
 
    ```bash
@@ -528,7 +543,7 @@ You should now have: a dbt project in GitHub, pre-commit locally and in CI, and 
 **Hints:**
 
 - SCD Type 2 is a very common interview question. Be ready to explain it.
-- Looker runs in the cloud. It cannot reach Postgres on `localhost`. For Looker, use Option A (Azure Postgres) or another Postgres that is reachable from the internet.
+- Looker connects to Neon over the internet. In the Looker connection, use the host, database, user and password from the Neon **Connect** window. Turn on SSL.
 
 ### Assignment 8: dbt in Docker and Slim CI (~6 h)
 
@@ -604,9 +619,9 @@ jobs:
 
 **Hints:**
 
-- From a container, Postgres on your machine is at `host.docker.internal`, not `localhost`.
-- Store database credentials in GitHub Actions secrets. Never commit them.
-- With Option B, GitHub cannot reach your local Postgres. Add a `postgres:16` [service container](https://docs.github.com/en/actions/use-cases-and-examples/using-containerized-services/creating-postgresql-service-containers) to the workflow and load the data there.
+- The container connects to the same Neon host as your laptop. Pass `NEON_PASSWORD` with `docker run -e NEON_PASSWORD=...`.
+- Store the Neon host, user and password in GitHub Actions secrets. Pass them to dbt as environment variables. Never commit them.
+- Optional: use a [Neon branch](https://neon.com/docs/introduction/branching) for CI. A branch is a full copy of your database that is ready in seconds. Run CI there and delete the branch after the run.
 
 ## Final result
 
@@ -618,19 +633,17 @@ jobs:
 
 ## Clean up
 
-- **Option B (Docker):** stop and delete the container and its data.
-
-  ```bash
-  docker stop surfalytics-pg
-  docker rm surfalytics-pg
-  docker volume rm surfalytics_pg_data
-  docker rmi ghcr.io/dbt-labs/dbt-postgres:1.8.2
-  ```
-
-- **Option A (Azure):** the server is shared. Do not delete it. Drop only your own database:
+- **Neon:** the Free plan costs nothing, so you can keep the project for your portfolio. To remove it, open the project **Settings** and click **Delete project**. To remove only test data:
 
   ```sql
-  DROP DATABASE surfalytics_dw_<your_unique_name>;
+  DROP SCHEMA dev CASCADE;
+  DROP SCHEMA ci CASCADE;  -- if you created a CI schema
+  ```
+
+- **Docker:** delete the dbt image.
+
+  ```bash
+  docker rmi ghcr.io/dbt-labs/dbt-postgres:1.8.2
   ```
 
 - **Looker:** delete your connection and project if you do not need them.

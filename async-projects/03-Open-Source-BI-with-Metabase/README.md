@@ -171,7 +171,7 @@ Work at your own pace. Each assignment shows the expected time.
 5. Decide where Superstore Postgres will run. Pick one:
    - Postgres with Superstore on your laptop. Metabase in Docker connects to it.
    - Add a Superstore Postgres service to the Docker Compose file.
-   - Postgres in the cloud: AWS RDS, Azure Database for PostgreSQL, or GCP Cloud SQL.
+   - Postgres in the cloud: a free [Neon](https://neon.com) project (no credit card). Load Superstore as in [project 01, Assignment 2](../01-end-to-end-analytics-with-dbt-and-looker/README.md#assignment-2-load-the-data-into-postgres-3-h). In Metabase, turn on SSL for the connection.
 
 **Deliverable:** `docker-compose.yml` in your repo and a screenshot of the Metabase home page.
 
@@ -262,7 +262,7 @@ docker stop metabase
 docker rm metabase
 ```
 
-If you used a cloud Postgres (RDS, Azure, Cloud SQL), delete it so you do not pay for it.
+If you used a Neon project, you can keep it (Free plan) or delete it in the project **Settings**.
 
 ## Resources
 
