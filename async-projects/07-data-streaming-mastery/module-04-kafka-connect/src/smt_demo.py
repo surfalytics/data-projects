@@ -3,7 +3,7 @@ Kafka Connect SMT (Single Message Transforms) Demo
 
 Demonstrates how to deploy connectors with SMTs and validates that
 the transforms are applied correctly. Covers:
-  - TimestampRouter: route records to date-partitioned topics
+  - TimestampRouter: route records to date-named targets (sink connector)
   - ReplaceField: rename fields in transit
   - InsertField: add static or timestamp fields
   - Filter (using RecordIsTombstone / predicates)
@@ -201,34 +201,52 @@ def demo_timestamp_router():
     """
     Demonstrate the TimestampRouter SMT.
 
-    Deploys a JDBC source connector with TimestampRouter that appends the
-    current date to the topic name, resulting in topics like:
-        mysql-employees-YYYYMMDD
+    TimestampRouter reads the record timestamp. JDBC source records have no
+    timestamp ("Timestamp missing on record"), so we use it in a SINK connector.
+    Records read from Kafka always have a timestamp.
+
+    Pipeline: MySQL departments -> topic smt-ts-departments -> JDBC sink with
+    TimestampRouter -> MySQL table smt-ts-departments-YYYYMMDD.
     """
     print("\n" + "=" * 70)
-    print("DEMO 1: TimestampRouter SMT")
-    print("Routes records to date-partitioned topics.")
+    print("DEMO 1: TimestampRouter SMT (on a sink connector)")
+    print("Routes records to date-named targets.")
     print("=" * 70)
 
     today = datetime.now().strftime("%Y%m%d")
+    source_name = "smt-demo-ts-source"
     connector_name = "smt-demo-timestamp-router"
-
-    config = {
-        "name": connector_name,
+    jdbc = {
+        "tasks.max": "1",
+        "connection.url": "jdbc:mysql://mysql:3306/company",
+        "connection.user": "connect_user",
+        "connection.password": "connect_pass",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "true",
+    }
+    source = {
+        "name": source_name,
         "config": {
+            **jdbc,
             "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-            "tasks.max": "1",
-            "connection.url": "jdbc:mysql://mysql:3306/company",
-            "connection.user": "connect_user",
-            "connection.password": "connect_pass",
             "mode": "bulk",
             "topic.prefix": "smt-ts-",
             "table.whitelist": "departments",
             "poll.interval.ms": "60000",
-            "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-            "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-            "value.converter.schemas.enable": "false",
-            # TimestampRouter SMT configuration
+        },
+    }
+    sink = {
+        "name": connector_name,
+        "config": {
+            **jdbc,
+            "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+            "topics": "smt-ts-departments",
+            "auto.create": "true",
+            "insert.mode": "insert",
+            "pk.mode": "none",
+            # The table name is the topic name AFTER the SMT.
+            "table.name.format": "${topic}",
             "transforms": "routeByDate",
             "transforms.routeByDate.type": "org.apache.kafka.connect.transforms.TimestampRouter",
             "transforms.routeByDate.topic.format": "${topic}-${timestamp}",
@@ -236,29 +254,40 @@ def demo_timestamp_router():
         },
     }
 
-    if not deploy_connector(config):
-        return False
+    for cfg in (source, sink):
+        if not deploy_connector(cfg) or not wait_for_connector_running(cfg["name"]):
+            return False
 
-    if not wait_for_connector_running(connector_name):
-        return False
+    print("  Waiting for data to be written ...")
+    time.sleep(15)
 
-    # Wait for data to flow
-    print("  Waiting for data to be produced ...")
-    time.sleep(10)
+    expected_table = f"smt-ts-departments-{today}"
+    try:
+        import mysql.connector
 
-    expected_topic = f"smt-ts-departments-{today}"
-    messages = consume_messages(expected_topic, timeout=20)
+        conn = mysql.connector.connect(
+            host="localhost", port=3306, user="connect_user", password="connect_pass", database="company"
+        )
+        cur = conn.cursor()
+        cur.execute("SHOW TABLES")
+        tables = [r[0] for r in cur.fetchall()]
+        rows = 0
+        if expected_table in tables:
+            cur.execute(f"SELECT COUNT(*) FROM `{expected_table}`")
+            rows = cur.fetchone()[0]
+        conn.close()
+    except Exception as exc:  # noqa: BLE001
+        print(f"  ERROR: could not query MySQL: {exc}")
+        tables, rows = [], 0
 
-    if messages:
-        print(f"\n  SUCCESS: Messages routed to date-partitioned topic '{expected_topic}'")
-        print(f"  Sample message: {messages[0]['value'][:200]}")
-        cleanup_connector(connector_name)
+    cleanup_connector(source_name)
+    cleanup_connector(connector_name)
+
+    if rows:
+        print(f"\n  SUCCESS: Table '{expected_table}' exists with {rows} rows.")
         return True
-    else:
-        print(f"\n  NOTE: No messages found in '{expected_topic}' yet.")
-        print("  The TimestampRouter appends dates to topics. Check Kafka UI for topics.")
-        cleanup_connector(connector_name)
-        return False
+    print(f"\n  NOTE: Table '{expected_table}' not found. Tables: {tables}")
+    return False
 
 
 # ============================================================================
@@ -405,7 +434,7 @@ def demo_insert_field():
             print(f"\n  Record fields: {list(record.keys())}")
             if has_timestamp and has_source:
                 print("  SUCCESS: Fields inserted correctly!")
-                print(f"  processed_at = {record['processed_at']}")
+                print(f"  processed_at = {record['processed_at']}  (null is expected: JDBC source records have no timestamp)")
                 print(f"  source_system = {record['source_system']}")
             else:
                 print("  PARTIAL: Some inserted fields missing.")
@@ -458,11 +487,14 @@ def demo_chained_smts():
             "value.converter": "org.apache.kafka.connect.json.JsonConverter",
             "value.converter.schemas.enable": "false",
             # Chained SMT configuration
-            "transforms": "addTimestamp,renameEmail,maskSalary",
+            "transforms": "addTimestamp,renameEmail,castSalary,maskSalary",
             "transforms.addTimestamp.type": "org.apache.kafka.connect.transforms.InsertField$Value",
             "transforms.addTimestamp.timestamp.field": "etl_timestamp",
             "transforms.renameEmail.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
             "transforms.renameEmail.renames": "email:contact_email",
+            # MaskField on a DECIMAL column fails ("mismatching scale"), so cast to float64 first.
+            "transforms.castSalary.type": "org.apache.kafka.connect.transforms.Cast$Value",
+            "transforms.castSalary.spec": "salary:float64",
             "transforms.maskSalary.type": "org.apache.kafka.connect.transforms.MaskField$Value",
             "transforms.maskSalary.fields": "salary",
         },

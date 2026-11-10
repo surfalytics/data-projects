@@ -60,7 +60,7 @@ What is the difference between "committed offset" and "current offset"?
 A) They are the same thing
 B) Current offset is where the consumer is reading; committed offset is persisted to Kafka
 C) Committed offset is always ahead of current offset
-D) Current offset is stored in ZooKeeper; committed offset is stored in the topic
+D) Current offset is stored on the broker disk; committed offset is stored only in the consumer
 
 ---
 
@@ -104,6 +104,16 @@ D) All messages in the topic are replayed
 
 ---
 
+### Question 11
+Which statement about Kafka 4.0 and later is true?
+
+A) ZooKeeper is optional and still the default
+B) Metadata is stored by KRaft controllers. ZooKeeper is removed
+C) KRaft only works with a single node
+D) Brokers need ZooKeeper for leader election of partitions
+
+---
+
 ## Answers
 
 | Question | Answer | Explanation |
@@ -117,4 +127,5 @@ D) All messages in the topic are replayed
 | 7 | **B) `earliest`** | `earliest` tells the consumer to start from the beginning of the partition when there is no committed offset. `latest` would skip all existing messages. |
 | 8 | **B) Duplicate messages from producer retries within a single partition** | The idempotent producer assigns a PID and sequence number to each message, allowing the broker to deduplicate retries. It does not prevent cross-partition or cross-session duplicates. |
 | 9 | **B) 1** | With RF=3 and min.insync.replicas=2, you need at least 2 replicas (including the leader) to be alive to accept writes. So 1 broker can fail. If 2 fail, only 1 replica remains, which is below the minimum. |
-| 10 | **B) Processing pauses for consumers whose partitions are being reassigned** | With the eager (default) rebalance protocol, all consumers revoke their partitions and stop processing during rebalance. The cooperative protocol (CooperativeSticky) reduces this by only reassigning partitions that need to move. |
+| 10 | **B) Processing pauses for consumers whose partitions are being reassigned** | With the classic protocol and an eager strategy (Range, RoundRobin), all consumers revoke their partitions and stop processing during rebalance. CooperativeSticky reduces this by only moving partitions that need to move. The new KIP-848 protocol (`group.protocol=consumer`, GA in Kafka 4.0) removes the global pause. |
+| 11 | **B) Metadata is stored by KRaft controllers. ZooKeeper is removed** | KRaft is the only mode since Kafka 4.0. A node can be a broker, a controller, or both. |

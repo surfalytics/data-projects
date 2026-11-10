@@ -16,17 +16,18 @@ The "Primary Modules" column says where each generator can be used. The module c
 
 ## Prerequisites
 
-1. **Python 3.9+**
-2. **Install dependencies:**
+1. **Python 3.12** (3.10 or newer also works)
+2. **Install dependencies** in a virtual environment:
    ```bash
-   pip install -r requirements.txt
+   uv venv --python 3.12 .venv && source .venv/bin/activate
+   uv pip install -r requirements.txt     # or: pip install -r requirements.txt
    ```
-3. **Docker services.** Start the course stack from the course folder (`07-data-streaming-mastery/`):
+3. **Docker services.** Start a module stack, for example `module-02-kafka-core/` (Kafka only) or `module-09-capstone/` (full stack, MySQL included):
    ```bash
-   docker compose up -d
+   cd ../module-02-kafka-core && docker compose up -d
    ```
-   It starts ZooKeeper, 3 Kafka brokers, Schema Registry, Kafka Connect, ksqlDB, MySQL, PostgreSQL and the monitoring services.
-   The generators connect to `localhost:9092` (Kafka) and `localhost:3306` (MySQL).
+   Each stack runs Kafka in KRaft mode (no ZooKeeper).
+   The generators connect to `localhost:9092` (Kafka) and `localhost:3306` (MySQL). Only the e-commerce simulator needs MySQL. MySQL 8.4 needs the `cryptography` package for the login. It is in `requirements.txt`.
 
 ---
 

@@ -57,7 +57,8 @@ def main() -> None:
             'properties.group.id' = 'pyflink-ex-2-3',
             'scan.startup.mode' = 'earliest-offset',
             'format' = 'json',
-            'json.ignore-parse-errors' = 'true'
+            'json.ignore-parse-errors' = 'true',
+            'json.timestamp-format.standard' = 'ISO-8601'
         )
     """)
 
@@ -105,12 +106,13 @@ def main() -> None:
     t_env.execute_sql("""
         INSERT INTO orders_per_minute_sink
         SELECT
-            TUMBLE_START(order_time, INTERVAL '1' MINUTE) AS window_start,
-            TUMBLE_END(order_time, INTERVAL '1' MINUTE)   AS window_end,
+            window_start,
+            window_end,
             COUNT(*)                                       AS order_count,
             SUM(amount)                                    AS total_revenue
-        FROM orders
-        GROUP BY TUMBLE(order_time, INTERVAL '1' MINUTE)
+        FROM TABLE(
+            TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE))
+        GROUP BY window_start, window_end
     """)
 
     # -----------------------------------------------------------------------

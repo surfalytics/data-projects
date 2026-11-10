@@ -407,8 +407,8 @@ sequenceDiagram
 | `initial_only` | Take a snapshot and then stop (no streaming) |
 | `when_needed` | Snapshot if offsets are missing or binlog position is unavailable |
 | `never` | Skip snapshot entirely; start streaming from current binlog position |
-| `schema_only` | Capture table schemas but not the data; then stream |
-| `schema_only_recovery` | Re-read schemas without re-snapshotting data; for recovery after schema history loss |
+| `no_data` (was `schema_only`) | Capture table schemas but not the data; then stream |
+| `recovery` (was `schema_only_recovery`) | Re-read schemas without re-snapshotting data; for recovery after schema history loss |
 
 ---
 

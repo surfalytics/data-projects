@@ -1,2 +1,2 @@
-confluent-kafka>=2.3.0
-faker>=20.0.0
+confluent-kafka>=2.12.0
+faker>=40.0.0

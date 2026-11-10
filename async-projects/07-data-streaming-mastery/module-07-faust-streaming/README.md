@@ -6,9 +6,11 @@
 
 ## Versions used in this module
 
-- Python 3.10 or newer. `faust-streaming` 0.15.x needs `>=3.10` ([PyPI](https://pypi.org/project/faust-streaming/)).
-- Install with `pip install -r requirements.txt`. This installs `faust-streaming`. The old `faust` package on PyPI (1.10.x) is the dead Robinhood project. Do not install it.
-- Kafka: Confluent Platform 7.5.0 with ZooKeeper (see `docker-compose.yml`). Kafka UI is on http://localhost:8080.
+- Python **3.12** (tested). `faust-streaming` 0.15.4 needs `>=3.10` ([PyPI](https://pypi.org/project/faust-streaming/0.15.4/)).
+- Install: `uv venv --python 3.12 && source .venv/bin/activate && uv pip install -r requirements.txt`. It installs `faust-streaming` 0.15.4, `aiokafka` 0.15, `confluent-kafka` 2.16.1 and `faker` 40.
+- `requirements.txt` also lists `packaging`. `faust-streaming` 0.15.4 imports it but does not declare it. Without it, `faust worker` fails with `No module named 'packaging'`. This installs `faust-streaming`. The old `faust` package on PyPI (1.10.x) is the dead Robinhood project. Do not install it.
+- Kafka: `confluentinc/cp-kafka:8.4.1` in KRaft mode (one node is broker and controller, no ZooKeeper). See `docker-compose.yml`. Kafka UI (`kafbat/kafka-ui:v1.5.0`) is on http://localhost:8080.
+- Faust uses `aiokafka` as its Kafka client. It works with Kafka 4.x brokers. Faust does not use the new consumer rebalance protocol (KIP-848). It uses the classic group protocol, which Kafka 4.x still supports.
 - All code in `src/` and `solutions/` uses `store="memory://"`. State is lost on restart. RocksDB is optional and needs the extra `python-rocksdb` package (see `requirements.txt`).
 
 ### Run the examples
@@ -502,7 +504,7 @@ app = faust.App(
 )
 ```
 
-> **Note:** Exactly-once requires Kafka broker version 0.11+ and adds some latency overhead due to transactional commits.
+> **Note:** Exactly-once needs transactions support in the broker (any current Kafka has it) and adds some latency overhead due to transactional commits.
 
 ---
 

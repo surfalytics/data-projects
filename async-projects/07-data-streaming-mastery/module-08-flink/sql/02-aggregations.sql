@@ -12,6 +12,13 @@
 --   1. TUMBLE  -- Non-overlapping fixed-size windows
 --   2. HOP     -- Overlapping (sliding) windows
 --   3. SESSION -- Activity-based windows that close after a gap
+--
+-- Syntax: these use the window table-valued functions (window TVFs).
+--   FROM TABLE(TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE))
+-- The function adds window_start, window_end and window_time columns.
+-- Then you GROUP BY window_start, window_end.
+-- The old group window syntax (GROUP BY TUMBLE(...) with TUMBLE_START) is
+-- not used in this module. See the README for the Flink 2.x status.
 -- =============================================================================
 
 
@@ -24,38 +31,35 @@
 -- =============================================================================
 
 SELECT
-    TUMBLE_START(order_time, INTERVAL '1' MINUTE)   AS window_start,
-    TUMBLE_END(order_time, INTERVAL '1' MINUTE)     AS window_end,
+    window_start,
+    window_end,
     COUNT(*)                                         AS order_count,
     SUM(amount)                                      AS total_revenue,
     AVG(amount)                                      AS avg_order_value,
     MIN(amount)                                      AS min_order_value,
     MAX(amount)                                      AS max_order_value
-FROM orders
-GROUP BY TUMBLE(order_time, INTERVAL '1' MINUTE);
+FROM TABLE(
+    TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE))
+GROUP BY window_start, window_end;
 
 
 -- =============================================================================
--- Query 2: Revenue by category per 5-minute window (Tumbling)
+-- Query 2: Revenue by order status per 5-minute window (Tumbling)
 -- =============================================================================
--- Groups orders by product category and computes revenue metrics.
--- This requires a join with the products table to get the category.
--- Note: This is a temporal join using the product's latest known value.
--- For simplicity, we assume product_id maps directly to a category via a
--- lookup. In production, you would use a versioned (temporal) table join.
+-- Groups orders by order status and computes revenue metrics.
+-- (For revenue by product category, see 04-joins-and-enrichment.sql.)
 -- =============================================================================
 
 SELECT
-    TUMBLE_START(o.order_time, INTERVAL '5' MINUTE)  AS window_start,
-    TUMBLE_END(o.order_time, INTERVAL '5' MINUTE)    AS window_end,
-    o.order_status                                    AS status,
+    window_start,
+    window_end,
+    order_status                                      AS status,
     COUNT(*)                                          AS order_count,
-    SUM(o.amount)                                     AS total_revenue,
-    AVG(o.amount)                                     AS avg_order_value
-FROM orders o
-GROUP BY
-    TUMBLE(o.order_time, INTERVAL '5' MINUTE),
-    o.order_status;
+    SUM(amount)                                       AS total_revenue,
+    AVG(amount)                                       AS avg_order_value
+FROM TABLE(
+    TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '5' MINUTE))
+GROUP BY window_start, window_end, order_status;
 
 
 -- =============================================================================
@@ -69,13 +73,16 @@ GROUP BY
 --   [09:56, 10:06), [09:57, 10:07), ..., [10:05, 10:15)
 -- =============================================================================
 
+-- HOP(TABLE t, DESCRIPTOR(time_col), SLIDE, SIZE): the slide comes first.
+
 SELECT
-    HOP_START(order_time, INTERVAL '1' MINUTE, INTERVAL '10' MINUTE) AS window_start,
-    HOP_END(order_time, INTERVAL '1' MINUTE, INTERVAL '10' MINUTE)   AS window_end,
+    window_start,
+    window_end,
     COUNT(*)                                                          AS rolling_order_count,
     SUM(amount)                                                       AS rolling_revenue
-FROM orders
-GROUP BY HOP(order_time, INTERVAL '1' MINUTE, INTERVAL '10' MINUTE);
+FROM TABLE(
+    HOP(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE, INTERVAL '10' MINUTE))
+GROUP BY window_start, window_end;
 
 
 -- =============================================================================
@@ -86,15 +93,18 @@ GROUP BY HOP(order_time, INTERVAL '1' MINUTE, INTERVAL '10' MINUTE);
 -- that customer. Useful for analyzing user engagement patterns.
 -- =============================================================================
 
+-- SESSION needs PARTITION BY to give one session per key.
+
 SELECT
-    SESSION_START(order_time, INTERVAL '5' MINUTE) AS session_start,
-    SESSION_END(order_time, INTERVAL '5' MINUTE)   AS session_end,
+    window_start                                    AS session_start,
+    window_end                                      AS session_end,
     customer_id,
     COUNT(*)                                        AS orders_in_session,
     SUM(amount)                                     AS session_revenue,
-    MAX(order_time) - MIN(order_time)               AS session_duration
-FROM orders
-GROUP BY SESSION(order_time, INTERVAL '5' MINUTE), customer_id;
+    TIMESTAMPDIFF(SECOND, MIN(order_time), MAX(order_time)) AS session_seconds
+FROM TABLE(
+    SESSION(TABLE orders PARTITION BY customer_id, DESCRIPTOR(order_time), INTERVAL '5' MINUTE))
+GROUP BY window_start, window_end, customer_id;
 
 
 -- =============================================================================
@@ -105,14 +115,13 @@ GROUP BY SESSION(order_time, INTERVAL '5' MINUTE), customer_id;
 -- =============================================================================
 
 SELECT
-    TUMBLE_START(order_time, INTERVAL '1' MINUTE) AS window_start,
+    window_start,
     order_status,
     COUNT(*)                                       AS status_count,
     SUM(amount)                                    AS status_revenue
-FROM orders
-GROUP BY
-    TUMBLE(order_time, INTERVAL '1' MINUTE),
-    order_status;
+FROM TABLE(
+    TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE))
+GROUP BY window_start, window_end, order_status;
 
 
 -- =============================================================================

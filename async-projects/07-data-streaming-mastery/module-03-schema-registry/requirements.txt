@@ -1,3 +1,4 @@
-confluent-kafka[avro]
-requests
-faker
+confluent-kafka[avro,json,schemaregistry]>=2.12.0
+fastavro>=1.12.0
+requests>=2.32.0
+faker>=40.0.0

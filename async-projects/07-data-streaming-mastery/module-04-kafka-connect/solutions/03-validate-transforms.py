@@ -39,16 +39,15 @@ def deploy_connector() -> bool:
             "connection.user": "connect_user",
             "connection.password": "connect_pass",
             "mode": "bulk",
-            "topic.prefix": "",
+            # In query mode, topic.prefix is the full topic name.
+            "topic.prefix": "transformed-employees",
             "query": "SELECT id, first_name, last_name, email, department_id, salary, is_active FROM company.employees",
             "poll.interval.ms": "60000",
             "key.converter": "org.apache.kafka.connect.storage.StringConverter",
             "value.converter": "org.apache.kafka.connect.json.JsonConverter",
             "value.converter.schemas.enable": "false",
-            "topic.prefix": "transformed-",
-            "table.whitelist": "employees",
             # Chained SMTs
-            "transforms": "renameFields,addSource,addTimestamp,maskSalary",
+            "transforms": "renameFields,addSource,addTimestamp,castSalary,maskSalary",
             # 1. Rename first_name -> given_name, last_name -> surname
             "transforms.renameFields.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
             "transforms.renameFields.renames": "first_name:given_name,last_name:surname",
@@ -59,7 +58,11 @@ def deploy_connector() -> bool:
             # 3. Add timestamp field: kafka_ingest_time
             "transforms.addTimestamp.type": "org.apache.kafka.connect.transforms.InsertField$Value",
             "transforms.addTimestamp.timestamp.field": "kafka_ingest_time",
-            # 4. Mask salary field
+            # 4a. Cast salary (DECIMAL) to float64. MaskField on a DECIMAL fails with
+            #     "Decimal value has mismatching scale" because it writes 0 with scale 0.
+            "transforms.castSalary.type": "org.apache.kafka.connect.transforms.Cast$Value",
+            "transforms.castSalary.spec": "salary:float64",
+            # 4b. Mask salary field
             "transforms.maskSalary.type": "org.apache.kafka.connect.transforms.MaskField$Value",
             "transforms.maskSalary.fields": "salary",
         },
@@ -185,7 +188,7 @@ def validate_transforms(messages: list[dict]) -> bool:
         "first_name field removed": [],
         "last_name field removed": [],
         "data_source == 'mysql-hr-system'": [],
-        "kafka_ingest_time exists and is set": [],
+        "kafka_ingest_time field exists": [],
         "salary is masked (zero)": [],
     }
 
@@ -205,8 +208,8 @@ def validate_transforms(messages: list[dict]) -> bool:
         checks["data_source == 'mysql-hr-system'"].append(
             record.get("data_source") == "mysql-hr-system"
         )
-        checks["kafka_ingest_time exists and is set"].append(
-            "kafka_ingest_time" in record and record["kafka_ingest_time"] is not None
+        checks["kafka_ingest_time field exists"].append(
+            "kafka_ingest_time" in record  # value is null: JDBC source records have no timestamp
         )
         checks["salary is masked (zero)"].append(
             record.get("salary") == 0 or record.get("salary") == 0.0

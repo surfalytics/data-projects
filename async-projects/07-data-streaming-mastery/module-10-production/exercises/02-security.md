@@ -8,17 +8,15 @@
 
 1. Run the SSL setup script to generate certificates:
    ```bash
-   cd config
-   bash ssl-setup.sh
-   cd ..
+   bash config/ssl-setup.sh
    ```
 
 2. Examine the generated files in the `ssl/` directory. For each file, write a one-sentence description of what it contains and its role in the SSL handshake:
    - `ca-cert.pem`
-   - `kafka.broker.keystore.jks`
-   - `kafka.broker.truststore.jks`
-   - `kafka.client.keystore.jks`
-   - `kafka.client.truststore.jks`
+   - `kafka.broker.keystore.p12`
+   - `kafka.broker.truststore.p12`
+   - `kafka.client.keystore.p12`
+   - `kafka.client.truststore.p12`
    - `client-cert.pem`
    - `client-key.pem`
 
@@ -40,6 +38,8 @@
 5. Review the `src/ssl_producer.py` code. List all SSL-related configuration properties and explain what each one does.
 
 6. Write a brief comparison (5-10 sentences) of one-way TLS vs mutual TLS (mTLS). When would you use each?
+
+Optional: start the secure broker (`docker compose -f docker-compose.secure.yml up -d`), give `User:kafka-client` the `--producer` ACL on topic `ssl-demo`, and run `python src/ssl_producer.py`.
 
 **Deliverable:** A file `exercises/ssl-analysis.md` with your answers to all questions above.
 
@@ -65,7 +65,7 @@
 
    Each application uses a separate SASL username matching its service name.
 
-   Write the `kafka-acls.sh` commands to:
+   Write the `kafka-acls` commands to (run them inside the secure broker, see the README section "ACLs"):
    - Create the minimum necessary permissions for each service
    - Ensure no service can access topics it should not
    - Create a consumer group ACL for each service (use the service name as the group ID)

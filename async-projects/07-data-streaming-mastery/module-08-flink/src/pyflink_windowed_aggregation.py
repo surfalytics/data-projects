@@ -80,7 +80,8 @@ def create_orders_source_ddl() -> str:
             'scan.startup.mode'               = 'earliest-offset',
             'format'                          = 'json',
             'json.fail-on-missing-field'      = 'false',
-            'json.ignore-parse-errors'        = 'true'
+            'json.ignore-parse-errors'        = 'true',
+            'json.timestamp-format.standard'    = 'ISO-8601'
         )
     """
 
@@ -242,15 +243,16 @@ def run_windowed_aggregation() -> None:
     tumbling_query = """
         INSERT INTO tumbling_results
         SELECT
-            TUMBLE_START(order_time, INTERVAL '1' MINUTE)       AS window_start,
-            TUMBLE_END(order_time, INTERVAL '1' MINUTE)         AS window_end,
+            window_start,
+            window_end,
             COUNT(*)                                             AS order_count,
             SUM(amount)                                          AS total_revenue,
             CAST(AVG(amount) AS DECIMAL(10, 2))                  AS avg_order_value,
             MAX(amount)                                          AS max_order_value,
             MIN(amount)                                          AS min_order_value
-        FROM orders_source
-        GROUP BY TUMBLE(order_time, INTERVAL '1' MINUTE)
+        FROM TABLE(
+            TUMBLE(TABLE orders_source, DESCRIPTOR(order_time), INTERVAL '1' MINUTE))
+        GROUP BY window_start, window_end
     """
     t_env.execute_sql(tumbling_query)
     logger.info("Tumbling window job submitted")
@@ -265,12 +267,13 @@ def run_windowed_aggregation() -> None:
     sliding_query = """
         INSERT INTO sliding_results
         SELECT
-            HOP_START(order_time, INTERVAL '1' MINUTE, INTERVAL '10' MINUTE)  AS window_start,
-            HOP_END(order_time, INTERVAL '1' MINUTE, INTERVAL '10' MINUTE)    AS window_end,
+            window_start,
+            window_end,
             COUNT(*)                                                           AS order_count,
             SUM(amount)                                                        AS total_revenue
-        FROM orders_source
-        GROUP BY HOP(order_time, INTERVAL '1' MINUTE, INTERVAL '10' MINUTE)
+        FROM TABLE(
+            HOP(TABLE orders_source, DESCRIPTOR(order_time), INTERVAL '1' MINUTE, INTERVAL '10' MINUTE))
+        GROUP BY window_start, window_end
     """
     t_env.execute_sql(sliding_query)
     logger.info("Sliding window job submitted")
@@ -287,12 +290,13 @@ def run_windowed_aggregation() -> None:
         INSERT INTO session_results
         SELECT
             customer_id,
-            SESSION_START(order_time, INTERVAL '5' MINUTE)      AS session_start,
-            SESSION_END(order_time, INTERVAL '5' MINUTE)        AS session_end,
+            window_start                                         AS session_start,
+            window_end                                           AS session_end,
             COUNT(*)                                             AS order_count,
             SUM(amount)                                          AS session_revenue
-        FROM orders_source
-        GROUP BY SESSION(order_time, INTERVAL '5' MINUTE), customer_id
+        FROM TABLE(
+            SESSION(TABLE orders_source PARTITION BY customer_id, DESCRIPTOR(order_time), INTERVAL '5' MINUTE))
+        GROUP BY window_start, window_end, customer_id
     """
     result = t_env.execute_sql(session_query)
     logger.info("Session window job submitted")

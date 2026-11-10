@@ -19,6 +19,7 @@
 6. [Time Semantics](#6-time-semantics-event-time-vs-processing-time-vs-ingestion-time)
 7. [Backpressure](#7-backpressure)
 8. [Event Sourcing and CQRS](#8-event-sourcing-and-cqrs)
+- [Tools Used in This Course (2026)](#tools-used-in-this-course-2026)
 9. [Key Takeaways](#9-key-takeaways)
 10. [Next Steps](#10-next-steps)
 
@@ -472,6 +473,24 @@ CQRS separates the **write model** (commands) from the **read model** (queries).
 - The read model can be optimized for query speed (denormalized tables, search indexes, caches).
 
 **Analogy**: A library. The cataloging department (write model) carefully organizes and records every book. The card catalog / search computer (read model) is optimized so visitors can quickly find what they need. They are separate systems with different optimization goals.
+
+---
+
+## Tools Used in This Course (2026)
+
+| Tool | Role | Version in this course |
+|---|---|---|
+| **Apache Kafka** | Broker. Stores events in topics. | Kafka 4.x (Confluent Platform 8.4). KRaft only. No ZooKeeper. |
+| **Schema Registry** | Stores and checks schemas | 8.4.1 |
+| **Kafka Connect / Debezium** | Move data in and out of Kafka. Capture database changes. | Connect 8.4.1, Debezium 3.x |
+| **Kafka Streams / Faust** | Stream processing in a library | `faust-streaming` (Python) |
+| **ksqlDB** | SQL on streams. In maintenance mode. For new work use Flink SQL. | Server 8.4.1 |
+| **Apache Flink** | Stateful stream processing, event time, watermarks | Flink 2.2 (the DataSet API is removed in 2.x) |
+
+- Kafka 4.0 removed ZooKeeper. Brokers keep their metadata with KRaft. ([Kafka 4.0 announcement](https://kafka.apache.org/blog/2025/03/18/apache-kafka-4.0.0-release-announcement/))
+- Kafka 4.0 needs Java 17 for brokers and Connect. Docker images already include Java.
+- Python version: 3.12.
+- This module is theory only. You start the Docker stack in module 2.
 
 ---
 

@@ -24,7 +24,7 @@ import signal
 import logging
 from collections import defaultdict
 
-from confluent_kafka import Consumer, TopicPartition
+from confluent_kafka import Consumer, ConsumerGroupTopicPartitions, TopicPartition
 from confluent_kafka.admin import AdminClient
 from prometheus_client import Gauge, start_http_server
 
@@ -141,7 +141,10 @@ def get_consumer_group_lag(admin_client, group_id):
     """
     # Get committed offsets for the consumer group
     try:
-        future = admin_client.list_consumer_group_offsets([group_id])
+        # Since confluent-kafka 2.x the API takes ConsumerGroupTopicPartitions objects.
+        future = admin_client.list_consumer_group_offsets(
+            [ConsumerGroupTopicPartitions(group_id)]
+        )
         offsets_result = future[group_id].result()
     except Exception as e:
         logger.warning("Failed to get offsets for group '%s': %s", group_id, e)

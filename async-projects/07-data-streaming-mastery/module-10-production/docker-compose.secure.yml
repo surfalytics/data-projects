@@ -1,0 +1,85 @@
+# Secure single-node KRaft cluster for the security exercises.
+# Run it ALONE (it is a separate stack from docker-compose.yml, but uses its own ports).
+#
+#   bash config/ssl-setup.sh                      # make certificates first
+#   docker compose -f docker-compose.secure.yml up -d
+#
+# Listeners:
+#   CONTROLLER  kafka:29093   SASL_PLAINTEXT (PLAIN). KRaft controller traffic. Not published.
+#   BROKER      kafka:29092   SSL (mutual TLS).         Broker-to-broker and other containers.
+#   SSL         localhost:9093 SSL (mutual TLS).         Your laptop.
+#   SASL        localhost:9094 SASL_PLAINTEXT (PLAIN or SCRAM-SHA-512). Your laptop. Demo only.
+services:
+  kafka:
+    image: confluentinc/cp-kafka:8.4.1
+    hostname: kafka
+    container_name: module10-secure-kafka
+    ports:
+      - "9093:9093"
+      - "9094:9094"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+      KAFKA_LISTENERS: BROKER://kafka:29092,CONTROLLER://kafka:29093,SSL://0.0.0.0:9093,SASL://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: BROKER://kafka:29092,SSL://localhost:9093,SASL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:SASL_PLAINTEXT,BROKER:SSL,SSL:SSL,SASL:SASL_PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+
+      # --- Controller listener security (KRaft) ---
+      # The controller listener has its own protocol and its own SASL mechanism.
+      # The same JAAS entry is used by the controller (server side, user_* lines)
+      # and by the broker when it connects to the controller (client side).
+      KAFKA_SASL_MECHANISM_CONTROLLER_PROTOCOL: PLAIN
+      KAFKA_LISTENER_NAME_CONTROLLER_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_LISTENER_NAME_CONTROLLER_PLAIN_SASL_JAAS_CONFIG: >-
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="controller" password="controller-secret"
+        user_controller="controller-secret";
+
+      # --- SASL listener for clients ---
+      # "__" in an env var name becomes "-" in the property name.
+      KAFKA_LISTENER_NAME_SASL_SASL_ENABLED_MECHANISMS: PLAIN,SCRAM-SHA-512
+      KAFKA_LISTENER_NAME_SASL_PLAIN_SASL_JAAS_CONFIG: >-
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        user_admin="admin-secret"
+        user_producer="producer-secret"
+        user_consumer="consumer-secret";
+      KAFKA_LISTENER_NAME_SASL_SCRAM__SHA__512_SASL_JAAS_CONFIG: >-
+        org.apache.kafka.common.security.scram.ScramLoginModule required;
+
+      # --- TLS (PKCS12 stores made by config/ssl-setup.sh) ---
+      # The Confluent image wants file NAMES in /etc/kafka/secrets, and password FILES.
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker.keystore.p12
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: store-password
+      KAFKA_SSL_KEY_CREDENTIALS: store-password
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.broker.truststore.p12
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: store-password
+      KAFKA_SSL_KEYSTORE_TYPE: PKCS12
+      KAFKA_SSL_TRUSTSTORE_TYPE: PKCS12
+      KAFKA_SSL_CLIENT_AUTH: required
+      # Certificate CN becomes the user name: "CN=kafka-client,OU=..." -> User:kafka-client
+      KAFKA_SSL_PRINCIPAL_MAPPING_RULES: "RULE:^CN=([^,]+).*$$/$$1/,DEFAULT"
+
+      # --- ACLs (KRaft uses StandardAuthorizer, not AclAuthorizer) ---
+      KAFKA_AUTHORIZER_CLASS_NAME: org.apache.kafka.metadata.authorizer.StandardAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      # kafka = the broker itself (inter-broker TLS). controller = KRaft controller. admin = you.
+      KAFKA_SUPER_USERS: User:kafka;User:controller;User:admin
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    volumes:
+      - ./ssl:/etc/kafka/secrets:ro
+      - ./config/admin-sasl.properties:/etc/kafka/admin-sasl.properties:ro
+      - ./config/admin-ssl.properties:/etc/kafka/admin-ssl.properties:ro
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server kafka:29092 --command-config /etc/kafka/admin-ssl.properties"]
+      interval: 15s
+      timeout: 15s
+      retries: 10
+      start_period: 30s

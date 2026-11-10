@@ -19,3 +19,15 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
     scrape_interval: 30s
+
+  # Python exporters that run on your laptop (src/monitoring_producer.py and
+  # src/consumer_lag_monitor.py). host.docker.internal is the laptop, seen from Docker.
+  - job_name: 'python-producer'
+    static_configs:
+      - targets: ['host.docker.internal:8000']
+    scrape_interval: 10s
+
+  - job_name: 'consumer-lag'
+    static_configs:
+      - targets: ['host.docker.internal:8001']
+    scrape_interval: 10s

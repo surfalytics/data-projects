@@ -4,7 +4,7 @@
 
 1. Start the Flink stack: `./src/setup_flink.sh`
 2. Seed data: `python src/seed_data.py` (let it run in the background)
-3. Open the Flink SQL Client: `docker exec -it flink-sql-client /opt/flink/bin/sql-client.sh`
+3. Open the Flink SQL Client: `docker compose run --rm sql-client`
 4. Run the table creation script: `sql/01-create-kafka-tables.sql`
 
 ---
@@ -24,7 +24,8 @@
 - Write results to a new Kafka topic `order-dashboard-5min` using upsert-kafka
 
 **Hints:**
-- Use `TUMBLE(order_time, INTERVAL '5' MINUTE)` for windowing
+- Use the window function: `FROM TABLE(TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '5' MINUTE))`
+- Then `GROUP BY window_start, window_end`
 - Use `COUNT(DISTINCT customer_id)` for distinct customer count
 - The sink needs a PRIMARY KEY for upsert-kafka
 
@@ -45,7 +46,7 @@
 - Write results to a `print` sink so you can observe the output
 
 **Hints:**
-- Use `HOP(order_time, INTERVAL '1' MINUTE, INTERVAL '10' MINUTE)`
+- Use `HOP(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE, INTERVAL '10' MINUTE)`. The slide comes first, then the size.
 - You can filter aggregation results using a `HAVING` clause
 - A print sink is useful for debugging: `'connector' = 'print'`
 
@@ -66,8 +67,8 @@
 4. Create a Kafka sink table `revenue-by-category-per-minute` and write results there
 
 **Hints:**
-- For a three-way join: `FROM orders o JOIN customers c ON ... JOIN products p ON ...`
-- Window the joined result with `TUMBLE(o.order_time, INTERVAL '1' MINUTE)`
+- Joining `customers` is optional for this result. The windowed query only needs `products`.
+- A regular join removes the time attribute, so you cannot window after it. Window first (per `product_id`), then join `products`, then group by category.
 - For "most common status," you can use a simpler approach: just count per category (skip the mode calculation if it's too complex)
 
 **Verification:**
