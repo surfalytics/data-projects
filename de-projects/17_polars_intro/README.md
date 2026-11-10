@@ -135,7 +135,7 @@ Work at your own pace. Each assignment shows the expected time.
 - [ ] You answer at least 3 business questions with Polars.
 - [ ] You wrote down the run time of Polars vs Pandas.
 
-**Hints:** the [`pyproject.toml`](pyproject.toml) lists both `polars` and `polars-lts-cpu`. They install the same `polars` module. Keep only one. Use `polars-lts-cpu` only on old CPUs.
+**Hints:** the [`poetry.lock`](poetry.lock) is older than [`pyproject.toml`](pyproject.toml). If `poetry install` says the lock file is out of date, run `poetry lock` first. On an old CPU, use `polars-lts-cpu` instead of `polars` (not both).
 
 ### Assignment 2: Polars and PyArrow (~2 h)
 

@@ -133,15 +133,15 @@ WITH directpushlaunchdarklyevents AS(
  event_key AS experiment_name,
        event_variationname AS experiment_variation_name,
 event_value AS experiment_variation_description,
- CASE 
+ CASE
   WHEN LOWER(event_value)='t' THEN TRUE
- WHEN LOWER(event_value)='f' THEN FALSE 
+ WHEN LOWER(event_value)='f' THEN FALSE
  END AS is_experiment_variation
-FROM partner_directpush_launchdarkly_events  
+FROM partner_directpush_launchdarkly_events
   WHERE is_active='Y'
 ),
 
-legacyfeatureflagevents AS (  
+legacyfeatureflagevents AS (
 SELECT id AS event_id,
   user AS event_contextkeysuser,
 "timestamp" as event_creationdate,

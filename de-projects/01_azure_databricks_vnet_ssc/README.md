@@ -86,8 +86,8 @@ Data flow:
 - Azure subscription. Start with the [Azure free account](https://azure.microsoft.com/en-us/free/).
 - Basic knowledge of cloud computing and Azure. Courses:
   - [Introduction to Microsoft Azure Cloud Services](https://www.coursera.org/learn/microsoft-azure-cloud-services)
-  - [Microsoft Azure Management Tools and Security Solutions](https://www.coursera.org/learn/microsoft-azure-management-tools-and-security-solutions)
-  - [Microsoft Azure Services and Lifecycles](https://www.coursera.org/learn/microsoft-azure-services-lifecycles)
+  - [Microsoft Azure Management Tools and Security Solutions](https://learn.microsoft.com/en-us/training/courses/az-900t00)
+  - [Microsoft Azure Services and Lifecycles](https://learn.microsoft.com/en-us/training/courses/az-900t00)
 - New to Git, CLI or Docker? Start with [Surfalytics Module 0](https://www.youtube.com/watch?v=LJIiCLu2gr8&list=PLNCDg7zJiXhP5Z_-TXUdorz2n7sjYHHKE&index=1).
 
 ## Assignments

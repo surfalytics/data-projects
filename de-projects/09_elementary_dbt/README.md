@@ -367,7 +367,7 @@ Work at your own pace. Each assignment shows the expected time. In all code, rep
    edr --help
    ```
 
-   You see the list of `edr` commands. If you get `command not found: edr`, see the [troubleshooting guide](https://docs.elementary-data.com/general/troubleshooting).
+   You see the list of `edr` commands. If you get `command not found: edr`, see the [troubleshooting guide](https://docs.elementary-data.com/oss/general/troubleshooting).
 5. Build the report:
 
    ```bash
@@ -424,7 +424,7 @@ Work at your own pace. Each assignment shows the expected time. In all code, rep
 ## Resources
 
 - [Elementary quickstart (CLI + package)](https://docs.elementary-data.com/oss/quickstart/quickstart-cli-package): official step-by-step guide.
-- [Elementary troubleshooting](https://docs.elementary-data.com/general/troubleshooting): common install errors.
+- [Elementary troubleshooting](https://docs.elementary-data.com/oss/general/troubleshooting): common install errors.
 - [Video: data observability](https://youtu.be/jfg9wBJBtKk?si=4UVZ93u-MdwnJvaF): why observability matters.
 - [Complete dbt Bootcamp repo](https://github.com/nordquant/complete-dbt-bootcamp-zero-to-hero): the dbt project used here.
 - [dbt Snowflake setup](https://docs.getdbt.com/docs/core/connect-data-platform/snowflake-setup): profile options.

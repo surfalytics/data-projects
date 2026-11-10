@@ -16,6 +16,15 @@ create table jaffle_shop.orders(
     status varchar(50)
 );
 
+create table jaffle_shop.payments(
+    id integer,
+    order_id integer,
+    payment_method varchar(50),
+    status varchar(50),
+    amount integer,
+    created date
+);
+
 create table stripe.payment(
     id integer,
     orderid integer,

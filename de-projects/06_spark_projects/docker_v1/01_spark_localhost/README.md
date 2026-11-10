@@ -11,7 +11,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.121-b13, mixed mode)
 ## Install Python
 
 ```
-brew install python   
+brew install python
 
 python3 --version
 Python 3.11.7
@@ -92,7 +92,7 @@ only showing top 5 rows
 ...                     .sum("Count")
 ...                     .orderBy("sum(Count)", ascending=False))
 >>> count_mnm_df.show(n=3, truncate=False)
-+-----+------+----------+                                                       
++-----+------+----------+
 |State|Color |sum(Count)|
 +-----+------+----------+
 |CA   |Yellow|100956    |

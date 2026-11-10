@@ -260,3 +260,7 @@ All generators handle `Ctrl+C` (SIGINT) gracefully. They will:
 2. Flush any buffered Kafka messages
 3. Close database connections
 4. Print a summary of events produced
+
+---
+
+**[Back to the course overview](../README.md)**

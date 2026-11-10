@@ -167,7 +167,7 @@ Work at your own pace. Each assignment shows the expected time.
 - [ ] The script prints the row count and statistics.
 - [ ] Your extra question works with `pyarrow.compute`, not pandas.
 
-**Hints:** [`ex.py`](ex.py) is a short draft of the same code. It has no imports, so it does not run alone.
+**Hints:** [`ex.py`](ex.py) is a short version of the same code. Run it with `poetry run python ex.py`.
 
 ### Assignment 3: PyArrow for data engineering (~2 h)
 

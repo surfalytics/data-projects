@@ -68,6 +68,7 @@ Data flow:
 - **Tables / entities:**
   - `jaffle_shop.customers` (id, first_name, last_name)
   - `jaffle_shop.orders` (id, user_id, order_date, status)
+  - `jaffle_shop.payments` (id, order_id, payment_method, status, amount, created). Extra table, the dbt models in this project do not use it.
   - `stripe.payment` (id, orderid, paymentmethod, status, amount in cents, created)
 - **Size:** about 100 customers, 99 orders, 120 payments.
 
@@ -100,7 +101,7 @@ Work at your own pace. Each assignment shows the expected time.
 
 3. Create a Postgres database in the cloud. Allow access from your IP if your provider needs it. Connect with DBeaver.
 4. Run [`src/sql/01_create_schemas_tables.sql`](src/sql/01_create_schemas_tables.sql) to create the schemas `jaffle_shop`, `stripe`, `dev` and the tables.
-5. Run [`src/sql/02_insert_data.sql`](src/sql/02_insert_data.sql) to load the data. See the hint below about `jaffle_shop.payments`.
+5. Run [`src/sql/02_insert_data.sql`](src/sql/02_insert_data.sql) to load the data.
 6. Create a virtual environment.
 
    macOS / Linux:
@@ -190,19 +191,6 @@ Work at your own pace. Each assignment shows the expected time.
 - [ ] No password is in the repo.
 
 **Hints:**
-
-- `02_insert_data.sql` also inserts into `jaffle_shop.payments`, but `01_create_schemas_tables.sql` does not create that table. Skip that `INSERT` block, or create the table first:
-
-  ```sql
-  create table jaffle_shop.payments(
-      id integer,
-      order_id integer,
-      payment_method varchar(50),
-      status varchar(50),
-      amount integer,
-      created date
-  );
-  ```
 
 - You can also load the CSV files from the `data` folder with DBeaver import.
 

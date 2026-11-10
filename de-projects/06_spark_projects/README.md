@@ -87,12 +87,12 @@ Data flow:
 
 | Path | What it is |
 |---|---|
-| [`docker_v1/readme.md`](docker_v1/readme.md) | Install options: archive, pip, WSL, Docker |
+| [`docker_v1/README.md`](docker_v1/README.md) | Install options: archive, pip, WSL, Docker |
 | [`docker_v1/Dockerfile`](docker_v1/Dockerfile) | Image with Python 3.11, Java 11 and PySpark |
-| [`docker_v1/01_spark_localhost/`](docker_v1/01_spark_localhost/readme.md) | First Spark program: M&M count |
-| [`docker_v1/02_spark_dataframe_api/`](docker_v1/02_spark_dataframe_api/readme.md) | DataFrame API, schemas, SF fire calls |
+| [`docker_v1/01_spark_localhost/`](docker_v1/01_spark_localhost/README.md) | First Spark program: M&M count |
+| [`docker_v1/02_spark_dataframe_api/`](docker_v1/02_spark_dataframe_api/README.md) | DataFrame API, schemas, SF fire calls |
 | [`docker_v1/02_spark_dataframe_api/sf_fire.ipynb`](docker_v1/02_spark_dataframe_api/sf_fire.ipynb) | Notebook with answers in PySpark and SQL |
-| [`docker_v2/`](docker_v2/readme.md) | Spark cluster with Docker Compose |
+| [`docker_v2/`](docker_v2/README.md) | Spark cluster with Docker Compose |
 
 ## Assignments
 
@@ -104,7 +104,7 @@ Work at your own pace. Each assignment shows the expected time.
 
 **Steps:**
 
-1. Pick one option. Details are in [`docker_v1/readme.md`](docker_v1/readme.md).
+1. Pick one option. Details are in [`docker_v1/README.md`](docker_v1/README.md).
    - Download the [Spark archive](https://spark.apache.org/downloads.html).
    - Install the [PySpark library](https://pypi.org/project/pyspark/) with pip.
    - Use the Docker image.
@@ -169,7 +169,7 @@ Work at your own pace. Each assignment shows the expected time.
 **Hints:**
 
 - `pip install pyspark` now installs Spark 4.x. Spark 4 needs Java 17 or newer.
-- The Dockerfiles set `JAVA_HOME` to the `arm64` path. On an Intel or AMD machine, change `arm64` to `amd64`.
+- The Dockerfiles find the right `JAVA_HOME` for your CPU (`arm64` or `amd64`). You do not need to change it.
 - The old guide says `spark_docker`. The real folder is `docker_v1`.
 
 ### Assignment 2: First Spark program: M&M count (~2 h)
@@ -178,7 +178,7 @@ Work at your own pace. Each assignment shows the expected time.
 
 **Steps:**
 
-1. Follow [`docker_v1/01_spark_localhost/readme.md`](docker_v1/01_spark_localhost/readme.md).
+1. Follow [`docker_v1/01_spark_localhost/README.md`](docker_v1/01_spark_localhost/README.md).
 2. In the `pyspark` shell, load the file:
 
    ```python
@@ -218,7 +218,7 @@ Work at your own pace. Each assignment shows the expected time.
 
 **Steps:**
 
-1. Follow [`docker_v1/02_spark_dataframe_api/readme.md`](docker_v1/02_spark_dataframe_api/readme.md).
+1. Follow [`docker_v1/02_spark_dataframe_api/README.md`](docker_v1/02_spark_dataframe_api/README.md).
 2. Run [`define_schema_example.py`](docker_v1/02_spark_dataframe_api/define_schema_example.py). It builds a DataFrame with a DDL schema string, including an `ARRAY<STRING>` column.
 
    ```bash
@@ -379,7 +379,7 @@ Work at your own pace. Each assignment shows the expected time.
    - [`docker-compose.yml`](docker_v2/docker-compose.yml): 3 services and a shared `spark-logs` volume.
    - [`spark-defaults.conf`](docker_v2/spark-defaults.conf): turns on event logs for the history server.
    - [`Makefile`](docker_v2/Makefile): short commands for build and run.
-3. Create the folders the compose file mounts: `book_data/` (data) and `spark_apps/` (scripts). Copy `mnmcount.py` and its CSV there.
+3. The compose file mounts two folders: `book_data/` (data) and `spark_apps/` (scripts). They are empty. Copy `mnm_dataset.csv` to `book_data/` and `mnmcount.py` to `spark_apps/`.
 4. Build and start the cluster with 3 workers:
 
    ```bash
@@ -408,10 +408,10 @@ Work at your own pace. Each assignment shows the expected time.
 
 **Hints:**
 
-- The `Makefile` uses spaces, not tabs. `make` fails with `missing separator`. Replace the indent with tabs, or run the `docker compose` commands directly.
+- You can also use the `Makefile`: `make build`, then `make run-scaled`.
 - Docker Compose v1 (`docker-compose`) is retired. Use `docker compose`. The `version:` line in the compose file is ignored.
-- Old Spark releases leave `dlcdn.apache.org`. If the download fails, change the URL to `https://archive.apache.org/dist/spark/`.
-- On Intel or AMD machines, change `arm64` to `amd64` in `JAVA_HOME`.
+- The Dockerfile downloads Spark from `archive.apache.org`. It is slow but keeps old releases.
+- The Dockerfile works on both `arm64` (Apple Silicon) and `amd64` (Intel or AMD) machines.
 
 ## Final result
 

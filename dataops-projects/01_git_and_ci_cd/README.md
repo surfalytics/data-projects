@@ -252,7 +252,7 @@ Work at your own pace. Each assignment shows the expected time.
 
 - `.PHONY` marks a target as a label, not a file. `make` always runs it, even if a file with the same name exists.
 - Makefile recipes must start with a tab, not spaces.
-- The last line of `scripts/analyze_data.sh` reads `/app/top_20_locations.csv`. The SQL writes to `/app/output/top_20_locations.csv`. Fix the path, or the script fails with `set -e`.
+- The SQL writes the result to `/app/output/top_20_locations.csv` inside the container.
 
 ### Assignment 3: Pull request and code review (~1 h)
 
@@ -393,7 +393,10 @@ Work at your own pace. Each assignment shows the expected time.
 - [ ] `pre-commit run --all-files` passes.
 - [ ] Badly formatted SQL is fixed on commit.
 
-**Hints:** The PyPI package for sqlfmt is `shandy-sqlfmt`. The `sqlfmt` package on PyPI is a different tool.
+**Hints:**
+
+- The PyPI package for sqlfmt is `shandy-sqlfmt`. The `sqlfmt` package on PyPI is a different tool.
+- The `mirrors-prettier` repo is archived. The pinned `rev: v3.1.0` still works. Keep the pin.
 
 ### Assignment 5: Continuous Integration with GitHub Actions (~3 h)
 

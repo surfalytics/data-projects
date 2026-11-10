@@ -20,7 +20,7 @@ Learn to create real AWS infrastructure including EC2, S3, and IAM resources usi
 
 ## Cost Warning
 This exercise creates real AWS resources:
-- **EC2 t2.micro**: Free tier eligible (750 hours/month for 12 months)
+- **EC2 t2.micro**: Low cost. New AWS accounts (since July 2025) get Free Tier credits, not 750 free hours. Older accounts may still have the 750 hours. See [AWS Free Tier](https://aws.amazon.com/free/).
 - **S3 bucket**: Very low cost for small usage
 - **IAM role**: Free
 

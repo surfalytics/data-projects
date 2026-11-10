@@ -13,6 +13,8 @@ Learn to create reusable Terraform modules for maximum code reuse and maintainab
 
 ## Project Structure
 
+> The `modules/` and `environments/` folders are empty on purpose. You write these files yourself in this exercise.
+
 ```
 05-modules/
 ├── modules/

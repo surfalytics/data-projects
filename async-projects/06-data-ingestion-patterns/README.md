@@ -413,7 +413,7 @@ Delete cloud resources so you do not pay for them.
 - [Snowflake Free Trial](https://signup.snowflake.com/): 30-day trial.
 - [Fivetran Free Trial](https://fivetran.com/): managed connectors.
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/): local containers.
-- [AWS Data Engineering Learning Path](https://aws.amazon.com/training/learning-paths/data-engineering/): AWS training.
+- [AWS Data Engineering Learning Path](https://skillbuilder.aws/learning-plan/data-engineer): AWS training.
 - [Snowflake Learning Resources](https://learn.snowflake.com/): Snowflake training.
 
 ## Community solutions

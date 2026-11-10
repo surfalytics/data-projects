@@ -105,7 +105,7 @@ Work at your own pace. Each assignment shows the expected time.
    ```
 
 3. Open `docker/source-data/sales_data.csv` in VS Code. Look at the Rainbow CSV colors.
-4. Start Docker Desktop. Build and run the image (see [`docker/Dockerfile`](docker/Dockerfile) and [`docker/readme.md`](docker/readme.md)):
+4. Start Docker Desktop. Build and run the image (see [`docker/Dockerfile`](docker/Dockerfile) and [`docker/README.md`](docker/README.md)):
 
    ```bash
    cd docker
@@ -239,7 +239,7 @@ Work at your own pace. Each assignment shows the expected time.
 
 **Hints:**
 
-- Cell 3 writes to `updated_sales_data` in `append` mode. Change the name to `fast_updated_sales_data` first. If not, you add 3 million duplicate rows to the old table.
+- Cell 3 writes to `fast_updated_sales_data` in `append` mode. Create the table first (step 4). `row_id` is the primary key, so a second run fails. Run `TRUNCATE migration.fast_updated_sales_data;` first.
 - Try other speed-ups: `method="multi"` in `to_sql`, or PostgreSQL `COPY` with `psycopg2`.
 
 ### Assignment 4: Read Snowflake into pandas (~1 h)
@@ -258,8 +258,8 @@ Work at your own pace. Each assignment shows the expected time.
        password=os.getenv("SNOWFLAKE_PASSWORD"),
        account=os.getenv("SNOWFLAKE_ACCOUNT"),
        warehouse="WH_SUPERSTORE",
-       database="RAW",
-       schema="SUPERSTORE")
+       database="SUPERSTORE",
+       schema="RAW")
    cur = conn.cursor()
    cur.execute("select * from orders limit 100")
    df = cur.fetch_pandas_all()

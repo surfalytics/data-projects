@@ -99,7 +99,7 @@ Work at your own pace. Each assignment shows the expected time.
    - Handles petabytes of data.
    - You pay only for the storage and compute you use.
 
-3. Learn the architecture. Storage and compute are decoupled. This is different from node-based cloud warehouses and on-premise MPP systems. Read [BigQuery under the hood](https://cloud.google.com/blog/big-data/2016/01/bigquery-under-the-hood).
+3. Learn the architecture. Storage and compute are decoupled. This is different from node-based cloud warehouses and on-premise MPP systems. Read [BigQuery under the hood](https://cloud.google.com/blog/products/bigquery/bigquery-under-the-hood).
 
    ![BigQuery architecture](https://github.com/user-attachments/assets/f625aaee-ca66-4713-8197-3bbd42767bb7)
 
@@ -108,7 +108,7 @@ Work at your own pace. Each assignment shows the expected time.
    | Component | Role |
    |---|---|
    | [Dremel](https://research.google.com/pubs/pub36632.html) (compute) | Multi-tenant cluster that runs SQL. It turns a query into an execution tree. Leaves are **slots**: they read data and compute. Branches are **mixers**: they aggregate. Slots are given to queries as needed. One user can get thousands of slots. |
-   | [Colossus](https://www.systutorials.com/3202/colossus-successor-to-google-file-system-gfs/) (storage) | Google's global storage. Data is stored in a [columnar format](https://cloud.google.com/blog/products/gcp/inside-capacitor-bigquerys-next-generation-columnar-storage-format) with compression. It handles replication and recovery. |
+   | [Colossus](https://cloud.google.com/blog/products/storage-data-transfer/a-peek-behind-colossus-googles-file-system) (storage) | Google's global storage. Data is stored in a [columnar format](https://cloud.google.com/blog/products/gcp/inside-capacitor-bigquerys-next-generation-columnar-storage-format) with compression. It handles replication and recovery. |
    | [Jupiter](https://cloudplatform.googleblog.com/2015/06/A-Look-Inside-Googles-Data-Center-Networks.html) (network) | Petabit network between storage and compute. The **shuffle** step uses it to move data fast. |
    | [Borg](https://research.google.com/pubs/pub43438.html) (orchestration) | Allocates hardware for mixers and slots. It is the predecessor of [Kubernetes](https://kubernetes.io/). |
 

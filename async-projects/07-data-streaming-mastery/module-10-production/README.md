@@ -842,3 +842,7 @@ You have completed **Data Streaming Mastery** -- all 10 modules covering the ful
 - **Join the community** -- Apache Kafka mailing lists, Confluent Community Slack, Stack Overflow
 
 Thank you for completing this course. The skills you have built -- designing streaming architectures, implementing producers and consumers, managing schemas, building processing pipelines, and operating Kafka in production -- are in high demand across the industry. Go build something great.
+
+---
+
+**[Back to the course overview](../README.md)**

@@ -129,7 +129,8 @@ resource "aws_security_group" "ec2_sg" {
 # ============================================================================
 # WHY: EC2 is the fundamental compute service in AWS
 # WHAT: Creates a small Linux instance
-# COST: Free tier eligible (750 hours/month for first 12 months)
+# COST: Low. New AWS accounts (since July 2025) get Free Tier credits.
+#       See https://aws.amazon.com/free/
 
 resource "aws_instance" "web_server" {
   ami           = data.aws_ami.amazon_linux_2.id

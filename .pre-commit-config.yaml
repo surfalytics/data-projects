@@ -3,7 +3,7 @@ fail_fast: false
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: check-yaml
@@ -16,7 +16,7 @@ repos:
 
   # SQL Formatter (sqlfmt)
   - repo: https://github.com/tconbeer/sqlfmt
-    rev: v0.24.0
+    rev: v0.32.0
     hooks:
       - id: sqlfmt
         name: sqlfmt

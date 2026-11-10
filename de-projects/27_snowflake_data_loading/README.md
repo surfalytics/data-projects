@@ -101,13 +101,14 @@ Project files:
 | [`scripts/03_raw_to_bronze_pipe.sql`](scripts/03_raw_to_bronze_pipe.sql) | Production pipe with lineage columns |
 | [`scripts/99_bulk_load_data_ingestion_observability.sql`](scripts/99_bulk_load_data_ingestion_observability.sql) | `COPY_HISTORY`, `VALIDATE()`, Task, Alert, quarantine |
 
-The scripts contain the author's Azure storage account and tenant ID. Replace them with your own:
+The scripts use placeholders. Replace them with your own values:
 
 | Placeholder | Replace with |
 |---|---|
 | `<storage_account>` | your storage account name |
 | `<tenant_id>` | your Microsoft Entra ID tenant ID |
 | `<resource_group>` | your Azure resource group |
+| `<your_email>` | your verified email for alerts |
 
 ### Assignment 1: Set up Snowflake and Azure storage (~2 h)
 
@@ -203,8 +204,6 @@ The scripts contain the author's Azure storage account and tenant ID. Replace th
 - [ ] You can explain when to use `ABORT_STATEMENT` vs `CONTINUE`.
 - [ ] You found the 3 bad rows with `VALIDATE()`.
 
-**Hints:** In the script, the bad-file `COPY` with `ABORT_STATEMENT` (step 9) and the `LOAD_HISTORY` query (option B) have no `;` at the end. Add it before you run them together.
-
 ### Assignment 3: Auto-ingest with Snowpipe (~3 h)
 
 **Goal:** Load files automatically when they land in Azure.
@@ -284,8 +283,6 @@ The scripts contain the author's Azure storage account and tenant ID. Replace th
 - [ ] `executionState` is `RUNNING`. If `FAILING`, recheck consent and IAM roles.
 - [ ] Every row in `BRONZE.USERS` has `SourceFilePath` and `LoadId`.
 
-**Hints:** The script creates the pipe in `BRONZE` but runs `REFRESH` and `SYSTEM$PIPE_STATUS` on `ANALYTICS_DEV.RAW.SV_USERS_PIPE`. Use the `BRONZE` name as shown above.
-
 ### Assignment 5: Observability and quarantine (~2 h)
 
 **Goal:** Detect failed loads without checking by hand.
@@ -302,28 +299,9 @@ The scripts contain the author's Azure storage account and tenant ID. Replace th
    | Snowflake **Alert** | Sends an email when `ERROR_COUNT > 0` |
    | Quarantine | Load with `ON_ERROR = 'CONTINUE'`, save rejects to `USERS_DEMO_REJECTED` |
 
-2. Before the Task, create the `load_alerts` table. The script uses it but does not create it:
-
-   ```sql
-   CREATE TABLE IF NOT EXISTS ANALYTICS_DEV.BRONZE.load_alerts (
-       file_name   STRING,
-       status      STRING,
-       error_count NUMBER,
-       detected_at TIMESTAMP_LTZ
-   );
-   ```
-
-3. Before the Alert, create an email notification integration named `load_alerts`. Use your own verified email:
-
-   ```sql
-   CREATE NOTIFICATION INTEGRATION load_alerts
-     TYPE = EMAIL
-     ENABLED = TRUE
-     ALLOWED_RECIPIENTS = ('<your_email>');
-   ```
-
-4. Load the bad file again with `ON_ERROR = 'CONTINUE'` and `FORCE = TRUE`. Save rejects to `USERS_DEMO_REJECTED`.
-5. Suspend the Task and the Alert when you finish. They use warehouse credits.
+2. The script creates the `load_alerts` table for the Task. It also creates an email notification integration named `load_alerts` for the Alert. Replace `<your_email>` with your own verified email in both places.
+3. Load the bad file again with `ON_ERROR = 'CONTINUE'` and `FORCE = TRUE`. Save rejects to `USERS_DEMO_REJECTED`.
+4. Suspend the Task and the Alert when you finish. They use warehouse credits.
 
 **Deliverable:** a row in `load_alerts`, an alert email, and the quarantine table.
 

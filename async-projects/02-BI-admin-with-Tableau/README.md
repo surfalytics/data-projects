@@ -150,7 +150,7 @@ Document every step with screenshots. Use a `README.md` in your GitHub repo or a
    | Viewers (interact with dashboards) | 45 |
    | Departments | Product, Marketing, Sales, Finance, Customer Service, Engineering |
 
-5. Read about [Tableau license types](https://help.tableau.com/current/blueprint/en-us/bp_license_types.htm). Map each user type to a license (Creator, Explorer, Viewer). Optional: estimate the license cost.
+5. Read about [Tableau license types](https://help.tableau.com/current/blueprint/en-us/bp_license_management.htm). Map each user type to a license (Creator, Explorer, Viewer). Optional: estimate the license cost.
 6. Write a role-based access plan. Create groups and roles. Assign users to them. Use a markdown table or a spreadsheet.
 7. Define one project (folder) per department. Assign groups. Example: only Marketing users can see the Marketing project.
 8. Plan [user filters](https://help.tableau.com/current/pro/desktop/en-us/publish_userfilters.htm) for Sales. Example: a Vancouver sales user sees only Vancouver data.
@@ -241,14 +241,14 @@ Start the 14-day Server trial now.
    - Configure email alerts for system events.
    - Use [Admin Views](https://help.tableau.com/current/server/en-us/adminview.htm): Traffic to Views, Background Tasks for Extracts, Stats for Load Times, Server Disk Space.
    - Optional: install the [Resource Monitoring Tool (RMT)](https://help.tableau.com/current/server/en-us/rmt-intro.htm).
-6. **Logs and troubleshooting.** Read the [logs overview](https://help.tableau.com/current/server/en-us/logs_overview.htm). Collect logs:
+6. **Logs and troubleshooting.** Read the [logs overview](https://help.tableau.com/current/server/en-us/logs_working_with.htm). Collect logs:
 
    ```bash
    tsm maintenance ziplogs -d
    ```
 
-   Check the Server Status page, Background Tasks, and Queue Status. See [troubleshooting](https://help.tableau.com/current/server/en-us/troubleshoot_main.htm).
-7. **Performance.** Use the Performance Recorder on a slow dashboard. See [workbook performance tips](https://help.tableau.com/current/pro/desktop/en-us/performance_tips.htm). Read about [server processes](https://help.tableau.com/current/server/en-us/server_process_concepts.htm): topology, cache, extract refresh strategy.
+   Check the Server Status page, Background Tasks, and Queue Status. See [troubleshooting](https://help.tableau.com/current/server/en-us/logs_loc.htm).
+7. **Performance.** Use the Performance Recorder on a slow dashboard. See [workbook performance tips](https://help.tableau.com/current/pro/desktop/en-us/performance_tips.htm). Read about [server processes](https://help.tableau.com/current/server/en-us/processes.htm): topology, cache, extract refresh strategy.
 8. **Sites and branding.** [Add sites](https://help.tableau.com/current/server/en-us/sites_add.htm). Move content between sites. [Customize](https://help.tableau.com/current/server/en-us/customize.htm) the logo and sign-in page.
 9. **Final exercise.** Combine the above:
    - Scripts that check server health, make a daily report, manage user access, and run routine maintenance.
@@ -284,7 +284,7 @@ Start the 14-day Server trial now.
 
 ## Resources
 
-- [Tableau Server help](https://help.tableau.com/current/server/en-us/): official admin docs.
+- [Tableau Server help](https://help.tableau.com/current/server/en-us/admin.htm): official admin docs.
 - [Tableau Blueprint](https://help.tableau.com/current/blueprint/en-us/bp_overview.htm): how to plan a Tableau rollout.
 - [Tableau Server Certified Associate](https://www.tableau.com/learn/certification/server-certified-associate): admin certification.
 - [Tableau Community Forums](https://community.tableau.com/): ask other admins.

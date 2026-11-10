@@ -73,7 +73,7 @@ Data flow:
 - Understanding of ETL vs ELT.
 - New to Git, CLI or Docker? Start with [Surfalytics Module 0](https://www.youtube.com/watch?v=LJIiCLu2gr8&list=PLNCDg7zJiXhP5Z_-TXUdorz2n7sjYHHKE&index=1).
 
-> Airbyte 1.0 deprecated the Docker Compose install. Use `abctl` instead. See [this discussion](https://discuss.airbyte.io/t/deprecation-of-docker-compose-in-airbyte-1-0-release-and-performance-issues-with-abctl/7984).
+> Airbyte 1.0 deprecated the Docker Compose install. Use `abctl` instead. See [this discussion](https://docs.airbyte.com/platform/using-airbyte/getting-started/oss-quickstart).
 
 ## Assignments
 
@@ -168,8 +168,8 @@ Work at your own pace. Each assignment shows the expected time.
 
 - [Airbyte OSS Quickstart](https://docs.airbyte.com/using-airbyte/getting-started/oss-quickstart): official install guide.
 - [Airbyte Helm chart](https://artifacthub.io/packages/helm/airbyte/airbyte): chart and values.
-- [Getting Started with Airbyte: An Introductory Tutorial for Beginners](https://blog.det.life/getting-started-with-airbyte-an-introductory-tutorial-for-beginners-58887bc3b4dd): step-by-step tutorial.
-- [Deprecation of Docker Compose in Airbyte 1.0](https://discuss.airbyte.io/t/deprecation-of-docker-compose-in-airbyte-1-0-release-and-performance-issues-with-abctl/7984): why `abctl` replaced Docker Compose.
+- [Getting Started with Airbyte: An Introductory Tutorial for Beginners](https://medium.com/data-engineer-things/getting-started-with-airbyte-an-introductory-tutorial-for-beginners-58887bc3b4dd): step-by-step tutorial.
+- [Deprecation of Docker Compose in Airbyte 1.0](https://docs.airbyte.com/platform/using-airbyte/getting-started/oss-quickstart): why `abctl` replaced Docker Compose.
 
 ## Community solutions
 

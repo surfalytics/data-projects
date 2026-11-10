@@ -2,7 +2,7 @@
 
 ## Install Spark Locally
 
-We have multiple options to install Sparl Locally. They also might depend on OS you are using.
+We have multiple options to install Spark locally. They also might depend on OS you are using.
 
 1. Download Spark Archive
 2. Install Pyspark locally
@@ -11,7 +11,7 @@ We have multiple options to install Sparl Locally. They also might depend on OS 
 
 ### 1. Download Spark Archive
 
-We can [download Apache Spark](https://spark.apache.org/downloads.html) 
+We can [download Apache Spark](https://spark.apache.org/downloads.html)
 
 ### 2. Install PySpark locally
 
@@ -50,7 +50,7 @@ pip3 install pyspark
 
 #### Install on Windows
 
-1. Download [Ubuntu for Windows](https://ubuntu.com/wsl) 
+1. Download [Ubuntu for Windows](https://ubuntu.com/wsl)
 2. Set username and password
 3. Run the following commands:
 
@@ -67,19 +67,19 @@ sudo apt install python3-pip
 #install java
 sudo apt install default-jdk
 
-#install 
+#install
 pip install pyspark
 ```
 
 4. Run Spark with command `pyspark`
 
-### 3. Use the Docker file 
+### 3. Use the Docker file
 
 There is a Dockerfile `de-projects/06_spark_projects/spark_docker/Dockerfile` that has PySpark and copy all PySpark projects from `de-projects/06_spark_projects`.
 
 You can run these commands:
 
-```bash 
+```bash
 cd ./de-projects/06_spark_projects/spark_docker
 ```
 
@@ -112,4 +112,4 @@ fire_df = spark.read.csv(sf_fire_file, header=True)
 fire_df.show()
 ```
 
-We also can open Spark UI at [http://localhost:4050/jobs/](http://localhost:4050/jobs/). 
+We also can open Spark UI at [http://localhost:4050/jobs/](http://localhost:4050/jobs/).

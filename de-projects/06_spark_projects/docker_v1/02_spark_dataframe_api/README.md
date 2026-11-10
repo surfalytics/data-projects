@@ -11,7 +11,7 @@ python3 define_schema_example.py
 Setting default log level to "WARN".
 To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
 24/02/03 12:37:10 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
-+---+---------+-------+-----------------+---------+-----+--------------------+  
++---+---------+-------+-----------------+---------+-----+--------------------+
 | Id|    First|   Last|              Url|Published| Hits|           Campaigns|
 +---+---------+-------+-----------------+---------+-----+--------------------+
 |  1|    Jules|  Damji|https://tinyurl.1| 1/4/2016| 4535| [twitter, LinkedIn]|
@@ -59,25 +59,25 @@ import pyspark.sql.functions as F
 Create Schema
 
 ```python
-# Programmatic way to define a schema 
+# Programmatic way to define a schema
 fire_schema = StructType([StructField('CallNumber', IntegerType(), True),
                      StructField('UnitID', StringType(), True),
                      StructField('IncidentNumber', IntegerType(), True),
-                     StructField('CallType', StringType(), True),                  
-                     StructField('CallDate', StringType(), True),      
+                     StructField('CallType', StringType(), True),
+                     StructField('CallDate', StringType(), True),
                      StructField('WatchDate', StringType(), True),
                      StructField('CallFinalDisposition', StringType(), True),
                      StructField('AvailableDtTm', StringType(), True),
-                     StructField('Address', StringType(), True),       
-                     StructField('City', StringType(), True),       
-                     StructField('Zipcode', IntegerType(), True),       
-                     StructField('Battalion', StringType(), True),                 
-                     StructField('StationArea', StringType(), True),       
-                     StructField('Box', StringType(), True),       
-                     StructField('OriginalPriority', StringType(), True),       
-                     StructField('Priority', StringType(), True),       
-                     StructField('FinalPriority', IntegerType(), True),       
-                     StructField('ALSUnit', BooleanType(), True),       
+                     StructField('Address', StringType(), True),
+                     StructField('City', StringType(), True),
+                     StructField('Zipcode', IntegerType(), True),
+                     StructField('Battalion', StringType(), True),
+                     StructField('StationArea', StringType(), True),
+                     StructField('Box', StringType(), True),
+                     StructField('OriginalPriority', StringType(), True),
+                     StructField('Priority', StringType(), True),
+                     StructField('FinalPriority', IntegerType(), True),
+                     StructField('ALSUnit', BooleanType(), True),
                      StructField('CallTypeGroup', StringType(), True),
                      StructField('NumAlarms', IntegerType(), True),
                      StructField('UnitType', StringType(), True),
@@ -156,7 +156,7 @@ few_fire_df.show(5, truncate=False)
 ```
 
 ```python
-# In Python, filter for only distinct non-null CallTypes from all 
+# In Python, filter for only distinct non-null CallTypes from all
 (fire_df
  .select("CallType")
  .where(col("CallType").isNotNull())
@@ -172,10 +172,10 @@ few_fire_df.show(5, truncate=False)
 # date operations
 fire_ts_df = (new_fire_df
   .withColumn("IncidentDate", F.to_timestamp(F.col("CallDate"), "MM/dd/yyyy"))
-  .drop("CallDate") 
+  .drop("CallDate")
   .withColumn("OnWatchDate", F.to_timestamp(F.col("WatchDate"), "MM/dd/yyyy"))
-  .drop("WatchDate") 
-  .withColumn("AvailableDtTS", F.to_timestamp(F.col("AvailableDtTm"), 
+  .drop("WatchDate")
+  .withColumn("AvailableDtTS", F.to_timestamp(F.col("AvailableDtTm"),
   "MM/dd/yyyy hh:mm:ss a"))
   .drop("AvailableDtTm"))
 
@@ -189,7 +189,7 @@ fire_ts_df = (new_fire_df
 
 On Windows, it will bring a way more level of comfort working with PySpark if you use the "Jupyter" extension for VS Code. It is similar to working with Python / pandas in Jupyter Notebook where you can run code chunks in separate cells.
 
-The complete software trio to work with PySpark on Windows laptop is: VS Code, Jupyter extension, and WSL. 
+The complete software trio to work with PySpark on Windows laptop is: VS Code, Jupyter extension, and WSL.
 
 To install the "Jupyter" extension in VS Code:
  - Click Extensions

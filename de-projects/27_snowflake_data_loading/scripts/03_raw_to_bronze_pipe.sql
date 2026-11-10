@@ -1,13 +1,17 @@
 -- ============================================================
 -- 1. SET CONTEXT
 -- ============================================================
----> set Role Context
-USE ROLE ACCOUNTADMIN;
----> set Warehouse Context
-USE WAREHOUSE COMPUTE_DEV;
----> set the Database
-USE DATABASE ANALYTICS_DEV;
-USE SCHEMA SILVER;
+-- -> set Role Context
+use role accountadmin
+;
+-- -> set Warehouse Context
+use warehouse compute_dev
+;
+-- -> set the Database
+use database analytics_dev
+;
+use schema silver
+;
 
 -- ============================================================
 -- 2. CREATE PIPE
@@ -56,19 +60,22 @@ CREATE OR REPLACE PIPE ANALYTICS_DEV.BRONZE.SV_USERS_PIPE
 -- ============================================================
 -- 3. VERIFY PIPE CREATED CORRECTLY
 -- ============================================================
-SHOW PIPES;
-DESC PIPE ANALYTICS_DEV.BRONZE.SV_USERS_PIPE;
+show pipes
+;
+desc pipe analytics_dev.bronze.sv_users_pipe
+;
 
 -- ============================================================
 -- 4. BACKFILL ANY FILES ALREADY IN STAGE
---     Only needed if files existed in stage before pipe was created
+-- Only needed if files existed in stage before pipe was created
 -- ============================================================
-ALTER PIPE ANALYTICS_DEV.RAW.SV_USERS_PIPE REFRESH;
+ALTER PIPE ANALYTICS_DEV.BRONZE.SV_USERS_PIPE REFRESH;
 
 -- ============================================================
 -- 5. CHECK PIPE STATUS
---     Expected: executionState = "Running"
---     If "Initializing" -> wait a few minutes and re-run
---     If "Failing"      -> recheck Azure consent and IAM role
+-- Expected: executionState = "Running"
+-- If "Initializing" -> wait a few minutes and re-run
+-- If "Failing"      -> recheck Azure consent and IAM role
 -- ============================================================
-SELECT SYSTEM$PIPE_STATUS('ANALYTICS_DEV.RAW.SV_USERS_PIPE');
+select system $pipe_status('ANALYTICS_DEV.BRONZE.SV_USERS_PIPE')
+;

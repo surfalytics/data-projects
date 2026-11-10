@@ -111,13 +111,22 @@ Project files:
    echo "AIRFLOW_UID=$(id -u)" > .env
    ```
 
-4. Build the image and start all services:
+4. Generate your own Fernet key. Airflow uses it to encrypt passwords in Connections. Add it to `.env`:
+
+   ```bash
+   pip install cryptography
+   echo "AIRFLOW_FERNET_KEY=$(python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")" >> .env
+   ```
+
+   You can also set `AIRFLOW_API_SECRET_KEY` and `AIRFLOW_JWT_SECRET` in `.env`. Without them, Docker Compose uses local test values. Never commit `.env`.
+
+5. Build the image and start all services:
 
    ```bash
    docker compose up -d --build
    ```
 
-5. Open the Airflow UI at `http://localhost:8080/`. Login: `airflow` / `airflow`.
+6. Open the Airflow UI at `http://localhost:8080/`. Login: `airflow` / `airflow`.
 
 **Deliverable:** a screenshot of the Airflow UI.
 

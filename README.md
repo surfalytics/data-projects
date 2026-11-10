@@ -1,9 +1,8 @@
 # Surfalytics Projects
 
-We are planning to do interesting data projects with Surfalytics community.
+Hands-on data projects from the [Surfalytics](https://surfalytics.com) community. Each project is a small, real build you can finish at your own pace and show in your portfolio.
 
-Our primary focus is Data Engineering and Analytics (Business Intelligence).  These projects are inspired by the legendary [MakeOverMonday](https://www.makeovermonday.co.uk/) from the Tableau community.
-We will sync in Discord weekly and talk over the projects as well as publish in Git and Medium.
+We discuss projects in Discord. The idea comes from [MakeOverMonday](https://www.makeovermonday.co.uk/) in the Tableau community.
 
 ## Projects
 

@@ -190,7 +190,7 @@ terraform apply prod.tfplan
 ### Exercise 3: Add Environment-Specific Features
 Create resources that only exist in prod:
 ```hcl
-resource "aws_cloudwatch_alarm" "cpu" {
+resource "aws_cloudwatch_metric_alarm" "cpu" {
   count = var.environment == "prod" ? 1 : 0
   # ...
 }
