@@ -63,11 +63,11 @@ output "production_file" {
 output "environment_info" {
   description = "Environment information (demonstrates structured output)"
   value = {
-    environment      = var.environment
-    is_production    = local.is_production
-    resource_prefix  = local.resource_prefix
-    formatted_name   = local.resource_name_format
-    project_name     = var.project_name
+    environment     = var.environment
+    is_production   = local.is_production
+    resource_prefix = local.resource_prefix
+    formatted_name  = local.resource_name_format
+    project_name    = var.project_name
   }
 }
 

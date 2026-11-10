@@ -20,7 +20,7 @@ Learn to create real AWS infrastructure including EC2, S3, and IAM resources usi
 
 ## Cost Warning
 This exercise creates real AWS resources:
-- **EC2 t2.micro**: Low cost. New AWS accounts (since July 2025) get Free Tier credits, not 750 free hours. Older accounts may still have the 750 hours. See [AWS Free Tier](https://aws.amazon.com/free/).
+- **EC2 t3.micro**: Low cost. New AWS accounts (since July 15, 2025) get Free Tier credits (up to $200, 6 months), not 750 free hours. `t2.micro` is not Free Tier eligible for new accounts. See [AWS Free Tier](https://aws.amazon.com/free/).
 - **S3 bucket**: Very low cost for small usage
 - **IAM role**: Free
 
@@ -157,7 +157,7 @@ Note: You may need to add HTTP (port 80) to the security group to access the web
 3. Access the web server via browser
 
 **Experiment 2: Change Instance Type**
-1. Change `instance_type` from `t2.micro` to `t3.micro`
+1. Change `instance_type` from `t3.micro` to `t3.small`
 2. Plan and apply
 3. Notice what Terraform does (replacement vs update)
 
@@ -222,7 +222,7 @@ This file contains the current state of your infrastructure.
 
 ### 1. Data Sources
 ```hcl
-data "aws_ami" "amazon_linux_2" {
+data "aws_ami" "amazon_linux_2023" {
   most_recent = true
   owners      = ["amazon"]
   # ...
@@ -279,7 +279,7 @@ These tags are automatically added to all resources.
 
 ## Cost Optimization Tips
 
-1. **Use t2.micro** (free tier eligible)
+1. **Use t3.micro** (Free Tier eligible for old and new accounts)
 2. **Stop instances when not in use**: `aws ec2 stop-instances --instance-ids i-xxx`
 3. **Delete S3 objects before destroying bucket**
 4. **Enable AWS Cost Explorer** to monitor spending

@@ -14,7 +14,7 @@ DATA_FILE="/app/covid_data.csv"
 echo "Downloading data from ${DATA_URL}..."
 wget -O "${DATA_FILE}" "${DATA_URL}"
 
-# Create a DuckDB databasev
+# Create a DuckDB database
 DB_FILE="/app/analysis.db"
 
 # SQL file

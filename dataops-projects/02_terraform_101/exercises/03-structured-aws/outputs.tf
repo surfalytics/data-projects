@@ -36,7 +36,7 @@ output "s3_bucket_arn" {
 
 output "s3_bucket_region" {
   description = "Region of the S3 bucket"
-  value       = aws_s3_bucket.data.region
+  value       = aws_s3_bucket.data.bucket_region
 }
 
 # IAM Outputs
@@ -75,18 +75,18 @@ output "aws_account_id" {
 
 output "aws_region" {
   description = "AWS Region"
-  value       = data.aws_region.current.name
+  value       = data.aws_region.current.region
 }
 
 # Resource Summary
 output "resource_summary" {
   description = "Summary of created resources"
   value = {
-    ec2_instance    = aws_instance.web.id
-    s3_bucket       = aws_s3_bucket.data.id
-    iam_role        = aws_iam_role.ec2.name
-    security_group  = aws_security_group.ec2.id
-    environment     = var.environment
-    project         = var.project_name
+    ec2_instance   = aws_instance.web.id
+    s3_bucket      = aws_s3_bucket.data.id
+    iam_role       = aws_iam_role.ec2.name
+    security_group = aws_security_group.ec2.id
+    environment    = var.environment
+    project        = var.project_name
   }
 }

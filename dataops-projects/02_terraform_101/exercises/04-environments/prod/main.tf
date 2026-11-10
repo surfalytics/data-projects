@@ -7,7 +7,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.0"
     }
   }
 
@@ -24,12 +24,12 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Environment  = "prod"
-      Project      = var.project_name
-      ManagedBy    = "Terraform"
-      CostCenter   = "Production"
-      Backup       = "required"
-      Compliance   = "required"
+      Environment = "prod"
+      Project     = var.project_name
+      ManagedBy   = "Terraform"
+      CostCenter  = "Production"
+      Backup      = "required"
+      Compliance  = "required"
     }
   }
 }
@@ -45,13 +45,13 @@ variable "project_name" {
 
 # Production EC2 instance with enhanced features
 resource "aws_instance" "prod_web" {
-  ami           = data.aws_ami.amazon_linux_2.id
-  instance_type = "t3.small"  # Larger instance for production workloads
+  ami           = data.aws_ami.amazon_linux_2023.id
+  instance_type = "t3.small" # Larger instance for production workloads
 
-  monitoring = true  # Enable detailed monitoring
+  monitoring = true # Enable detailed monitoring
 
   root_block_device {
-    volume_size = 20  # Larger volume for production
+    volume_size = 20 # Larger volume for production
     encrypted   = true
   }
 
@@ -64,13 +64,13 @@ resource "aws_instance" "prod_web" {
 }
 
 # Data source for AMI
-data "aws_ami" "amazon_linux_2" {
+data "aws_ami" "amazon_linux_2023" {
   most_recent = true
   owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 }
 

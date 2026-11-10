@@ -100,7 +100,7 @@ diff /tmp/dev-outputs.txt /tmp/prod-outputs.txt
 
 | Aspect | Dev | Prod |
 |--------|-----|------|
-| **Instance Type** | t2.micro | t3.small |
+| **Instance Type** | t3.micro | t3.small |
 | **Monitoring** | Disabled | Enabled |
 | **SSH Access** | Your IP | Bastion/VPN only |
 | **Backups** | Disabled | Enabled |
@@ -137,7 +137,7 @@ Use `.tfvars` files for environment-specific values:
 ```hcl
 # dev.tfvars
 environment   = "dev"
-instance_type = "t2.micro"
+instance_type = "t3.micro"
 min_size      = 1
 max_size      = 2
 
@@ -257,8 +257,8 @@ jobs:
   terraform-dev:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: hashicorp/setup-terraform@v2
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
 
       - name: Terraform Init
         run: terraform init

@@ -13,8 +13,8 @@
 
 resource "random_string" "suffix" {
   length  = 8
-  special = false  # No special characters for cleaner file names
-  upper   = false  # Lowercase only for consistency
+  special = false # No special characters for cleaner file names
+  upper   = false # Lowercase only for consistency
 
   # Keepers force new random value when changed
   keepers = {

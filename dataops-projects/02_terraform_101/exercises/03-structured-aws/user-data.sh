@@ -3,12 +3,12 @@
 # This script runs on first boot
 
 # Update system
-yum update -y
+dnf update -y
 
 # Install Apache web server
-yum install -y httpd
+dnf install -y httpd
 
-# Install AWS CLI v2 (if not already installed)
+# AWS CLI v2 is preinstalled on Amazon Linux 2023. Install it only if missing.
 if ! command -v aws &> /dev/null; then
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
     unzip awscliv2.zip
@@ -20,8 +20,12 @@ fi
 systemctl start httpd
 systemctl enable httpd
 
+# Read instance metadata on the server (ec2-metadata supports IMDSv2)
+INSTANCE_ID=$(ec2-metadata --instance-id | cut -d ' ' -f 2)
+AZ=$(ec2-metadata --availability-zone | cut -d ' ' -f 2)
+
 # Create a simple web page
-cat > /var/www/html/index.html <<'HTML'
+cat > /var/www/html/index.html <<HTML
 <!DOCTYPE html>
 <html>
 <head>
@@ -63,8 +67,8 @@ cat > /var/www/html/index.html <<'HTML'
             <p><strong>Environment:</strong> ${environment}</p>
             <p><strong>Project:</strong> ${project_name}</p>
             <p><strong>Region:</strong> ${aws_region}</p>
-            <p><strong>Instance ID:</strong> <span id="instance-id">Loading...</span></p>
-            <p><strong>Availability Zone:</strong> <span id="az">Loading...</span></p>
+            <p><strong>Instance ID:</strong> $INSTANCE_ID</p>
+            <p><strong>Availability Zone:</strong> $AZ</p>
         </div>
 
         <div class="info">
@@ -72,7 +76,7 @@ cat > /var/www/html/index.html <<'HTML'
             <ul>
                 <li>Apache HTTP Server</li>
                 <li>AWS CLI v2</li>
-                <li>Amazon Linux 2</li>
+                <li>Amazon Linux 2023</li>
             </ul>
         </div>
 
@@ -82,18 +86,6 @@ cat > /var/www/html/index.html <<'HTML'
         </div>
     </div>
 
-    <script>
-        // Fetch instance metadata
-        fetch('http://169.254.169.254/latest/meta-data/instance-id')
-            .then(r => r.text())
-            .then(d => document.getElementById('instance-id').textContent = d)
-            .catch(() => document.getElementById('instance-id').textContent = 'Unable to fetch');
-
-        fetch('http://169.254.169.254/latest/meta-data/placement/availability-zone')
-            .then(r => r.text())
-            .then(d => document.getElementById('az').textContent = d)
-            .catch(() => document.getElementById('az').textContent = 'Unable to fetch');
-    </script>
 </body>
 </html>
 HTML
@@ -103,7 +95,7 @@ echo "Testing S3 access..." > /var/log/s3-test.log
 aws s3 ls s3://${bucket_name}/ >> /var/log/s3-test.log 2>&1
 
 # Create a test file and upload to S3
-echo "Instance $(ec2-metadata --instance-id | cut -d ' ' -f 2) started at $(date)" > /tmp/startup.txt
+echo "Instance $INSTANCE_ID started at $(date)" > /tmp/startup.txt
 aws s3 cp /tmp/startup.txt s3://${bucket_name}/logs/startup-$(date +%Y%m%d-%H%M%S).txt
 
 # Log completion

@@ -3,14 +3,14 @@
 # ============================================================================
 # This file contains all data source queries for existing AWS resources
 
-# Get the latest Amazon Linux 2 AMI
-data "aws_ami" "amazon_linux_2" {
+# Get the latest Amazon Linux 2023 AMI (Amazon Linux 2 support ended 2026-06-30)
+data "aws_ami" "amazon_linux_2023" {
   most_recent = true
   owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 
   filter {

@@ -6,7 +6,7 @@ roles: ["BI Developer", "Analytics Engineer"]
 duration: "4 assignments, ~1-4 hours each"
 cost: "Free trial"
 tools: ["Looker", "LookML", "Snowflake", "Git"]
-status: "In progress"
+status: "Ready"
 ---
 
 # KPI Dashboard with Looker and Snowflake
@@ -17,7 +17,7 @@ status: "In progress"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | BI Developer, Analytics Engineer | 4 assignments, ~1-4 h each | Free trial | In progress |
+| Intermediate | BI Developer, Analytics Engineer | 4 assignments, ~1-4 h each | Free trial | Ready |
 
 ## Goal
 
@@ -40,14 +40,14 @@ You build a Superstore KPI dashboard in Looker. The data is in Snowflake. You wr
 
 | Tool | Used for | Free option |
 |---|---|---|
-| Snowflake | Data warehouse | trial (30 days) |
-| Looker | BI platform from Google Cloud | trial (ask Google Cloud) |
+| Snowflake | Data warehouse | trial (30 days, $400 of usage, no credit card) |
+| Looker (Google Cloud core) | BI platform from Google Cloud | trial edition (90 days, needs a Google Cloud project with billing) |
 | LookML | Semantic layer as code | yes (part of Looker) |
 | Git | Version control for the LookML project | yes |
 
 Key terms:
 
-- **Looker:** an enterprise platform for BI, data apps and embedded analytics. You explore and share data in real time.
+- **Looker:** an enterprise platform for BI, data apps and embedded analytics. Today you create it in Google Cloud as **Looker (Google Cloud core)**. It is not Looker Studio (a different, free reporting tool).
 - **LookML:** the Looker modeling language. It defines dimensions, measures and joins on top of SQL tables.
 - **Snowflake:** a cloud data warehouse. Storage and compute are separate, so you scale them independently.
 
@@ -78,8 +78,12 @@ Data flow:
 
 ## Prerequisites
 
-- A Snowflake account. Start a [30-day free trial](https://signup.snowflake.com/).
-- A Looker instance. Looker has no free tier. Ask for a trial through [Google Cloud](https://cloud.google.com/looker). Do not confuse it with Looker Studio, a different free tool.
+- A Snowflake account. Start a [free trial](https://signup.snowflake.com/): 30 days or $400 of usage, whichever ends first. No credit card needed. See [Trial accounts](https://docs.snowflake.com/en/user-guide/admin-trial-account).
+- A Looker instance. Looker has no free tier. Options:
+  - Your company or school already has Looker. Ask for a developer account.
+  - Create a **trial edition** instance of [Looker (Google Cloud core)](https://docs.cloud.google.com/looker/docs/looker-core-overview). It is valid for 90 days. You need a Google Cloud project with billing on, the Looker API on, and the Looker Admin role. Your project also needs Looker quota. If it has none, contact Google Cloud sales. See [Create an instance](https://docs.cloud.google.com/looker/docs/looker-core-instance-create).
+- `openssl` on your computer, to create a key pair for the Looker user (macOS and Linux have it; on Windows use Git Bash).
+- A GitHub account for the LookML project.
 - Basic SQL.
 - Optional: [`de-projects/02_dbt_core_snowflake`](../../de-projects/02_dbt_core_snowflake) to model the data with dbt first.
 - New to Git, CLI or Docker? Start with [Surfalytics Module 0](https://www.youtube.com/watch?v=LJIiCLu2gr8&list=PLNCDg7zJiXhP5Z_-TXUdorz2n7sjYHHKE&index=1).
@@ -143,18 +147,37 @@ Work at your own pace. Each assignment shows the expected time. The finished Loo
    );
    ```
 
-3. Upload the files. Use the Snowsight UI (**Data → Add Data → Load data into a Table**) with the `pipe_csv` file format. Or use a stage and `COPY INTO`.
-4. Check row counts.
+3. Upload the files. In Snowsight, go to **Ingestion → Add Data → Load data into a Table**. Pick the file, then the database `SUPERSTORE`, schema `RAW` and the target table. Select the file format `pipe_csv`. Select **Load**.
+4. Or load from the command line. Put the files to the table stage with [Snowflake CLI](https://docs.snowflake.com/en/developer-guide/snowflake-cli/index) or SnowSQL, then copy:
+
+   ```sql
+   -- from your computer: PUT file://supestore_orders.csv @%ORDERS;
+   COPY INTO ORDERS          FROM @%ORDERS          FILE_FORMAT = (FORMAT_NAME = 'pipe_csv');
+   COPY INTO RETURNED_ORDERS FROM @%RETURNED_ORDERS FILE_FORMAT = (FORMAT_NAME = 'pipe_csv');
+   COPY INTO SALES_MANAGERS  FROM @%SALES_MANAGERS  FILE_FORMAT = (FORMAT_NAME = 'pipe_csv');
+   ```
+
+5. Check row counts:
+
+   ```sql
+   SELECT 'ORDERS' AS t, COUNT(*) FROM ORDERS
+   UNION ALL SELECT 'RETURNED_ORDERS', COUNT(*) FROM RETURNED_ORDERS
+   UNION ALL SELECT 'SALES_MANAGERS', COUNT(*) FROM SALES_MANAGERS;
+   ```
 
 **Deliverable:** SQL script and row counts for the 3 tables.
 
 **Done when:**
 
-- [ ] `RAW.ORDERS` has about 9,994 rows.
-- [ ] `RAW.RETURNED_ORDERS` has about 800 rows.
+- [ ] `RAW.ORDERS` has 9,994 rows. Order dates are from 2016-01-03 to 2019-12-30.
+- [ ] `RAW.RETURNED_ORDERS` has 800 rows (296 distinct order IDs).
 - [ ] `RAW.SALES_MANAGERS` has 4 rows.
 
-**Hints:** [Load data with Snowsight](https://docs.snowflake.com/en/user-guide/data-load-web-ui), [COPY INTO](https://docs.snowflake.com/en/sql-reference/sql/copy-into-table).
+**Hints:**
+
+- Some product names have `"` inside quotes, for example `72""H`. `FIELD_OPTIONALLY_ENCLOSED_BY = '"'` handles this.
+- Postal codes look like `42420.0`. Keep them as `VARCHAR`.
+- [Load data with Snowsight](https://docs.snowflake.com/en/user-guide/data-load-web-ui), [COPY INTO](https://docs.snowflake.com/en/sql-reference/sql/copy-into-table).
 
 ### Assignment 2: Connect Looker to Snowflake (~1 h)
 
@@ -162,10 +185,51 @@ Work at your own pace. Each assignment shows the expected time. The finished Loo
 
 **Steps:**
 
-1. In Snowflake, create a user, role and warehouse for Looker. Grant read access to `SUPERSTORE.RAW`.
-2. In Looker, go to **Admin → Database → Connections** and add a Snowflake connection. Name it `superstore_snowflake_connection`.
-3. Test the connection.
-4. Create a new LookML project. Connect it to a GitHub repo.
+1. On your computer, create a key pair. Snowflake blocks password-only sign-in for service users, so Looker uses a key:
+
+   ```bash
+   openssl genrsa 2048 | openssl pkcs8 -topk8 -inform PEM -out rsa_key.p8 -nocrypt
+   openssl rsa -in rsa_key.p8 -pubout -out rsa_key.pub
+   ```
+
+2. In Snowflake, create a role, a warehouse and a service user for Looker. Paste the body of `rsa_key.pub` without the `BEGIN`/`END` lines:
+
+   ```sql
+   USE ROLE ACCOUNTADMIN;
+   CREATE ROLE IF NOT EXISTS LOOKER_ROLE;
+   GRANT ROLE LOOKER_ROLE TO ROLE SYSADMIN;
+
+   CREATE WAREHOUSE IF NOT EXISTS LOOKER_WH
+     WAREHOUSE_SIZE = XSMALL AUTO_SUSPEND = 60 AUTO_RESUME = TRUE INITIALLY_SUSPENDED = TRUE;
+   GRANT USAGE ON WAREHOUSE LOOKER_WH TO ROLE LOOKER_ROLE;
+
+   CREATE USER IF NOT EXISTS LOOKER_USER
+     TYPE = SERVICE
+     DEFAULT_ROLE = LOOKER_ROLE
+     DEFAULT_WAREHOUSE = LOOKER_WH;
+   ALTER USER LOOKER_USER ADD KEY PAIR looker_key PUBLIC_KEY = 'MIIBIjANBgkqh...';
+   GRANT ROLE LOOKER_ROLE TO USER LOOKER_USER;
+
+   GRANT USAGE ON DATABASE SUPERSTORE TO ROLE LOOKER_ROLE;
+   GRANT USAGE ON SCHEMA SUPERSTORE.RAW TO ROLE LOOKER_ROLE;
+   GRANT SELECT ON ALL TABLES IN SCHEMA SUPERSTORE.RAW TO ROLE LOOKER_ROLE;
+   ```
+
+3. In Looker, go to **Admin → Database → Connections → Add Connection**. Fill in:
+
+   | Field | Value |
+   |---|---|
+   | Name | `superstore_snowflake_connection` |
+   | SQL Dialect | Snowflake |
+   | Hostname | `<account_identifier>.snowflakecomputing.com` |
+   | Database Name | `SUPERSTORE` |
+   | Default Schema | `RAW` |
+   | Authentication | **Key Pair**: username `LOOKER_USER`, upload `rsa_key.p8` |
+   | Additional JDBC parameters | `warehouse=LOOKER_WH` |
+
+4. Select **Test**, then **Connect**.
+5. Turn on **Development Mode**. Go to **Develop → Projects → New LookML Project**. Name it `superstore`. Use the connection `superstore_snowflake_connection` and start from a blank project.
+6. In the project, select **Configure Git**. Paste the URL of an empty GitHub repo. Add the deploy key Looker shows to the repo (**Settings → Deploy keys**, allow write access).
 
 **Deliverable:** Screenshot of a successful connection test.
 
@@ -173,8 +237,9 @@ Work at your own pace. Each assignment shows the expected time. The finished Loo
 
 - [ ] The connection test passes.
 - [ ] The LookML project is linked to Git.
+- [ ] `rsa_key.p8` is not in any Git repo.
 
-**Hints:** [Looker Snowflake connection](https://cloud.google.com/looker/docs/db-config-snowflake). Never commit passwords or keys to Git.
+**Hints:** [Looker Snowflake connection](https://docs.cloud.google.com/looker/docs/db-config-snowflake), [Snowflake key-pair authentication](https://docs.snowflake.com/en/user-guide/key-pair-auth), [Set up Git for a LookML project](https://docs.cloud.google.com/looker/docs/setting-up-git-connection). Never commit passwords or keys to Git.
 
 ### Assignment 3: Build the LookML model (~3 h)
 
@@ -190,7 +255,7 @@ Work at your own pace. Each assignment shows the expected time. The finished Loo
    - `orders` left join `returned_orders` on `order_id`.
    - `orders` join `sales_managers` on `region`.
 3. Create the model [`superstore_model.model.lkml`](project/models/superstore_model.model.lkml). It uses the connection and includes all views and explores.
-4. Validate the LookML and commit.
+4. Select **Validate LookML**. Fix errors. Commit and deploy to production.
 
 **Deliverable:** LookML files in Git.
 
@@ -203,8 +268,11 @@ Work at your own pace. Each assignment shows the expected time. The finished Loo
 **Hints:**
 
 - Check the primary key. One order has many lines, so `order_id` is not unique in `ORDERS`. `row_id` is.
-- Check the join relationship. The returns file has duplicate order IDs.
-- [LookML introduction](https://cloud.google.com/looker/docs/what-is-lookml).
+- Check the join relationship. `order_id` repeats in `ORDERS` and in the returns file, so the join is `many_to_many`.
+- A `type: yesno` dimension needs a true/false SQL expression. `RETURNED` holds the text `Yes`, so use `${TABLE}."RETURNED" = 'Yes'`.
+- Use `{{ profit_or_sales._parameter_value }}` or `{% parameter profit_or_sales %}` to read the parameter in SQL. See [parameter](https://docs.cloud.google.com/looker/docs/reference/param-field-parameter).
+- The reference views use full table names (`"SUPERSTORE"."RAW"."ORDERS"`), so they work even if the connection has no default database.
+- [LookML introduction](https://docs.cloud.google.com/looker/docs/what-is-lookml), [join relationship](https://docs.cloud.google.com/looker/docs/reference/param-explore-join-relationship).
 
 ### Assignment 4: Build the KPI dashboard (~3 h)
 
@@ -218,8 +286,8 @@ Work at your own pace. Each assignment shows the expected time. The finished Loo
    - Profit or sales by state (map).
    - Profit or sales by region (column).
    - Number of orders by manager (bar).
-3. Add filters: Period, Profit or Sales (toggle), Segment, Category, Subcategory.
-4. Save the dashboard as LookML. Compare with [`superstore.dashboard.lookml`](project/dashboards/superstore.dashboard.lookml).
+3. Add filters: Period (month, default `2019-01`), Profit or Sales (button toggle, one value), Segment, Category, Subcategory.
+4. Get the dashboard LookML: **... → Get LookML** on the user-defined dashboard. Save it in `dashboards/` and commit. Compare with [`superstore.dashboard.lookml`](project/dashboards/superstore.dashboard.lookml).
 
 **Deliverable:** Dashboard screenshot and the dashboard LookML file in Git.
 
@@ -229,7 +297,10 @@ Work at your own pace. Each assignment shows the expected time. The finished Loo
 - [ ] The Profit or Sales toggle changes the charts.
 - [ ] Filters apply to all tiles.
 
-**Hints:** [LookML dashboards](https://cloud.google.com/looker/docs/building-lookml-dashboards).
+**Hints:**
+
+- Use aggregate measures (`total_sales`, `total_orders`) in KPI tiles. Table calculations run only on the rows the query returns (row limit 5000), so a sum in a table calculation can be wrong.
+- [LookML dashboards](https://docs.cloud.google.com/looker/docs/building-lookml-dashboards).
 
 ## Final result
 
@@ -240,15 +311,31 @@ Work at your own pace. Each assignment shows the expected time. The finished Loo
 
 ## Clean up
 
-- **Snowflake:** run `DROP DATABASE SUPERSTORE;`. Drop the Looker user, role and warehouse if you created them.
-- **Looker:** delete the connection and the project if your trial instance stays open.
+- **Snowflake:** run:
+
+  ```sql
+  USE ROLE ACCOUNTADMIN;
+  DROP DATABASE IF EXISTS SUPERSTORE;
+  DROP USER IF EXISTS LOOKER_USER;
+  DROP WAREHOUSE IF EXISTS LOOKER_WH;
+  DROP ROLE IF EXISTS LOOKER_ROLE;
+  ```
+
+- The Snowflake trial ends after 30 days. The account is suspended. You do not pay unless you add a card and upgrade.
+- **Looker trial instance:** delete it in the Google Cloud console (**Looker → select the instance → Delete**) before 90 days. Other Google Cloud services in the project can still bill you.
+- **Looker at work:** delete the connection and the project.
+- Delete `rsa_key.p8` and `rsa_key.pub` from your computer.
 
 ## Resources
 
 - [Looker demo video](https://www.youtube.com/watch?v=FBlyD2nCJds): a quick look at the product.
-- [Looker learning path from Google](https://www.cloudskillsboost.google/paths/28): official course.
+- [BI and Analytics with Looker](https://www.skills.google/paths/28): official learning path on Google Skills.
 - [Udemy course on Looker](https://www.udemy.com/course/looker-learning-tutorial-for-beginners/): beginner course.
-- [Looker documentation](https://cloud.google.com/looker/docs): full reference.
+- [Looker documentation](https://docs.cloud.google.com/looker/docs): full reference.
+- [Looker (Google Cloud core) overview](https://docs.cloud.google.com/looker/docs/looker-core-overview): editions and the 90-day trial edition.
+- [Snowflake trial accounts](https://docs.snowflake.com/en/user-guide/admin-trial-account): trial length, no credit card, what happens at the end.
+- [Snowflake MFA rollout](https://docs.snowflake.com/en/user-guide/security-mfa-rollout): why service users cannot use a password only.
+- [Looker Snowflake connection](https://docs.cloud.google.com/looker/docs/db-config-snowflake): connection settings and key-pair login.
 
 ## Community solutions
 

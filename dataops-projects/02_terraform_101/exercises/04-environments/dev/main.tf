@@ -7,7 +7,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.0"
     }
   }
 
@@ -44,8 +44,8 @@ variable "project_name" {
 
 # Simple EC2 instance for development
 resource "aws_instance" "dev_web" {
-  ami           = data.aws_ami.amazon_linux_2.id
-  instance_type = "t2.micro"  # Smallest instance for cost savings
+  ami           = data.aws_ami.amazon_linux_2023.id
+  instance_type = "t3.micro" # Smallest instance for cost savings
 
   tags = {
     Name = "${var.project_name}-dev-web"
@@ -54,13 +54,13 @@ resource "aws_instance" "dev_web" {
 }
 
 # Data source for AMI
-data "aws_ami" "amazon_linux_2" {
+data "aws_ami" "amazon_linux_2023" {
   most_recent = true
   owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 }
 

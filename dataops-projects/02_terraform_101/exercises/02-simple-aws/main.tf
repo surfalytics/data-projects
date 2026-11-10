@@ -2,7 +2,7 @@
 # Exercise 2: Simple AWS Resources in a Single File
 # ============================================================================
 # This exercise demonstrates creating basic AWS resources:
-# - EC2 instance (t2.micro)
+# - EC2 instance (t3.micro)
 # - S3 bucket
 # - IAM role with policy
 #
@@ -15,7 +15,11 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.7"
     }
   }
 }
@@ -68,15 +72,16 @@ variable "my_ip" {
 # Data Sources
 # ============================================================================
 # WHY: Data sources query existing AWS resources rather than creating them
-# WHAT: Here we're finding the latest Amazon Linux 2 AMI
+# WHAT: Here we're finding the latest Amazon Linux 2023 AMI
+# NOTE: Amazon Linux 2 reached end of support on 2026-06-30. Use AL2023.
 
-data "aws_ami" "amazon_linux_2" {
+data "aws_ami" "amazon_linux_2023" {
   most_recent = true
   owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-2023.*-x86_64"]
   }
 
   filter {
@@ -125,7 +130,7 @@ resource "aws_security_group" "ec2_sg" {
 }
 
 # ============================================================================
-# Example 1: EC2 Instance (t2.micro - Free Tier Eligible)
+# Example 1: EC2 Instance (t3.micro - Free Tier Eligible)
 # ============================================================================
 # WHY: EC2 is the fundamental compute service in AWS
 # WHAT: Creates a small Linux instance
@@ -133,8 +138,8 @@ resource "aws_security_group" "ec2_sg" {
 #       See https://aws.amazon.com/free/
 
 resource "aws_instance" "web_server" {
-  ami           = data.aws_ami.amazon_linux_2.id
-  instance_type = "t2.micro"
+  ami           = data.aws_ami.amazon_linux_2023.id
+  instance_type = "t3.micro"
 
   # Attach security group
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
@@ -145,8 +150,8 @@ resource "aws_instance" "web_server" {
   # User data script runs on first boot
   user_data = <<-EOF
               #!/bin/bash
-              yum update -y
-              yum install -y httpd
+              dnf update -y
+              dnf install -y httpd
               systemctl start httpd
               systemctl enable httpd
               echo "<h1>Hello from Terraform!</h1>" > /var/www/html/index.html

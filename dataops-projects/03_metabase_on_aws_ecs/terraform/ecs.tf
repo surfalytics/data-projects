@@ -22,7 +22,7 @@ resource "aws_ecs_task_definition" "metabase" {
 
   runtime_platform {
     operating_system_family = "LINUX"
-    cpu_architecture         = "X86_64"
+    cpu_architecture        = "X86_64"
   }
 
   container_definitions = jsonencode([
@@ -46,6 +46,8 @@ resource "aws_ecs_task_definition" "metabase" {
         { name = "MB_DB_PORT", value = "5432" },
         { name = "MB_DB_USER", value = var.db_username },
         { name = "MB_DB_PASS", value = var.db_password },
+        # The JVM uses 1/4 of the memory by default. Let Metabase use 75%.
+        { name = "JAVA_OPTS", value = "-XX:MaxRAMPercentage=75.0" },
       ]
       logConfiguration = {
         logDriver = "awslogs"
@@ -64,6 +66,10 @@ resource "aws_ecs_service" "metabase" {
   cluster         = aws_ecs_cluster.this.id
   task_definition = aws_ecs_task_definition.metabase.arn
   desired_count   = 1
+
+  # Metabase needs a few minutes to start. Do not stop the task for failed
+  # health checks during this time.
+  health_check_grace_period_seconds = 300
 
   capacity_provider_strategy {
     capacity_provider = "FARGATE"

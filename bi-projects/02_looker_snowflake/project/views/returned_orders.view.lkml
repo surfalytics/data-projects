@@ -1,5 +1,5 @@
 view: returned_orders {
-  sql_table_name: "RAW"."RETURNED_ORDERS" ;;
+  sql_table_name: "SUPERSTORE"."RAW"."RETURNED_ORDERS" ;;
 
   dimension: order_id {
     type: string
@@ -8,7 +8,7 @@ view: returned_orders {
   }
   dimension: returned {
     type: yesno
-    sql: ${TABLE}."RETURNED" ;;
+    sql: ${TABLE}."RETURNED" = 'Yes' ;;
   }
   measure: total_returned_orders {
     type: count_distinct

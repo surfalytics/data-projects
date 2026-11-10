@@ -4,7 +4,7 @@ category: "DataOps"
 level: "Intermediate"
 roles: ["DataOps Engineer", "Data Engineer", "BI Developer"]
 duration: "4 assignments, ~1-3 hours each"
-cost: "Paid (~$3/day)"
+cost: "Paid (~$2.5/day)"
 tools: ["AWS VPC", "AWS IAM", "Amazon RDS for PostgreSQL", "Amazon ECS", "AWS Fargate", "Application Load Balancer", "Amazon CloudWatch", "Docker", "Metabase", "Terraform"]
 status: "Ready"
 ---
@@ -17,7 +17,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | DataOps Engineer, Data Engineer, BI Developer | 4 assignments, ~1-3 h each | Paid (~$3/day) | Ready |
+| Intermediate | DataOps Engineer, Data Engineer, BI Developer | 4 assignments, ~1-3 h each | Paid (~$2.5/day) | Ready |
 
 ## Goal
 
@@ -44,11 +44,11 @@ You deploy Metabase, an open-source BI tool, on AWS. Metabase runs as a containe
 |---|---|---|
 | AWS VPC | Network: subnets, route tables, internet gateway | yes |
 | AWS IAM | Task execution role for ECS | yes |
-| Amazon RDS for PostgreSQL | Metabase application database | free tier (if your account has it) |
+| Amazon RDS for PostgreSQL | Metabase application database | Free Tier credits (new accounts) |
 | Amazon ECS + Fargate | Run the Metabase container | no |
 | Application Load Balancer | Public HTTP entry point | no |
 | Amazon CloudWatch Logs | Container logs | yes (small usage) |
-| Metabase | Open-source BI tool (`metabase/metabase` image) | yes |
+| Metabase | Open-source BI tool (`metabase/metabase:v0.65.4` image, Java 25) | yes |
 | Terraform | Infrastructure as code | yes |
 
 ## Architecture
@@ -63,7 +63,7 @@ Data flow:
 
 1. A user opens `http://<alb-dns-name>` in the browser.
 2. The Application Load Balancer (public subnets, port 80) forwards the request to the Metabase task on port 3000.
-3. The ECS Fargate task runs the `metabase/metabase` image. It pulls the image from Docker Hub through its public IP (no NAT gateway).
+3. The ECS Fargate task (1 vCPU, 2 GB) runs the `metabase/metabase` image. It pulls the image from Docker Hub through its public IP (no NAT gateway).
 4. Metabase stores its settings, users and questions in RDS PostgreSQL in a private subnet (port 5432).
 5. The task sends logs to CloudWatch Logs (`/ecs/metabase-task`).
 
@@ -142,22 +142,26 @@ Work at your own pace. Each assignment shows the expected time. Assignments 1-3 
 
 **Steps:**
 
-1. Go to **RDS Console → Create database**.
-2. Engine: **PostgreSQL**.
-3. Template: **Free tier** (or Dev/Test).
-4. DB instance identifier: `metabase-db`.
-5. Master username: `metabase_admin`. Set a master password. You need it in Assignment 3.
-6. Instance class: `db.t3.micro` or `db.t4g.micro`.
-7. Storage: 20 GB gp3, no autoscaling.
-8. **Multi-AZ: No.**
-9. Connectivity:
-   - VPC: `metabase-vpc`.
-   - DB subnet group: create a new one with both private subnets. With Multi-AZ off, the database runs in only one subnet. AWS still needs 2 AZs in the subnet group, so you can turn on Multi-AZ later without a rebuild.
-   - Public access: **No**.
-10. VPC security group: choose existing `metabase-rds-sg`. Remove the default group. The private subnet blocks internet access. The security group decides which resources inside the VPC can connect. Here, only the ECS task.
-11. Initial database name: `metabase`.
-12. Create database. It takes 5-10 minutes.
-13. When it is ready, copy the **endpoint** hostname. You need it in Assignment 3.
+1. **DB subnet group first.** Go to **RDS Console → Subnet groups → Create DB subnet group**.
+   - Name: `metabase-db-subnet-group`. VPC: `metabase-vpc`.
+   - Availability Zones: both AZs. Subnets: only the 2 **private** subnets.
+   - If you let the database wizard create the group, it can add the public subnets too. So create it here.
+2. Go to **RDS Console → Databases → Create database**. Choose **Standard create**.
+3. Engine: **PostgreSQL**. Engine version: **PostgreSQL 18** (latest 18.x minor).
+4. Template: **Free tier** (free plan accounts) or **Sandbox** / **Dev/Test** (paid plan accounts).
+5. DB instance identifier: `metabase-db`.
+6. Master username: `metabase_admin`. Credentials management: **Self managed**. Set a master password. You need it in Assignment 3.
+7. Instance class: `db.t3.micro` or `db.t4g.micro`.
+8. Storage: **General Purpose SSD (gp3)**, 20 GB. Turn off storage autoscaling.
+9. **Multi-AZ: No.**
+10. Connectivity:
+    - VPC: `metabase-vpc`.
+    - DB subnet group: choose `metabase-db-subnet-group` (from step 1). With Multi-AZ off, the database runs in only one subnet. AWS still needs 2 AZs in the subnet group, so you can turn on Multi-AZ later without a rebuild.
+    - Public access: **No**.
+11. VPC security group: choose existing `metabase-rds-sg`. Remove the default group. The private subnet blocks internet access. The security group decides which resources inside the VPC can connect. Here, only the ECS task.
+12. **Additional configuration → Initial database name:** `metabase`.
+13. Create database. It takes 5-10 minutes.
+14. When it is ready, copy the **endpoint** hostname. You need it in Assignment 3.
 
 **Deliverable:** Screenshot of the RDS instance with status "Available".
 
@@ -166,6 +170,7 @@ Work at your own pace. Each assignment shows the expected time. Assignments 1-3 
 - [ ] `metabase-db` is available.
 - [ ] Public access is **No**.
 - [ ] Only `metabase-rds-sg` is attached.
+- [ ] `metabase-db-subnet-group` has only the 2 private subnets.
 
 ### Assignment 3: ECS Fargate service and load balancer (~2 h)
 
@@ -186,7 +191,7 @@ Work at your own pace. Each assignment shows the expected time. Assignments 1-3 
    - **Task role:** none.
    - Container:
      - Name: `metabase`.
-     - Image URI: `metabase/metabase:latest`. This is the public Docker Hub image. You do not need an account ID or a registry login.
+     - Image URI: `metabase/metabase:v0.65.4`. This is the public Docker Hub image. You do not need an account ID or a registry login. Pin a version tag, not `latest`, so a restart does not upgrade Metabase by surprise. Check the [tags](https://hub.docker.com/r/metabase/metabase/tags) for a newer version.
      - Port mappings: container port **3000**, TCP.
      - Environment variables:
 
@@ -198,6 +203,9 @@ Work at your own pace. Each assignment shows the expected time. Assignments 1-3 
        | `MB_DB_USER` | `metabase_admin` |
        | `MB_DB_PASS` | _(RDS master password)_ |
        | `MB_DB_HOST` | _(RDS endpoint from Assignment 2)_ |
+       | `JAVA_OPTS` | `-XX:MaxRAMPercentage=75.0` |
+
+       By default the JVM uses only 1/4 of the task memory. `JAVA_OPTS` lets Metabase use 75% (1.5 GB of 2 GB).
 
      - Log collection: turn on. This creates a log group like `/ecs/metabase-task`.
    - Create.
@@ -217,9 +225,10 @@ Work at your own pace. Each assignment shows the expected time. Assignments 1-3 
    - Task definition: `metabase-task`, latest revision.
    - Service name: `metabase-service`.
    - Desired tasks: **1**.
-   - Networking: VPC `metabase-vpc`, one public subnet (enough for 1 task), security group `metabase-ecs-sg`.
+   - Networking: VPC `metabase-vpc`, both public subnets, security group `metabase-ecs-sg`. Remove the default security group.
    - **Public IP: ON.** The task needs it to reach Docker Hub without a NAT gateway.
-   - Load balancer: existing ALB `metabase-alb` → existing target group `metabase-tg`.
+   - Load balancing: **Application Load Balancer** → **Use an existing load balancer** `metabase-alb` → existing listener HTTP:80 → existing target group `metabase-tg`.
+   - Health check grace period: **300** seconds. Metabase needs a few minutes to start. Without the grace period ECS can stop the task before it is ready.
    - Create service.
 
    ECS starts the task, pulls the image, starts the container and registers it in the target group after the health check passes. This takes 2-4 minutes.
@@ -281,7 +290,7 @@ Work at your own pace. Each assignment shows the expected time. Assignments 1-3 
    ```
 
 5. Open the `alb_dns_name` output in the browser.
-6. Compare the Terraform code with your Console build. Find at least 2 differences (for example, task memory, storage type, which subnets are in the DB subnet group).
+6. Compare the Terraform code with your Console build. Task size, storage type and the DB subnet group are the same. Find at least 2 differences (for example, log retention, the deployment circuit breaker, the `FARGATE_SPOT` capacity provider, the PostgreSQL minor version).
 
 **Deliverable:** `terraform apply` output and a screenshot of Metabase at the new ALB URL.
 
@@ -302,14 +311,27 @@ Work at your own pace. Each assignment shows the expected time. Assignments 1-3 
 
 ## Clean up
 
-You pay for the ALB, Fargate task, RDS and public IP every hour. Delete everything when you finish.
+You pay for the ALB, Fargate task, RDS and public IPv4 addresses every hour. Delete everything when you finish.
+
+Cost estimate for us-east-1, on-demand list prices (November 2026):
+
+| Item | Price | Per day |
+|---|---|---|
+| Fargate task, 1 vCPU + 2 GB | $0.04048/vCPU-h + $0.004445/GB-h | ~$1.19 |
+| ALB (low traffic) | $0.0225/h + LCU | ~$0.55 |
+| RDS `db.t4g.micro`, Single-AZ | $0.016/h | ~$0.38 |
+| RDS storage, 20 GB gp3 | $0.115/GB-month | ~$0.08 |
+| 3 public IPv4 (2 ALB + 1 task) | $0.005/h each | ~$0.36 |
+| **Total** | | **~$2.5/day** |
+
+CloudWatch Logs cost almost nothing at this size. New accounts can pay this with Free Tier credits.
 
 **Console build.** Delete in this order to avoid dependency errors:
 
 1. **ECS service:** set desired count to 0, then delete `metabase-service`.
 2. **ECS cluster:** delete `metabase-cluster`.
 3. **Load balancer:** delete `metabase-alb`, then target group `metabase-tg`.
-4. **RDS:** delete `metabase-db`. Skip the final snapshot for a test database.
+4. **RDS:** delete `metabase-db`. Skip the final snapshot for a test database. Then delete the subnet group `metabase-db-subnet-group`.
 5. **Security groups:** delete `metabase-ecs-sg`, `metabase-rds-sg`, `metabase-alb-sg`, in this order.
 6. **VPC:** "Delete VPC" also removes the subnets, route tables and internet gateway.
 7. **IAM and logs:** delete the role `metabaseTaskExecutionRole` and the log group `/ecs/metabase-task`.
@@ -327,6 +349,11 @@ terraform destroy
 - [Amazon ECS on Fargate](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html): how Fargate tasks run.
 - [Application Load Balancer target groups](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html): IP targets and health checks.
 - [Amazon RDS DB subnet groups](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.WorkingWithRDSInstanceinaVPC.html): why 2 AZs are needed.
+- [RDS for PostgreSQL release calendar](https://docs.aws.amazon.com/AmazonRDS/latest/PostgreSQLReleaseNotes/postgresql-release-calendar.html): supported versions. PostgreSQL 18 is supported until 2031.
+- [Create a PostgreSQL DB instance](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_GettingStarted.CreatingConnecting.PostgreSQL.html): current Console names (**Free tier** / **Sandbox** templates).
+- [Metabase memory and JVM](https://www.metabase.com/docs/latest/troubleshooting-guide/running): the JVM uses 1/4 of RAM by default.
+- [metabase/metabase tags](https://hub.docker.com/r/metabase/metabase/tags): image versions.
+- [Fargate pricing](https://aws.amazon.com/fargate/pricing/), [ELB pricing](https://aws.amazon.com/elasticloadbalancing/pricing/), [RDS for PostgreSQL pricing](https://aws.amazon.com/rds/postgresql/pricing/), [VPC pricing (public IPv4)](https://aws.amazon.com/vpc/pricing/): inputs for the cost estimate.
 
 ## Community solutions
 

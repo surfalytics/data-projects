@@ -1,6 +1,7 @@
 resource "aws_db_subnet_group" "this" {
-  name       = "${var.project_name}-db-subnet-group"
-  subnet_ids = concat(aws_subnet.public[*].id, aws_subnet.private[*].id)
+  name = "${var.project_name}-db-subnet-group"
+  # Private subnets only. 2 AZs are required even for a single-AZ database.
+  subnet_ids = aws_subnet.private[*].id
 
   tags = {
     Name = "${var.project_name}-db-subnet-group"
@@ -10,11 +11,11 @@ resource "aws_db_subnet_group" "this" {
 resource "aws_db_instance" "this" {
   identifier     = "${var.project_name}-db"
   engine         = "postgres"
-  engine_version = "18.3"
+  engine_version = var.db_engine_version
 
   instance_class    = var.db_instance_class
   allocated_storage = var.db_allocated_storage
-  storage_type      = "gp2"
+  storage_type      = "gp3"
   storage_encrypted = true
 
   db_name  = var.db_name

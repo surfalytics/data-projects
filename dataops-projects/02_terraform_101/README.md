@@ -41,9 +41,9 @@ You learn Infrastructure as Code (IaC) with Terraform. You start with local reso
 
 | Tool | Used for | Free option |
 |---|---|---|
-| Terraform (>= 1.0) | Define and create infrastructure | yes |
+| Terraform (>= 1.0, validated with 1.16) | Define and create infrastructure | yes |
 | `local` and `random` providers | Learn Terraform without a cloud account | yes |
-| AWS EC2, S3, IAM | Real cloud resources | trial (AWS Free Tier) |
+| AWS EC2, S3, IAM | Real cloud resources (AWS provider `~> 6.0`) | trial (AWS Free Tier credits) |
 | AWS CLI | Credentials and checks | yes |
 | GitHub Actions | Run `fmt`, `validate`, `plan` on each PR | yes |
 | Make | Short commands (`make help`) | yes |
@@ -232,7 +232,7 @@ Work at your own pace. Each assignment shows the expected time. Run `terraform d
 
 5. Make changes and watch the plan:
    - Add an ingress rule for port 80. Open the web server.
-   - Change `instance_type` from `t2.micro` to `t3.micro`. Is it an update or a replacement?
+   - Change `instance_type` from `t3.micro` to `t3.small`. Is it an update or a replacement?
    - Add an `aws_s3_object` resource.
 6. Clean up: `terraform destroy`.
 
@@ -244,7 +244,10 @@ Work at your own pace. Each assignment shows the expected time. Run `terraform d
 - [ ] SSH is open only to your IP.
 - [ ] `terraform destroy` removes all resources.
 
-**Hints:** S3 bucket names are global. If the name exists, change `project_name`.
+**Hints:**
+
+- S3 bucket names are global. If the name exists, change `project_name`.
+- The code uses `t3.micro` and Amazon Linux 2023. Amazon Linux 2 support ended on June 30, 2026. `t2.micro` is not Free Tier eligible for accounts created after July 15, 2025.
 
 ### Assignment 3: Structured AWS code (~2 h)
 
@@ -268,7 +271,7 @@ Work at your own pace. Each assignment shows the expected time. Run `terraform d
    project_name   = "myproject"
    my_ip          = "YOUR_IP_HERE/32"
    enable_http    = true
-   instance_type  = "t2.micro"
+   instance_type  = "t3.micro"
    ```
 
 3. Run `terraform init`, `terraform plan`, `terraform apply`.
@@ -300,7 +303,7 @@ Work at your own pace. Each assignment shows the expected time. Run `terraform d
 
 | Aspect | Dev | Prod |
 |---|---|---|
-| Instance | t2.micro | t3.small |
+| Instance | t3.micro | t3.small |
 | Monitoring | Disabled | Enabled |
 | Volume | 8 GB | 20 GB |
 | SSH access | Open | Restricted |
@@ -379,7 +382,7 @@ Work at your own pace. Each assignment shows the expected time. Run `terraform d
    ```hcl
    module "web" {
      source        = "../../modules/ec2"
-     instance_type = "t2.micro"
+     instance_type = "t3.micro"
      # ...
    }
    ```
@@ -433,8 +436,8 @@ Work at your own pace. Each assignment shows the expected time. Run `terraform d
      terraform:
        runs-on: ubuntu-latest
        steps:
-         - uses: actions/checkout@v4
-         - uses: hashicorp/setup-terraform@v3
+         - uses: actions/checkout@v7
+         - uses: hashicorp/setup-terraform@v4
 
          - name: Terraform Init
            run: terraform init
@@ -485,7 +488,11 @@ Work at your own pace. Each assignment shows the expected time. Run `terraform d
 - [Terraform AWS modules](https://github.com/terraform-aws-modules): community modules.
 - [Terraform best practices](https://www.terraform-best-practices.com/): code structure and naming.
 - [Terraform style guide](https://developer.hashicorp.com/terraform/language/style): official style rules.
-- [AWS Free Tier](https://aws.amazon.com/free/): what is free.
+- [AWS Free Tier](https://aws.amazon.com/free/): what is free. Accounts created on or after July 15, 2025 get credits for 6 months, not 12 months of free usage.
+- [EC2 Free Tier instance types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-free-tier-usage.html): `t3.micro` is eligible for old and new accounts.
+- [AWS provider v6 upgrade guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/version-6-upgrade): `data.aws_region.name` is now `region`, `aws_s3_bucket.region` is now `bucket_region`.
+- [Amazon Linux 2 FAQ](https://aws.amazon.com/amazon-linux-2/faqs/): end of support on June 30, 2026. Use Amazon Linux 2023.
+- [hashicorp/setup-terraform](https://github.com/hashicorp/setup-terraform): GitHub Action to install Terraform.
 - [Terraform Associate certification](https://www.hashicorp.com/certification/terraform-associate): next step.
 
 Common commands:

@@ -1,5 +1,5 @@
 view: sales_managers {
-  sql_table_name: "RAW"."SALES_MANAGERS" ;;
+  sql_table_name: "SUPERSTORE"."RAW"."SALES_MANAGERS" ;;
 
   dimension: person {
     type: string

@@ -40,11 +40,11 @@ This directory contains a series of exercises that progressively teach Terraform
 ### [Exercise 2: Simple AWS Resources](./02-simple-aws/)
 **Difficulty**: Beginner
 **Duration**: 45 minutes
-**Cost**: ~$0.01/hour (t2.micro free tier eligible)
+**Cost**: ~$0.01/hour (t3.micro, Free Tier eligible)
 
 **Topics Covered**:
 - AWS provider configuration
-- EC2 instances (t2.micro)
+- EC2 instances (t3.micro)
 - S3 buckets with security settings
 - IAM roles and policies
 - Security groups
@@ -59,7 +59,7 @@ This directory contains a series of exercises that progressively teach Terraform
 **Goal**: Create real AWS infrastructure with Terraform.
 
 **Resources Created**:
-- 1× EC2 instance (t2.micro)
+- 1× EC2 instance (t3.micro)
 - 1× S3 bucket
 - 1× IAM role
 - 1× Security group
@@ -121,7 +121,7 @@ This directory contains a series of exercises that progressively teach Terraform
 **Comparison**:
 | Aspect | Dev | Prod |
 |--------|-----|------|
-| Instance | t2.micro | t3.small |
+| Instance | t3.micro | t3.small |
 | Monitoring | Disabled | Enabled |
 | Volume | 8 GB | 20 GB |
 | SSH Access | Open | Restricted |
@@ -224,8 +224,8 @@ cd exercises/05-modules
 | Exercise | Resources | Est. Cost/Month |
 |----------|-----------|-----------------|
 | Exercise 1 | Local only | $0 |
-| Exercise 2 | 1× t2.micro | $0 (free tier) or $8 |
-| Exercise 3 | 1× t2.micro + S3 | $8-10 |
+| Exercise 2 | 1× t3.micro | $0 (Free Tier credits) or ~$8 |
+| Exercise 3 | 1× t3.micro + S3 | $8-10 |
 | Exercise 4 | 2× instances | $16-40 |
 | Exercise 5 | 2× instances + modules | $16-40 |
 
@@ -237,7 +237,7 @@ cd exercises/05-modules
 ### Cost Optimization Tips
 1. Stop instances when not in use
 2. Delete resources between learning sessions
-3. Use `t2.micro` or `t3.micro` instances
+3. Use `t3.micro` instances (Free Tier eligible for all accounts)
 4. Enable AWS Free Tier notifications
 
 ## Troubleshooting

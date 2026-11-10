@@ -108,15 +108,15 @@ Flow of one pull request:
 
 ## Dataset
 
-- **Source:** [Our World in Data COVID-19 dataset](https://github.com/owid/covid-19-data). File: `owid-covid-data.csv`.
+- **Source:** [Our World in Data COVID-19 dataset](https://github.com/owid/covid-19-data). File: `owid-covid-data.csv`. The repo is archived. The data is frozen at August 2024, so the CI test result stays the same.
 - **Tables / entities:** one table `covid_data`: location, continent, date, total cases, total deaths, cases per million and more.
-- **Size:** about 400,000 rows, about 90 MB.
+- **Size:** about 430,000 rows, about 95 MB.
 
 ## Prerequisites
 
 - GitHub account.
 - Docker Hub account (from Assignment 6).
-- Git, Docker Desktop, Python 3.11, [DuckDB CLI](https://duckdb.org/docs/installation/), `make`, `wget`.
+- Git, Docker Desktop, Python 3.11 or newer (pre-commit 4 needs 3.11+), [DuckDB CLI](https://duckdb.org/install/), `make`, `wget`.
 - New to Git, CLI or Docker? Start with [Surfalytics Module 0](https://www.youtube.com/watch?v=LJIiCLu2gr8&list=PLNCDg7zJiXhP5Z_-TXUdorz2n7sjYHHKE&index=1).
 
 Project files in this folder:
@@ -125,7 +125,7 @@ Project files in this folder:
 |---|---|
 | [`queries/analysis.sql`](queries/analysis.sql) | DuckDB SQL: load CSV, build summary view, export CSV, print stats |
 | [`scripts/analyze_data.sh`](scripts/analyze_data.sh) | Downloads the CSV and runs the SQL in the container |
-| [`.docker/Dockerfile`](.docker/Dockerfile) | Ubuntu image with the DuckDB CLI for amd64 and arm64 |
+| [`.docker/Dockerfile`](.docker/Dockerfile) | Ubuntu 24.04 image with the DuckDB CLI for amd64 and arm64 |
 | [`makefile`](makefile) | `make build`, `make run`, `make help` |
 | [`.pre-commit-config.yaml`](.pre-commit-config.yaml) | pre-commit hooks for whitespace, YAML and SQL |
 
@@ -140,11 +140,11 @@ Work at your own pace. Each assignment shows the expected time.
 **Steps:**
 
 1. Create a new GitHub repo. Copy the content of this folder into it. Open a terminal in the repo folder.
-2. Check that DuckDB is installed. If not, [download it](https://duckdb.org/docs/installation/).
+2. Check that DuckDB is installed. If not, [download it](https://duckdb.org/install/).
 
    ```bash
    duckdb --version
-   # v1.1.3 19864453f7
+   # v2.0.0 (Cyanoptera) d54cbbe3df
    ```
 
 3. Download the data:
@@ -351,25 +351,23 @@ Work at your own pace. Each assignment shows the expected time.
 
    repos:
      - repo: https://github.com/pre-commit/pre-commit-hooks
-       rev: v4.6.0
+       rev: v6.0.0
        hooks:
          - id: trailing-whitespace
          - id: check-yaml
 
-     - repo: https://github.com/pre-commit/mirrors-prettier
-       rev: v3.1.0
+     # Maintained prettier mirror (pre-commit/mirrors-prettier is archived)
+     - repo: https://github.com/rbubley/mirrors-prettier
+       rev: v3.9.10
        hooks:
          - id: prettier
            files: '\.(yaml|yml)$'
 
      # SQL Formatter (sqlfmt)
      - repo: https://github.com/tconbeer/sqlfmt
-       rev: v0.24.0
+       rev: v0.32.0
        hooks:
          - id: sqlfmt
-           name: sqlfmt
-           entry: sqlfmt
-           language: python
            files: \.sql$
    ```
 
@@ -414,7 +412,8 @@ Work at your own pace. Each assignment shows the expected time.
 **Hints:**
 
 - The PyPI package for sqlfmt is `shandy-sqlfmt`. The `sqlfmt` package on PyPI is a different tool.
-- The `mirrors-prettier` repo is archived. The pinned `rev: v3.1.0` still works. Keep the pin.
+- The old `pre-commit/mirrors-prettier` repo is archived. Use the maintained mirror [`rbubley/mirrors-prettier`](https://github.com/rbubley/mirrors-prettier). Its tags match the prettier version.
+- Run `pre-commit autoupdate` to move every `rev` to the latest release.
 
 ### Assignment 5: Continuous Integration with GitHub Actions (~3 h)
 
@@ -447,15 +446,15 @@ Work at your own pace. Each assignment shows the expected time.
        steps:
          # Checkout the code and fetch all branches
          - name: Checkout code
-           uses: actions/checkout@v4
+           uses: actions/checkout@v7
            with:
              fetch-depth: 0 # Ensure the full history is fetched, not just the last commit
 
          # Set up Python environment
          - name: Set up Python
-           uses: actions/setup-python@v5
+           uses: actions/setup-python@v7
            with:
-             python-version: 3.11
+             python-version: "3.12"
 
          # Install dependencies and pre-commit hooks
          - name: Install dependencies
@@ -504,7 +503,7 @@ Work at your own pace. Each assignment shows the expected time.
        steps:
          # Checkout the code
          - name: Checkout code
-           uses: actions/checkout@v4
+           uses: actions/checkout@v7
 
          # Build the Docker container (USE YOUR PATH)
          - name: Build Docker Image
@@ -544,24 +543,25 @@ Work at your own pace. Each assignment shows the expected time.
              fi
    ```
 
-3. Make the Dockerfile work on both ARM (for example, a Mac laptop) and AMD64 (the GitHub runner). [`.docker/Dockerfile`](.docker/Dockerfile) already has this step:
+3. Make the Dockerfile work on both ARM (for example, a Mac laptop) and AMD64 (the GitHub runner). [`.docker/Dockerfile`](.docker/Dockerfile) already has this step. `DUCKDB_VERSION` is set at the top of the file (`ARG DUCKDB_VERSION=v2.0.0`):
 
    ```dockerfile
    # Download and install DuckDB CLI dynamically based on system architecture
    RUN ARCH=$(uname -m) && \
        if [ "$ARCH" = "x86_64" ]; then \
            echo "Installing DuckDB CLI for x86_64 (amd64)"; \
-           wget https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-linux-amd64.zip; \
+           DUCKDB_ARCH=amd64; \
        elif [ "$ARCH" = "aarch64" ]; then \
            echo "Installing DuckDB CLI for ARM64 (aarch64)"; \
-           wget https://github.com/duckdb/duckdb/releases/download/v1.1.3/duckdb_cli-linux-aarch64.zip; \
+           DUCKDB_ARCH=arm64; \
        else \
            echo "Unsupported architecture: $ARCH" && exit 1; \
        fi && \
-       unzip duckdb_cli-linux-*.zip && \
+       wget -q "https://github.com/duckdb/duckdb/releases/download/${DUCKDB_VERSION}/duckdb-cli-linux-${DUCKDB_ARCH}.tar.gz" && \
+       tar -xzf duckdb-cli-linux-*.tar.gz && \
        chmod +x duckdb && \
        mv duckdb /usr/local/bin/ && \
-       rm duckdb_cli-linux-*.zip
+       rm duckdb-cli-linux-*.tar.gz
    ```
 
 4. Push and check that both workflows pass. Note that the two workflows run in parallel.
@@ -586,14 +586,14 @@ Work at your own pace. Each assignment shows the expected time.
 
        steps:
          - name: Checkout code
-           uses: actions/checkout@v4
+           uses: actions/checkout@v7
            with:
              fetch-depth: 0 # Ensure full history is fetched
 
          - name: Set up Python
-           uses: actions/setup-python@v5
+           uses: actions/setup-python@v7
            with:
-             python-version: 3.11
+             python-version: "3.12"
 
          - name: Install dependencies
            run: |
@@ -624,7 +624,7 @@ Work at your own pace. Each assignment shows the expected time.
 
        steps:
          - name: Checkout code
-           uses: actions/checkout@v4
+           uses: actions/checkout@v7
 
          - name: Build Docker Image
            run: |
@@ -669,7 +669,7 @@ Work at your own pace. Each assignment shows the expected time.
 
 - **Integration test:** checks that several parts (script, DuckDB, Docker) work together and give the expected result.
 - **Unit test:** checks one small function alone, without external systems.
-- The expected numbers (243 locations, last date 2024-08-14) depend on the source file. If your run shows other values, put your own values in `expected_output`.
+- The expected numbers (243 locations, last date 2024-08-14) come from the source file. OWID archived the repo and stopped updates in August 2024, so the file does not change. Checked with DuckDB v2.0.0 in November 2026. If your run shows other values, put your own values in `expected_output`.
 
 ### Assignment 6: Continuous Deployment to Docker Hub (~2 h)
 
@@ -691,10 +691,10 @@ Work at your own pace. Each assignment shows the expected time.
 
        steps:
          - name: Checkout code
-           uses: actions/checkout@v4
+           uses: actions/checkout@v7
 
          - name: Log in to Docker Hub
-           uses: docker/login-action@v3
+           uses: docker/login-action@v4
            with:
              username: ${{ secrets.DOCKER_USERNAME }}
              password: ${{ secrets.DOCKER_PASSWORD }}
@@ -766,14 +766,14 @@ Work at your own pace. Each assignment shows the expected time.
 
        steps:
          - name: Checkout code
-           uses: actions/checkout@v4
+           uses: actions/checkout@v7
            with:
              fetch-depth: 0
 
          - name: Set up Python
-           uses: actions/setup-python@v5
+           uses: actions/setup-python@v7
            with:
-             python-version: 3.11
+             python-version: "3.12"
 
          - name: Install dependencies
            run: |
@@ -800,7 +800,7 @@ Work at your own pace. Each assignment shows the expected time.
 
        steps:
          - name: Checkout code
-           uses: actions/checkout@v4
+           uses: actions/checkout@v7
 
          - name: Build Docker Image
            run: |
@@ -840,10 +840,10 @@ Work at your own pace. Each assignment shows the expected time.
 
        steps:
          - name: Checkout code
-           uses: actions/checkout@v4
+           uses: actions/checkout@v7
 
          - name: Log in to Docker Hub
-           uses: docker/login-action@v3
+           uses: docker/login-action@v4
            with:
              username: ${{ secrets.DOCKER_USERNAME }}
              password: ${{ secrets.DOCKER_PASSWORD }}
@@ -921,9 +921,13 @@ Work at your own pace. Each assignment shows the expected time.
 - [GitHub Actions documentation](https://docs.github.com/en/actions): workflows, events, secrets.
 - [pre-commit](https://pre-commit.com/): hook framework and config.
 - [sqlfmt](https://sqlfmt.com/): SQL formatter for dbt-style SQL.
-- [DuckDB CLI](https://duckdb.org/docs/api/cli/overview): run SQL from the terminal.
+- [DuckDB CLI](https://duckdb.org/docs/stable/clients/cli/overview): run SQL from the terminal.
+- [DuckDB releases](https://github.com/duckdb/duckdb/releases): CLI downloads. From v2.0.0 the Linux files are `duckdb-cli-linux-<amd64|arm64>.tar.gz`.
 - [Dockerfile reference](https://docs.docker.com/reference/dockerfile/): build instructions.
 - [docker/login-action](https://github.com/docker/login-action): log in to registries in GitHub Actions.
+- [actions/checkout](https://github.com/actions/checkout/releases) and [actions/setup-python](https://github.com/actions/setup-python/releases): action versions used in the workflows.
+- [rbubley/mirrors-prettier](https://github.com/rbubley/mirrors-prettier): maintained prettier hook for pre-commit.
+- [OWID COVID-19 data repo](https://github.com/owid/covid-19-data): archived, last update August 2024.
 - [DORA metrics](https://dora.dev/): how to measure delivery performance.
 
 ## Community solutions

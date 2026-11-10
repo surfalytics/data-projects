@@ -54,6 +54,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "data" {
     id     = "transition-old-versions"
     status = "Enabled"
 
+    # Empty filter = rule applies to all objects
+    filter {}
+
     noncurrent_version_transition {
       noncurrent_days = 30
       storage_class   = "STANDARD_IA"

@@ -26,8 +26,8 @@ To add a project, copy [TEMPLATE.md](TEMPLATE.md). The allowed front matter valu
 
 | # | Project | Category | Level | Roles | Cost | Status |
 |---|---|---|---|---|---|---|
-| 01 | [End-to-End Power BI Dashboard with Microsoft Fabric](bi-projects/01_bi_dashboard_with_microsoft_fabric/) | BI | Beginner | BI Developer, Data Analyst | Free trial | Draft |
-| 02 | [KPI Dashboard with Looker and Snowflake](bi-projects/02_looker_snowflake/) | BI | Intermediate | BI Developer, Analytics Engineer | Free trial | In progress |
+| 01 | [End-to-End Power BI Dashboard with Microsoft Fabric](bi-projects/01_bi_dashboard_with_microsoft_fabric/) | BI | Beginner | BI Developer, Data Analyst | Free trial | Ready |
+| 02 | [KPI Dashboard with Looker and Snowflake](bi-projects/02_looker_snowflake/) | BI | Intermediate | BI Developer, Analytics Engineer | Free trial | Ready |
 
 ### DataOps: [dataops-projects](dataops-projects/)
 
@@ -35,7 +35,7 @@ To add a project, copy [TEMPLATE.md](TEMPLATE.md). The allowed front matter valu
 |---|---|---|---|---|---|---|
 | 01 | [Getting Started with Git and CI/CD](dataops-projects/01_git_and_ci_cd/) | DataOps | Beginner | Data Engineer, Analytics Engineer, DataOps Engineer | Free | Ready |
 | 02 | [Terraform 101](dataops-projects/02_terraform_101/) | DataOps | Beginner | DataOps Engineer, Data Engineer | Free trial | In progress |
-| 03 | [Metabase on AWS ECS Fargate](dataops-projects/03_metabase_on_aws_ecs/) | DataOps | Intermediate | DataOps Engineer, Data Engineer, BI Developer | Paid (~$3/day) | Ready |
+| 03 | [Metabase on AWS ECS Fargate](dataops-projects/03_metabase_on_aws_ecs/) | DataOps | Intermediate | DataOps Engineer, Data Engineer, BI Developer | Paid (~$2.5/day) | Ready |
 
 ### Async: [async-projects](async-projects/)
 
