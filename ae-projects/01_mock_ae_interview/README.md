@@ -5,7 +5,7 @@ level: "Intermediate"
 roles: ["Analytics Engineer", "Data Analyst"]
 duration: "5 assignments, ~1-2 hours each"
 cost: "Free"
-tools: ["SQL", "dbt", "Git", "LaunchDarkly"]
+tools: ["SQL", "DuckDB", "dbt", "Git", "LaunchDarkly"]
 status: "Ready"
 ---
 
@@ -41,6 +41,7 @@ This is a mock interview case for an Analytics Engineer role. A fintech company 
 | Tool | Used for | Free option |
 |---|---|---|
 | SQL | Fix and improve the experiment query | yes |
+| DuckDB | Run the query and your answers on sample data, on your laptop | yes |
 | dbt | Plan models, materializations and tests | yes (dbt Core) |
 | Git | Branch, commit and sync your work | yes |
 | LaunchDarkly | Source of feature flag events (context only) | not needed |
@@ -70,16 +71,45 @@ There is no dataset to download. The case uses these tables:
   - Users and subscriptions: not given. Assume they exist and use them in your model.
 - **Size:** millions of transactions per day. The production experiment data has 14 billion rows.
 
+### Practice with sample data
+
+The folder [`data/`](data/) has a small fictional copy of these tables: [`data/seed.sql`](data/seed.sql). It has the same problems as production: two flag systems, duplicate entries, one inactive row and a second experiment. It also has `users` and `subscriptions` for Assignment 3.
+
+1. Install [DuckDB](https://duckdb.org/docs/installation/) (one file, no server).
+2. Load the data:
+
+   ```bash
+   duckdb vault.duckdb < data/seed.sql
+   ```
+
+3. Open DuckDB and run SQL:
+
+   ```bash
+   duckdb vault.duckdb
+   ```
+
+4. Paste the query from Assignment 2. It fails. Finding out why is part of the task.
+
+| Table | Rows | What is inside |
+|---|---|---|
+| `partner_directpush_launchdarkly_events` | 10 | New flag system, from 2025-01-03 |
+| `legacy_feature_flag_events` | 6 | Old flag system, until 2025-01-02 |
+| `users` | 10 | One row per user |
+| `subscriptions` | 11 | Tier history (Standard, Plus, Premium). `valid_to` is empty for the current tier |
+
 ## Prerequisites
 
 - Good SQL: CTEs, joins, window functions, `GROUP BY`.
 - Basic dbt: models, sources, tests, materializations.
 - Basic Git.
+- DuckDB to run the SQL locally. Optional, but it makes Assignment 2 much easier.
 - New to Git, CLI or Docker? Start with [Surfalytics Module 0](https://www.youtube.com/watch?v=LJIiCLu2gr8&list=PLNCDg7zJiXhP5Z_-TXUdorz2n7sjYHHKE&index=1).
 
 ## Assignments
 
 Work at your own pace. Each assignment shows the expected time. Practice with a friend: one person is the interviewer, one is the candidate. Answer out loud first. Then write your answer down.
+
+Model answers are in [solutions.md](solutions.md). Try each assignment first, then compare.
 
 ### Assignment 1: Business case (~1 h)
 
@@ -108,6 +138,8 @@ Work at your own pace. Each assignment shows the expected time. Practice with a 
 - [ ] You name the main problems: speed, flexibility, two source systems.
 - [ ] Your solution moves the logic from the BI tool into modeled tables.
 - [ ] You can explain your answer in 5 minutes.
+
+**Hints:** Compare with the [model answer](solutions.md#assignment-1-business-case).
 
 ### Assignment 2: SQL challenge (~2 h)
 
@@ -182,6 +214,7 @@ ORDER BY num_user_true DESC, num_user_false DESC;
 **Done when:**
 
 - [ ] You found the errors in the query (CTE names, column names, `GROUP BY`).
+- [ ] Your queries run on the sample data in DuckDB.
 - [ ] Your query keeps only the first entry per user per experiment.
 - [ ] Your daily query has one row per user per day.
 - [ ] You can explain `UNION` vs `UNION ALL`.
@@ -192,6 +225,8 @@ ORDER BY num_user_true DESC, num_user_false DESC;
 - The query has bugs on purpose. Compare CTE names with the names in `FROM`. Look for `created_on`.
 - For deduplication, use `ROW_NUMBER()` or `QUALIFY`.
 - For one row per user per day, join to a date spine.
+- Check your numbers: on the sample data, 9 users enter `vault-launch`. 5 are in treatment and 4 in control.
+- Model answers: [solutions.md](solutions.md#assignment-2-sql-challenge).
 
 ### Assignment 3: Data modeling (~1.5 h)
 
@@ -217,6 +252,8 @@ The mart must scale over time. It must be the single source of truth for experim
 - [ ] Engineers can see allocation by day.
 - [ ] The dashboard reads from small, pre-aggregated or well-modeled tables.
 
+**Hints:** Test your model on the sample data: build the daily table with the tier for each day. Is the allocation balanced across tiers? Model answer: [solutions.md](solutions.md#assignment-3-data-modeling).
+
 ### Assignment 4: dbt implementation (~1.5 h)
 
 **Goal:** Turn your ERD into a dbt implementation plan.
@@ -237,7 +274,7 @@ The mart must scale over time. It must be the single source of truth for experim
 - [ ] You have tests for keys, not-null fields and accepted values.
 - [ ] You have at least 2 ideas to speed up development (for example, limit data in dev, defer to production).
 
-**Hints:** [dbt materializations](https://docs.getdbt.com/docs/build/materializations), [dbt data tests](https://docs.getdbt.com/docs/build/data-tests), [dbt defer](https://docs.getdbt.com/reference/node-selection/defer).
+**Hints:** Model answer: [solutions.md](solutions.md#assignment-4-dbt-implementation). Docs: [dbt materializations](https://docs.getdbt.com/docs/build/materializations), [dbt data tests](https://docs.getdbt.com/docs/build/data-tests), [dbt defer](https://docs.getdbt.com/reference/node-selection/defer).
 
 ### Assignment 5: Development, deployment and support (~1 h)
 
@@ -265,18 +302,19 @@ Your dbt models are ready. It is time to open a pull request.
 - [ ] You define an owner and a time to fix for failures.
 - [ ] You have a plan for renames (for example, keep old names as views for a period, use dbt model versions or contracts).
 
-**Hints:** [dbt model versions](https://docs.getdbt.com/docs/collaborate/govern/model-versions), [dbt model contracts](https://docs.getdbt.com/docs/collaborate/govern/model-contracts).
+**Hints:** Model answer: [solutions.md](solutions.md#assignment-5-development-deployment-and-support). Docs: [dbt model versions](https://docs.getdbt.com/docs/collaborate/govern/model-versions), [dbt model contracts](https://docs.getdbt.com/docs/collaborate/govern/model-contracts).
 
 ## Final result
 
 - Written answers for all 5 parts.
 - A cleaned-up SQL query and an ERD.
 - Put the SQL and the ERD in a GitHub repo.
+- Optional: build the models as a small dbt project with [dbt-duckdb](https://github.com/duckdb/dbt-duckdb) on the sample data.
 - Interview pitch: "I fixed a slow experiment dashboard. I moved the logic from the BI tool into a dbt mart with a daily grain per user. Analysts can now slice by subscription tier, and the dashboard loads fast."
 
 ## Clean up
 
-Nothing to clean up.
+Nothing to clean up. To start again, delete `vault.duckdb` and load `data/seed.sql` again.
 
 ## Resources
 
