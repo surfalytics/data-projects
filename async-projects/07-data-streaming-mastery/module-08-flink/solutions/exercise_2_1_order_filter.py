@@ -56,7 +56,8 @@ def main() -> None:
             'properties.group.id' = 'pyflink-ex-2-1',
             'scan.startup.mode' = 'earliest-offset',
             'format' = 'json',
-            'json.ignore-parse-errors' = 'true'
+            'json.ignore-parse-errors' = 'true',
+            'json.timestamp-format.standard' = 'ISO-8601'
         )
     """)
 

@@ -1,4 +1,5 @@
-confluent-kafka>=2.3.0
-faker>=22.0.0
-sqlalchemy>=2.0.0
-pymysql>=1.1.0
+confluent-kafka>=2.14
+faker>=40
+sqlalchemy>=2.0
+pymysql>=1.1
+cryptography>=43

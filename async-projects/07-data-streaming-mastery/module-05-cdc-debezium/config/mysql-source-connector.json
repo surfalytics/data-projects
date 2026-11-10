@@ -27,7 +27,6 @@
     "snapshot.mode": "initial",
 
     "tombstones.on.delete": "true",
-    "column.include.list": "",
 
     "decimal.handling.mode": "double",
     "time.precision.mode": "connect",

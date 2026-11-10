@@ -494,10 +494,18 @@ Response:
 
 | Item | Version | Note |
 |------|---------|------|
-| Confluent Platform | 7.5.0 (with ZooKeeper) | Kafka 4.0 removed ZooKeeper. This course still uses it. |
-| JDBC connector | 10.7.4 | Installed in the `Dockerfile` from Confluent Hub. |
-| MySQL driver | Connector/J 8.0.33 | The JDBC connector does not include a MySQL driver. The `Dockerfile` adds it. |
-| FileStream connectors | Bundled with Kafka | Not on Confluent Hub. Not installed separately. |
+| Confluent Platform | 8.4.1 (KRaft, no ZooKeeper) | Kafka 4.x has no ZooKeeper. One node is broker and controller. Connect needs Java 17+ (the image has Java 25). |
+| JDBC connector | 10.9.10 | Installed in the `Dockerfile` from Confluent Hub. |
+| MySQL driver | Connector/J 9.7.0 | The JDBC connector does not include a MySQL driver. The `Dockerfile` adds it from Maven Central. |
+| MySQL server | 8.4 (LTS) | `docker-compose.yml` uses `mysql:8.4`. |
+| FileStream connectors | In the Connect image, `/usr/share/filestream-connectors` | They ship with Kafka but are not on the default plugin path. `docker-compose.yml` adds that folder to `CONNECT_PLUGIN_PATH`. |
+
+The Confluent 8.4 images have no `curl` or `wget`. The `Dockerfile` uses `ADD` to download the driver. The health checks use `python3`.
+
+Two facts to know when you do the SMT exercises:
+
+- `TimestampRouter` fails on JDBC **source** records (`Timestamp missing on record`). They have no timestamp. Use it on a sink connector.
+- `MaskField` fails on a `DECIMAL` column (`Decimal value has mismatching scale`). Cast the field to `float64` first.
 
 In this module's `docker-compose.yml` the internal topics are named `_connect-configs`, `_connect-offsets` and `_connect-status` (with a leading underscore). The text above uses the names without the underscore.
 

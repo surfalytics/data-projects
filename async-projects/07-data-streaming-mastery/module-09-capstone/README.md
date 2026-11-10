@@ -57,8 +57,7 @@ flowchart LR
 |---|---|---|
 | MySQL | 3306 | Transactional e-commerce database (source of truth) |
 | Kafka Connect | 8083 | Runs the Debezium source and the JDBC sink connectors |
-| ZooKeeper | 2181 | Kafka metadata (this course uses ZooKeeper, not KRaft) |
-| Apache Kafka | 9092 (host), 29092 (Docker network), 7071 (JMX metrics) | Central event streaming backbone |
+| Apache Kafka (KRaft: broker + controller in one node) | 9092 (host), 29092 (Docker network, not published), 7071 (JMX metrics) | Central event streaming backbone |
 | Schema Registry | 8081 | Avro schema management |
 | ksqlDB | 8088 | Real-time stream processing (enrichment, aggregation) |
 | PostgreSQL | 5432 | Analytics sink database |
@@ -66,15 +65,26 @@ flowchart LR
 | Grafana | 3000 | Real-time dashboards |
 | Prometheus | 9090 | Metrics collection (Kafka broker via JMX exporter, Prometheus, Grafana) |
 
-Containers: `module-09-zookeeper`, `-kafka`, `-schema-registry`, `-kafka-connect`, `-ksqldb-server`, `-mysql`, `-postgres`, `-kafka-ui`, `-grafana`, `-prometheus`. A one-shot container `module-09-jmx-agent-init` downloads the JMX exporter agent and then exits.
+Containers: `module-09-kafka`, `-schema-registry`, `-kafka-connect`, `-ksqldb-server`, `-mysql`, `-postgres`, `-kafka-ui`, `-grafana`, `-prometheus`. A one-shot container `module-09-jmx-agent-init` downloads the JMX exporter agent and then exits.
 
 ### Versions used in this module
 
-- Confluent Platform 7.5.0 with ZooKeeper (Kafka 4.0 removed ZooKeeper; this course does not use it).
-- Kafka Connect uses `confluentinc/cp-kafka-connect:7.5.0`. It has the Confluent Avro converter and the JDBC sink.
-- On first start, it installs Debezium MySQL 2.5.4 and JDBC sink 10.7.4 from Confluent Hub. **It needs internet access.**
-- The `debezium/connect` image does not include the Confluent Avro converter (removed in 2.0), so we do not use it.
-- Debezium MySQL 2.5.4 uses the same config keys as 2.4.
+| Component | Version | Note |
+|---|---|---|
+| Kafka, Schema Registry, Connect, ksqlDB server | Confluent Platform 8.4.1 | Kafka runs in **KRaft** mode. No ZooKeeper. |
+| Debezium MySQL connector | 3.7.1.Final | Added to Connect in `Dockerfile` from [Maven Central](https://repo1.maven.org/maven2/io/debezium/debezium-connector-mysql/3.7.1.Final/). Confluent Hub only has 3.2.x. |
+| JDBC sink connector | 10.9.10 | Installed from Confluent Hub in `Dockerfile` |
+| MySQL | 8.4 (LTS) | Binlog is on by default. |
+| PostgreSQL | 18 | The data volume is `/var/lib/postgresql` (changed in PG 18). |
+| Prometheus / Grafana | 3.16.0 / 13.2.6 | |
+| JMX exporter agent | 1.0.1 | Loaded only into the broker process |
+| Kafka UI | kafbat/kafka-ui v1.5.0 | |
+| Python | 3.12 | `setup.sh` makes `.venv` for you |
+
+- The `debezium/connect` image has no Confluent Avro converter, so we use `cp-kafka-connect` and add Debezium to it.
+- The Connect image is built on the first `docker compose up`. **It needs internet access.**
+- ksqlDB is in maintenance mode. For new stream processing work, see Flink SQL in module 08.
+- Debezium 3.x renamed options. The source connector here uses `delete.tombstone.handling.mode` (it replaces `drop.tombstones` and `delete.handling.mode`).
 
 ---
 
@@ -100,29 +110,27 @@ Containers: `module-09-zookeeper`, `-kafka`, `-schema-registry`, `-kafka-connect
 ## Prerequisites
 
 - Docker and Docker Compose (v2+)
-- Python 3.9+ with pip
-- 8 GB RAM allocated to Docker (recommended)
+- Python 3.12 (`setup.sh` creates `.venv` with `uv` or `python3.12`)
+- RAM_PLACEHOLDER
 - Internet access on first start (downloads connector plugins and the JMX agent)
-- Ports 2181, 3000, 3306, 5432, 7071, 8080, 8081, 8083, 8088, 9090, 9092, 29092 available
+- Ports 3000, 3306, 5432, 7071, 8080, 8081, 8083, 8088, 9090, 9092, 29092 available
 
 ---
 
 ## Quick Start
 
 ```bash
-# 1. Install Python dependencies
-pip install sqlalchemy pymysql confluent-kafka requests psycopg2-binary
-
-# 2. Run the master setup script
+# 1. Run the master setup script (it creates .venv with Python 3.12 and installs requirements.txt)
 chmod +x setup.sh teardown.sh
 ./setup.sh
 
-# 3. Open Grafana
+# 2. Open Grafana
 open http://localhost:3000
 # Login: admin / admin (skip password change)
 ```
 
 The setup script will:
+- Create `.venv` (Python 3.12) and install `requirements.txt`
 - Start all Docker containers (`docker compose up -d`)
 - Wait for MySQL, Schema Registry, Kafka Connect, ksqlDB, PostgreSQL and Grafana
 - Register the Debezium source connector (`config/mysql-source-connector.json`)
@@ -182,7 +190,7 @@ Navigate to [http://localhost:3000](http://localhost:3000) (admin/admin). The **
 
 | Problem | Solution |
 |---|---|
-| Containers won't start | Ensure Docker has at least 8 GB RAM. Run `docker system prune` to free space. |
+| Containers won't start | Ensure Docker has at least 8 GB RAM. Run `docker compose down -v` and start again. |
 | Debezium connector fails | Check MySQL is healthy: `docker logs module-09-mysql`. Ensure binlog is enabled. |
 | No data in Kafka topics | Verify the simulator is running: `ps aux \| grep ecommerce_simulator`. Check connector status. |
 | ksqlDB queries fail | Ensure Schema Registry is up. Check ksqlDB logs: `docker logs module-09-ksqldb-server`. |

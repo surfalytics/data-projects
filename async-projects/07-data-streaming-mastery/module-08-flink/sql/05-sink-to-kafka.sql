@@ -91,13 +91,14 @@ CREATE TABLE order_metrics_per_minute_sink (
 -- Insert windowed metrics into the sink
 INSERT INTO order_metrics_per_minute_sink
 SELECT
-    TUMBLE_START(order_time, INTERVAL '1' MINUTE)  AS window_start,
-    TUMBLE_END(order_time, INTERVAL '1' MINUTE)    AS window_end,
+    window_start,
+    window_end,
     COUNT(*)                                        AS order_count,
-    SUM(amount)                                     AS total_revenue,
+    CAST(SUM(amount) AS DECIMAL(10, 2))             AS total_revenue,
     CAST(AVG(amount) AS DECIMAL(10, 2))             AS avg_order_value
-FROM orders
-GROUP BY TUMBLE(order_time, INTERVAL '1' MINUTE);
+FROM TABLE(
+    TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE))
+GROUP BY window_start, window_end;
 
 
 -- =============================================================================

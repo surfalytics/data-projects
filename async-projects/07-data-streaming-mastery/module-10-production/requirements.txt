@@ -1,4 +1,4 @@
-confluent-kafka
-prometheus-client
-requests
-faker
+confluent-kafka>=2.14
+prometheus-client>=0.25
+requests>=2.32
+faker>=40

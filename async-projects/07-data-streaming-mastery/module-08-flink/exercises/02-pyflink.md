@@ -4,7 +4,7 @@
 
 1. Start the Flink stack: `./src/setup_flink.sh`
 2. Seed data: `python src/seed_data.py` (let it run in the background)
-3. Install PyFlink: `pip install apache-flink==1.17.2`
+3. Install PyFlink in a Python 3.12 venv: `uv venv --python 3.12 && uv pip install -r requirements.txt`. You also need Java 11 or 17 on your laptop.
 
 ---
 
@@ -50,7 +50,7 @@
 **Hints:**
 - The source table needs `WATERMARK FOR order_time AS order_time - INTERVAL '5' SECOND`
 - The sink needs a composite PRIMARY KEY: `(customer_id, window_start)`
-- Use `TUMBLE(order_time, INTERVAL '2' MINUTE)` for windowing
+- Use the window function: `FROM TABLE(TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '2' MINUTE))`, then `GROUP BY window_start, window_end, customer_id`
 
 **Expected Output File:** `solutions/exercise_2_2_customer_stats.py`
 

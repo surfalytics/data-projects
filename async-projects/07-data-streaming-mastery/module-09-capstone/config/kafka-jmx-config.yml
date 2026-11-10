@@ -126,15 +126,17 @@ rules:
   # Consumer Group Metrics
   # ============================================================
 
-  # Consumer group lag (via consumer coordinator)
+  # Replica fetcher lag: how far a FOLLOWER replica is behind its leader.
+  # This is NOT consumer group lag. It is empty on a single-broker cluster.
+  # For consumer group lag, run src/consumer_lag_monitor.py (metric kafka_consumer_group_lag).
   - pattern: kafka.server<type=FetcherLagMetrics, name=ConsumerLag, clientId=(.+), topic=(.+), partition=(.+)><>Value
-    name: kafka_server_consumer_lag
+    name: kafka_server_replica_fetcher_lag
     type: GAUGE
     labels:
       client_id: "$1"
       topic: "$2"
       partition: "$3"
-    help: "Consumer group lag per partition"
+    help: "Replica fetcher lag per partition (follower behind leader)"
 
   # Group metadata manager - number of groups
   - pattern: kafka.coordinator.group<type=GroupMetadataManager, name=NumGroups><>Value
@@ -274,20 +276,7 @@ rules:
     type: GAUGE
     help: "JVM non-heap memory used in bytes"
 
-  # GC metrics
-  - pattern: java.lang<type=GarbageCollector, name=(.+)><>CollectionCount
-    name: jvm_gc_collection_count
-    type: COUNTER
-    labels:
-      gc: "$1"
-    help: "Total GC collection count"
-
-  - pattern: java.lang<type=GarbageCollector, name=(.+)><>CollectionTime
-    name: jvm_gc_collection_time_ms
-    type: COUNTER
-    labels:
-      gc: "$1"
-    help: "Total GC collection time in ms"
+  # GC metrics: the agent already exports jvm_gc_collection_seconds_count and _sum.
 
   # Thread count
   - pattern: java.lang<type=Threading><>ThreadCount

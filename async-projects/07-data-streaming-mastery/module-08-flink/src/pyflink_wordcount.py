@@ -187,29 +187,30 @@ def run_wordcount() -> None:
     #
     # The query uses:
     # - UNNEST with a CROSS JOIN to split each line into words
-    # - TUMBLE window for 1-minute aggregation
+    # - TUMBLE window function (table-valued) for 1-minute aggregation
     # - Processing time (proctime) since raw Kafka messages don't have
     #   embedded event timestamps
+    # View that splits each line into words. It keeps the proctime column.
+    t_env.execute_sql("""
+        CREATE TEMPORARY VIEW words_split AS
+        SELECT word, proctime
+        FROM words_source,
+             LATERAL TABLE(STRING_SPLIT(LOWER(TRIM(line)), ' ')) AS T(word)
+        WHERE TRIM(word) <> ''
+    """)
+
     logger.info("Submitting word count query")
 
     wordcount_query = """
         INSERT INTO wordcount_sink
         SELECT
             word,
-            TUMBLE_START(proctime, INTERVAL '1' MINUTE) AS window_start,
-            TUMBLE_END(proctime, INTERVAL '1' MINUTE)   AS window_end,
-            COUNT(*)                                     AS word_count
-        FROM (
-            -- Split each line into individual words
-            -- REGEXP_SPLIT_TO_TABLE is not available, so we use a lateral table
-            SELECT word, proctime
-            FROM words_source,
-                 LATERAL TABLE(STRING_SPLIT(LOWER(TRIM(line)), ' ')) AS T(word)
-            WHERE TRIM(word) <> ''
-        )
-        GROUP BY
-            TUMBLE(proctime, INTERVAL '1' MINUTE),
-            word
+            window_start,
+            window_end,
+            COUNT(*) AS word_count
+        FROM TABLE(
+            TUMBLE(TABLE words_split, DESCRIPTOR(proctime), INTERVAL '1' MINUTE))
+        GROUP BY window_start, window_end, word
     """
 
     # Execute the query -- this submits the job to the Flink cluster

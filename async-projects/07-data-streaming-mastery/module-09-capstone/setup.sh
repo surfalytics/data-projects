@@ -74,6 +74,28 @@ wait_for_mysql() {
 }
 
 # ---------------------------------------------------------------------------
+# Step 0: Python 3.12 virtual environment for the helper scripts
+# ---------------------------------------------------------------------------
+echo -e "${BLUE}Step 0: Preparing the Python 3.12 environment (.venv)...${NC}"
+if [ ! -x .venv/bin/python ]; then
+    if command -v uv > /dev/null 2>&1; then
+        uv venv --python 3.12 .venv
+    elif command -v python3.12 > /dev/null 2>&1; then
+        python3.12 -m venv .venv
+    else
+        echo -e "${RED}  Python 3.12 not found. Install uv (brew install uv) or python@3.12. See ../SETUP.md.${NC}"
+        exit 1
+    fi
+fi
+if command -v uv > /dev/null 2>&1; then
+    uv pip install -q --python .venv/bin/python -r requirements.txt
+else
+    .venv/bin/python -m pip install -q -r requirements.txt
+fi
+PY="$SCRIPT_DIR/.venv/bin/python"
+echo -e "${GREEN}  Python environment is ready.${NC}"
+
+# ---------------------------------------------------------------------------
 # Step 1: Start Docker Compose
 # ---------------------------------------------------------------------------
 echo -e "${GREEN}=============================================================${NC}"
@@ -101,6 +123,19 @@ wait_for_service "Grafana" "http://localhost:3000/api/health" 20 5
 
 echo ""
 echo -e "${GREEN}All services are running.${NC}"
+
+# ---------------------------------------------------------------------------
+# Step 2b: Create the CDC topics
+# Debezium only creates a topic when the first change event for that table arrives.
+# The ksqlDB streams in Step 5 need the topics to exist, so we create them first.
+# ---------------------------------------------------------------------------
+echo ""
+echo -e "${BLUE}Creating CDC topics...${NC}"
+for table in customers products orders order_items inventory_log; do
+    docker exec module-09-kafka kafka-topics --bootstrap-server kafka:29092 \
+        --create --if-not-exists --topic "ecommerce.ecommerce.${table}" --partitions 1 --replication-factor 1 > /dev/null
+done
+echo -e "${GREEN}  Topics are ready.${NC}"
 
 # ---------------------------------------------------------------------------
 # Step 3: Register Debezium MySQL source connector
@@ -158,7 +193,7 @@ echo "  Waiting 15 seconds for initial CDC snapshot..."
 sleep 15
 
 cd "$SCRIPT_DIR/src"
-python3 setup_ksqldb.py || {
+"$PY" setup_ksqldb.py || {
     echo -e "${YELLOW}  WARNING: Some ksqlDB queries may have failed. Check logs above.${NC}"
 }
 cd "$SCRIPT_DIR"
@@ -182,7 +217,7 @@ else
         echo -e "${YELLOW}  JDBC Sink connector registration failed (plugin may not be available).${NC}"
         echo -e "${YELLOW}  Starting Python sink consumer as alternative...${NC}"
         cd "$SCRIPT_DIR/src"
-        python3 sink_consumer.py &
+        "$PY" sink_consumer.py &
         SINK_PID=$!
         cd "$SCRIPT_DIR"
         echo -e "${GREEN}  Python sink consumer started (PID: $SINK_PID).${NC}"
@@ -196,7 +231,7 @@ echo ""
 echo -e "${BLUE}Step 7: Starting e-commerce simulator...${NC}"
 
 cd "$SCRIPT_DIR/src"
-python3 ecommerce_simulator.py --speed 2 --duration 3600 &
+"$PY" ecommerce_simulator.py --speed 2 --duration 3600 &
 SIMULATOR_PID=$!
 cd "$SCRIPT_DIR"
 

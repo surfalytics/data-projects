@@ -7,10 +7,10 @@
 | File | Description | Role in SSL Handshake |
 |---|---|---|
 | `ca-cert.pem` | The Certificate Authority's public certificate. Contains the CA's public key and identity. | Both client and broker use this to verify that the other party's certificate was signed by a trusted CA. |
-| `kafka.broker.keystore.jks` | Java KeyStore containing the broker's private key and CA-signed certificate. This is the broker's identity. | During the handshake, the broker presents its certificate from this keystore to prove its identity to clients. |
-| `kafka.broker.truststore.jks` | Java KeyStore containing the CA certificate that the broker trusts. | The broker uses this to verify client certificates (in mutual TLS). If the client's cert was signed by this CA, the broker trusts it. |
-| `kafka.client.keystore.jks` | Java KeyStore containing the client's private key and CA-signed certificate. This is the client's identity. | In mutual TLS, the client presents its certificate from this keystore to prove its identity to the broker. |
-| `kafka.client.truststore.jks` | Java KeyStore containing the CA certificate that the client trusts. | The client uses this to verify the broker's certificate. If the broker's cert was signed by this CA, the client trusts it. |
+| `kafka.broker.keystore.p12` | PKCS12 keystore containing the broker's private key and CA-signed certificate. This is the broker's identity. | During the handshake, the broker presents its certificate from this keystore to prove its identity to clients. |
+| `kafka.broker.truststore.p12` | PKCS12 keystore containing the CA certificate that the broker trusts. | The broker uses this to verify client certificates (in mutual TLS). If the client's cert was signed by this CA, the broker trusts it. |
+| `kafka.client.keystore.p12` | PKCS12 keystore containing the client's private key and CA-signed certificate. This is the client's identity. | In mutual TLS, the client presents its certificate from this keystore to prove its identity to the broker. |
+| `kafka.client.truststore.p12` | PKCS12 keystore containing the CA certificate that the client trusts. | The client uses this to verify the broker's certificate. If the broker's cert was signed by this CA, the client trusts it. |
 | `client-cert.pem` | The client's CA-signed certificate in PEM format (used by Python clients instead of JKS). | Same as client keystore certificate, but in PEM format for use with librdkafka-based clients. |
 | `client-key.pem` | The client's private key in PEM format (used by Python clients). | The client uses this to prove ownership of client-cert.pem during the TLS handshake. |
 
@@ -46,9 +46,8 @@ producer_config = {
     # Proves ownership of the client certificate.
     "ssl.key.location": "/path/to/client-key.pem",
 
-    # ssl.key.password: Password for the private key (if encrypted).
-    # Optional -- only needed if the key file is password-protected.
-    "ssl.key.password": "password",
+    # ssl.key.password: Password for the private key. Only needed if the key file is
+    # password-protected. The key made by ssl-setup.sh is not, so leave it out.
 }
 ```
 
@@ -75,7 +74,7 @@ With the PLAIN mechanism, the username and password are sent in cleartext over t
 | Mechanism | When to Use |
 |---|---|
 | PLAIN | Development only (or combined with SSL). Simplest to set up. |
-| SCRAM-SHA-256/512 | Production without Kerberos. Password is never transmitted (challenge-response). Stored in ZooKeeper. |
+| SCRAM-SHA-256/512 | Production without Kerberos. Password is never transmitted (challenge-response). Stored in the cluster metadata (KRaft). |
 | GSSAPI (Kerberos) | Enterprise environments with existing Kerberos/Active Directory infrastructure. |
 | OAUTHBEARER | Cloud-native environments with OAuth 2.0 identity providers (Okta, Auth0, Azure AD). |
 
@@ -84,58 +83,61 @@ With the PLAIN mechanism, the username and password are sent in cleartext over t
 ```bash
 # ================================================
 # ACL Policy for E-Commerce Kafka Applications
+# Run inside the secure broker container as admin:
+#   docker exec -it module10-secure-kafka bash
+A="--bootstrap-server localhost:9094 --command-config /etc/kafka/admin-sasl.properties"
 # ================================================
 
 # --- order-service ---
 # Produces to 'orders' topic
-kafka-acls.sh --bootstrap-server localhost:9092 \
+kafka-acls $A \
   --add --allow-principal User:order-service \
   --operation Write --topic orders
 
 # Consumes from 'inventory-updates' topic
-kafka-acls.sh --bootstrap-server localhost:9092 \
+kafka-acls $A \
   --add --allow-principal User:order-service \
   --operation Read --topic inventory-updates
 
 # Consumer group permission
-kafka-acls.sh --bootstrap-server localhost:9092 \
+kafka-acls $A \
   --add --allow-principal User:order-service \
   --operation Read --group order-service
 
 # --- inventory-service ---
 # Consumes from 'orders' topic
-kafka-acls.sh --bootstrap-server localhost:9092 \
+kafka-acls $A \
   --add --allow-principal User:inventory-service \
   --operation Read --topic orders
 
 # Produces to 'inventory-updates' topic
-kafka-acls.sh --bootstrap-server localhost:9092 \
+kafka-acls $A \
   --add --allow-principal User:inventory-service \
   --operation Write --topic inventory-updates
 
 # Consumer group permission
-kafka-acls.sh --bootstrap-server localhost:9092 \
+kafka-acls $A \
   --add --allow-principal User:inventory-service \
   --operation Read --group inventory-service
 
 # --- analytics-service ---
 # Consumes from 'orders' topic (read-only)
-kafka-acls.sh --bootstrap-server localhost:9092 \
+kafka-acls $A \
   --add --allow-principal User:analytics-service \
   --operation Read --topic orders
 
 # Consumes from 'inventory-updates' topic (read-only)
-kafka-acls.sh --bootstrap-server localhost:9092 \
+kafka-acls $A \
   --add --allow-principal User:analytics-service \
   --operation Read --topic inventory-updates
 
 # Consumer group permission
-kafka-acls.sh --bootstrap-server localhost:9092 \
+kafka-acls $A \
   --add --allow-principal User:analytics-service \
   --operation Read --group analytics-service
 
 # --- Verify the ACLs ---
-kafka-acls.sh --bootstrap-server localhost:9092 --list
+kafka-acls $A --list
 ```
 
 ### Principle of Least Privilege

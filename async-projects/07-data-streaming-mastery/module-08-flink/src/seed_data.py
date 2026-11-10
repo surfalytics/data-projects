@@ -38,7 +38,7 @@ import sys
 import time
 import uuid
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any
 
@@ -274,7 +274,7 @@ def generate_customers(
             "city": fake.city(),
             "state": fake.state_abbr(),
             "country": random.choice(["US", "CA", "UK", "DE", "FR"]),
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
         }
         customers.append(customer)
 
@@ -354,7 +354,7 @@ def generate_products(
                 "category": category,
                 "price": str(round(random.uniform(9.99, 299.99), 2)),
                 "brand": random.choice(BRANDS[category]),
-                "updated_at": datetime.utcnow().isoformat(),
+                "updated_at": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
             }
             products.append(product)
 
@@ -412,7 +412,7 @@ def generate_order(
     amount = round(unit_price * quantity * random.uniform(0.9, 1.1), 2)
 
     # Simulate slight out-of-order events by occasionally backdating
-    event_time = datetime.utcnow()
+    event_time = datetime.now(timezone.utc).replace(tzinfo=None)
     if random.random() < 0.1:  # 10% of events are slightly late
         event_time -= timedelta(seconds=random.randint(1, 15))
 
@@ -558,7 +558,7 @@ def main() -> None:
                 "city": fake.city(),
                 "state": fake.state_abbr(),
                 "country": random.choice(["US", "CA", "UK", "DE", "FR"]),
-                "created_at": datetime.utcnow().isoformat(),
+                "created_at": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
             }
             customers.append(customer)
             produce_to_kafka(producer, "customers", customer["customer_id"], customer)
@@ -574,7 +574,7 @@ def main() -> None:
                     "category": cat,
                     "price": str(round(random.uniform(9.99, 299.99), 2)),
                     "brand": random.choice(BRANDS[cat]),
-                    "updated_at": datetime.utcnow().isoformat(),
+                    "updated_at": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
                 }
                 products.append(product)
                 produce_to_kafka(producer, "products", product["product_id"], product)
@@ -596,7 +596,7 @@ def main() -> None:
                 product = random.choice(products)
                 quantity = random.randint(1, 5)
                 amount = round(float(product["price"]) * quantity * random.uniform(0.9, 1.1), 2)
-                event_time = datetime.utcnow()
+                event_time = datetime.now(timezone.utc).replace(tzinfo=None)
                 if random.random() < 0.1:
                     event_time -= timedelta(seconds=random.randint(1, 15))
                 order = {

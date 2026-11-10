@@ -1,4 +1,6 @@
-apache-flink==1.17.2
-confluent-kafka==2.3.0
-faker==22.0.0
-mysql-connector-python==8.2.0
+# PyFlink. The version must match the Flink cluster (2.2.x). Python 3.9-3.12.
+# PyFlink needs Java 11 or 17 on your laptop (it starts a local Flink in a JVM).
+apache-flink>=2.2.1,<2.3
+confluent-kafka>=2.16.1
+faker>=40.0.0
+mysql-connector-python>=9.4.0

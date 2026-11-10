@@ -149,20 +149,31 @@ LEFT JOIN mysql_products AS mp
 -- =============================================================================
 -- Join 6: Aggregation after enrichment
 -- =============================================================================
--- After enriching orders, compute revenue by product category per 5-minute
--- window. This pattern is extremely common in real-time analytics pipelines.
+-- Compute revenue by product category per 5-minute window.
+-- Pattern: window first, then join the dimension, then group by the dimension.
 -- =============================================================================
 
+-- A regular join drops the time attribute of order_time.
+-- Window functions need a time attribute. So the window comes FIRST
+-- (per product_id), and the join with products comes AFTER it.
+
 SELECT
-    TUMBLE_START(o.order_time, INTERVAL '5' MINUTE) AS window_start,
-    TUMBLE_END(o.order_time, INTERVAL '5' MINUTE)   AS window_end,
+    w.window_start,
+    w.window_end,
     p.category,
-    COUNT(*)                                          AS order_count,
-    SUM(o.amount)                                     AS total_revenue,
-    AVG(o.amount)                                     AS avg_order_value
-FROM orders AS o
+    SUM(w.order_count)                                AS order_count,
+    SUM(w.total_revenue)                              AS total_revenue
+FROM (
+    SELECT
+        window_start,
+        window_end,
+        product_id,
+        COUNT(*)                                      AS order_count,
+        SUM(amount)                                   AS total_revenue
+    FROM TABLE(
+        TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '5' MINUTE))
+    GROUP BY window_start, window_end, product_id
+) AS w
 INNER JOIN products AS p
-    ON o.product_id = p.product_id
-GROUP BY
-    TUMBLE(o.order_time, INTERVAL '5' MINUTE),
-    p.category;
+    ON w.product_id = p.product_id
+GROUP BY w.window_start, w.window_end, p.category;

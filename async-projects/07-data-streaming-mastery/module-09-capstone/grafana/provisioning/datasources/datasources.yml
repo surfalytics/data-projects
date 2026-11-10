@@ -13,7 +13,7 @@ datasources:
       maxOpenConns: 10
       maxIdleConns: 5
       connMaxLifetime: 14400
-      postgresVersion: 1500
+      postgresVersion: 1800
       timescaledb: false
     secureJsonData:
       password: postgres

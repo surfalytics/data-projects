@@ -9,7 +9,9 @@ Prerequisites:
     1. Run the SSL setup script to generate certificates:
        bash config/ssl-setup.sh
 
-    2. Configure Kafka broker with SSL listener (see README.md for details)
+    2. Start the secure KRaft broker (SSL listener on port 9093):
+       docker compose -f docker-compose.secure.yml up -d
+    3. Give the client certificate an ACL to write (see README.md)
 
 Usage:
     python src/ssl_producer.py

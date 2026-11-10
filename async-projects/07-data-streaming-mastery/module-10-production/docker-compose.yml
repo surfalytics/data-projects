@@ -1,21 +1,6 @@
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    hostname: zookeeper
-    container_name: module10-zookeeper
-    ports:
-      - "2181:2181"
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 2181"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   # One-shot job. Downloads the Prometheus JMX exporter java agent and the
-  # config into a shared volume. Kafka loads the agent with KAFKA_OPTS.
+  # config into a shared volume. The broker loads the agent with KAFKA_OPTS (set only for the broker process).
   jmx-agent-init:
     image: curlimages/curl:8.5.0
     container_name: module10-jmx-agent-init
@@ -24,7 +9,7 @@ services:
     command:
       - >
         curl -fsSL -o /agent/jmx_prometheus_javaagent.jar
-        https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+        https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/1.0.1/jmx_prometheus_javaagent-1.0.1.jar
         && cp /config/kafka-jmx-config.yml /agent/kafka-jmx-config.yml
     volumes:
       - jmx-agent:/agent
@@ -32,29 +17,30 @@ services:
     restart: "no"
 
   kafka:
-    image: confluentinc/cp-kafka:7.5.0
+    image: confluentinc/cp-kafka:8.4.1
     hostname: kafka
     container_name: module10-kafka
     depends_on:
-      zookeeper:
-        condition: service_healthy
       jmx-agent-init:
         condition: service_completed_successfully
     ports:
       - "9092:9092"
       - "7071:7071"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # KRaft: one node is both broker and controller. No ZooKeeper.
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_JMX_PORT: 9101
-      KAFKA_JMX_HOSTNAME: kafka
     volumes:
       - jmx-agent:/opt/jmx-exporter:ro
     # The JMX agent is set only for the broker process. If it were set in the container
@@ -79,7 +65,7 @@ services:
       retries: 10
 
   prometheus:
-    image: prom/prometheus:v2.47.0
+    image: prom/prometheus:v3.16.0
     hostname: prometheus
     container_name: module10-prometheus
     ports:
@@ -92,12 +78,14 @@ services:
       - "--storage.tsdb.path=/prometheus"
       - "--storage.tsdb.retention.time=7d"
       - "--web.enable-lifecycle"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       kafka:
         condition: service_healthy
 
   grafana:
-    image: grafana/grafana:10.1.0
+    image: grafana/grafana:13.2.6
     hostname: grafana
     container_name: module10-grafana
     ports:
@@ -115,7 +103,7 @@ services:
       - prometheus
 
   kafka-ui:
-    image: provectuslabs/kafka-ui:latest
+    image: kafbat/kafka-ui:v1.5.0
     hostname: kafka-ui
     container_name: module10-kafka-ui
     ports:
@@ -123,8 +111,12 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: module10-cluster
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
-      KAFKA_CLUSTERS_0_JMXPORT: 9101
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:8080/api/clusters || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     depends_on:
       kafka:
         condition: service_healthy

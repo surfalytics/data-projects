@@ -55,13 +55,9 @@ A **broker** is a single Kafka server. It receives messages from producers, stor
 ```mermaid
 graph TB
     subgraph Kafka Cluster
-        B1[Broker 1<br/>id=1]
-        B2[Broker 2<br/>id=2]
-        B3[Broker 3<br/>id=3]
-    end
-
-    subgraph Coordination
-        ZK[ZooKeeper / KRaft<br/>Controller]
+        B1[Broker 1<br/>node.id=1]
+        B2[Broker 2<br/>node.id=2]
+        B3[Broker 3<br/>node.id=3]
     end
 
     P1[Producer 1] --> B1
@@ -72,31 +68,34 @@ graph TB
     B2 --> C2[Consumer 2]
     B3 --> C3[Consumer 3]
 
-    ZK -.->|metadata & leader election| B1
-    ZK -.->|metadata & leader election| B2
-    ZK -.->|metadata & leader election| B3
+    B1 <-.->|KRaft metadata log| B2
+    B2 <-.->|KRaft metadata log| B3
 
     style B1 fill:#e8f5e9
     style B2 fill:#e8f5e9
     style B3 fill:#e8f5e9
-    style ZK fill:#fff3e0
 ```
 
-### ZooKeeper vs KRaft
+### KRaft: Kafka Without ZooKeeper
 
-Historically, Kafka used **Apache ZooKeeper** for:
-- Broker registration and discovery
-- Leader election for partitions
-- Configuration management
-- Health monitoring
+Kafka stores its cluster metadata in an internal log. This is called **KRaft** (Kafka Raft). A small group of nodes, the **controller quorum**, keeps this log with the Raft protocol.
 
-Starting with Kafka 3.3+, **KRaft mode** (Kafka Raft) replaces ZooKeeper:
-- Metadata is managed within Kafka itself
-- Eliminates the operational burden of running ZooKeeper
-- Faster controller failover
-- Simplified deployment
+- KRaft is the only mode in Kafka 4.0 and later. ZooKeeper is removed. ([Kafka 4.0 announcement](https://kafka.apache.org/blog/2025/03/18/apache-kafka-4.0.0-release-announcement/))
+- Confluent Platform 8 is based on Kafka 4.x. It runs in KRaft mode only.
+- A node has one or more roles: `broker`, `controller`, or both (`process.roles`).
+- Production: use 3 dedicated controller nodes plus separate brokers.
+- Our lab: one node with `broker,controller`. This is the simplest setup.
+- Benefits: one system to run, faster controller failover, more partitions per cluster.
 
-> **Note:** Our Docker setup uses ZooKeeper for compatibility, but production deployments should consider KRaft for new clusters.
+> **History:** Kafka 3.3 (2022) made KRaft production-ready for new clusters. Older Kafka versions used ZooKeeper for metadata and leader election. You may still see it in old tutorials. Ignore it for new work.
+
+The lab broker has three listeners:
+
+| Listener | Port | Used by |
+|---|---|---|
+| `PLAINTEXT_HOST` | 9092 | Your laptop (Python scripts) |
+| `PLAINTEXT` | 29092 | Other containers (Kafka UI) |
+| `CONTROLLER` | 29093 | KRaft controller traffic |
 
 ---
 
@@ -270,10 +269,12 @@ graph TB
 
 | Strategy | Description |
 |---|---|
-| **Range** (default) | Assigns contiguous partitions to each consumer per topic |
+| **Range** (default in both Java and Python clients) | Assigns contiguous partitions to each consumer per topic |
 | **RoundRobin** | Distributes partitions one-by-one across consumers |
 | **Sticky** | Like RoundRobin but minimizes partition movement during rebalancing |
 | **CooperativeSticky** | Incremental rebalancing -- only reassigns partitions that need to move |
+
+These are the **classic** protocol strategies (`partition.assignment.strategy`). The new protocol (see below) assigns partitions on the broker.
 
 ### Rebalancing
 
@@ -290,7 +291,7 @@ sequenceDiagram
     participant C3 as Consumer 3 (new)
     participant GC as Group Coordinator<br/>(Broker)
 
-    Note over C1,GC: Initial State: C1 has P0,P1 and C2 has P2,P3
+    Note over C1,GC: Classic protocol, eager strategy. Initial State: C1 has P0,P1 and C2 has P2,P3
 
     C3->>GC: JoinGroup request
     GC->>C1: Revoke partitions
@@ -304,6 +305,28 @@ sequenceDiagram
     GC->>C3: Assign P2, P3
     Note over C1,C3: All consumers resume processing
 ```
+
+### New Rebalance Protocol (KIP-848)
+
+Kafka 4.0 made a new consumer group protocol generally available. It is called **KIP-848**. ([Kafka 4.0 announcement](https://kafka.apache.org/blog/2025/03/18/apache-kafka-4.0.0-release-announcement/), [KIP-848](https://cwiki.apache.org/confluence/display/KAFKA/KIP-848%3A+The+Next+Generation+of+the+Consumer+Rebalance+Protocol))
+
+- The broker (group coordinator) computes the assignment. The clients do not.
+- There is no global "stop-the-world" step. Each consumer keeps its partitions until a partition must move.
+- Server assignors: `uniform` (default) and `range`.
+- It is on by default in the broker. Clients must opt in: `group.protocol=consumer`.
+- The default is still `classic`.
+- Python: `confluent-kafka` 2.12.0 and later have it as GA. ([changelog](https://docs.confluent.io/kafka-clients/python/2.16/changelog.html))
+- With `group.protocol=consumer`, classic settings such as `partition.assignment.strategy` and `session.timeout.ms` are not used. Do not call `assign()` or `unassign()` directly.
+
+```python
+consumer = Consumer({
+    "bootstrap.servers": "localhost:9092",
+    "group.id": "my-group",
+    "group.protocol": "consumer",  # KIP-848. Default is "classic".
+})
+```
+
+The exercises use the classic protocol with `cooperative-sticky`. Try `group.protocol=consumer` on the same exercise and compare the logs.
 
 ---
 
@@ -426,7 +449,7 @@ The ISR is the set of replicas that are "caught up" to the leader:
 
 ### What Happens When a Broker Fails?
 
-1. The controller detects the broker is down (via ZooKeeper session timeout or KRaft heartbeat)
+1. The controller detects the broker is down (the KRaft controller notices that the broker stopped sending heartbeats)
 2. For each partition where the failed broker was the leader, a new leader is elected from the ISR
 3. Producers and consumers update their metadata and redirect to the new leader
 4. When the broker comes back, it rejoins as a follower and catches up
@@ -435,8 +458,9 @@ The ISR is the set of replicas that are "caught up" to the leader:
 
 ## Versions Used in This Module
 
-- Confluent Platform 7.5.0 (Kafka 3.5) with ZooKeeper. This is for the lab only.
-- ZooKeeper mode is removed in Kafka 4.0. New clusters use KRaft. KRaft is production-ready since Kafka 3.3.
+- Confluent Platform 8.4.1 (Apache Kafka 4.x) in **KRaft** mode. One node is broker and controller. There is no ZooKeeper.
+- Kafka UI: `kafbat/kafka-ui:v1.5.0`. Python 3.12 with `confluent-kafka` 2.12 or later.
+- Kafka 4.0 needs Java 17 for brokers, Connect and tools. Java clients need Java 11. The Docker images already include Java. ([source](https://kafka.apache.org/blog/2025/03/18/apache-kafka-4.0.0-release-announcement/))
 - Python client: `confluent-kafka` (librdkafka). Its default partitioner for keys is `consistent_random` (CRC32), not the Java murmur2 hash. The idea is the same: same key, same partition.
 
 ---
@@ -450,7 +474,7 @@ The ISR is the set of replicas that are "caught up" to the leader:
 5. **Offsets track consumer progress** -- commit strategies determine your processing guarantees (at-most-once, at-least-once, exactly-once).
 6. **Replication provides fault tolerance** -- configure `replication.factor`, `min.insync.replicas`, and `acks` together for your durability needs.
 7. **Idempotent producers** eliminate duplicates from retries at the partition level.
-8. **Rebalancing is the most complex consumer behavior** -- use cooperative strategies to minimize disruption.
+8. **Rebalancing is the most complex consumer behavior** -- use `cooperative-sticky` or the new `group.protocol=consumer` to minimize disruption.
 
 ---
 

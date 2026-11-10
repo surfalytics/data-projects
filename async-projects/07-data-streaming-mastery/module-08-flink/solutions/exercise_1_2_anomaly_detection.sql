@@ -21,11 +21,12 @@ CREATE TABLE anomaly_print_sink (
 -- Step 2: Insert sliding window results filtered by threshold
 INSERT INTO anomaly_print_sink
 SELECT
-    HOP_START(order_time, INTERVAL '1' MINUTE, INTERVAL '10' MINUTE) AS window_start,
-    HOP_END(order_time, INTERVAL '1' MINUTE, INTERVAL '10' MINUTE)   AS window_end,
+    window_start,
+    window_end,
     COUNT(*)                                                          AS order_count,
     CAST(AVG(amount) AS DECIMAL(10, 2))                               AS avg_order_value,
     SUM(amount)                                                       AS total_revenue
-FROM orders
-GROUP BY HOP(order_time, INTERVAL '1' MINUTE, INTERVAL '10' MINUTE)
+FROM TABLE(
+    HOP(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE, INTERVAL '10' MINUTE))
+GROUP BY window_start, window_end
 HAVING COUNT(*) > 15;

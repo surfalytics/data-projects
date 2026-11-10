@@ -43,7 +43,11 @@ CREATE TABLE orders (
     'scan.startup.mode' = 'earliest-offset',              -- Read from beginning
     'format' = 'json',                                    -- Message format
     'json.fail-on-missing-field' = 'false',               -- Don't fail on missing fields
-    'json.ignore-parse-errors' = 'true'                   -- Skip malformed messages
+    'json.ignore-parse-errors' = 'true',                  -- Skip malformed messages
+    -- The seed data writes ISO-8601 timestamps (2026-01-01T10:00:00.123).
+    -- Without this line the default SQL format fails, and ignore-parse-errors
+    -- turns every order_time into NULL. Then no window ever fires.
+    'json.timestamp-format.standard' = 'ISO-8601'
 );
 
 
@@ -74,7 +78,8 @@ CREATE TABLE customers (
     'scan.startup.mode' = 'earliest-offset',
     'format' = 'json',
     'json.fail-on-missing-field' = 'false',
-    'json.ignore-parse-errors' = 'true'
+    'json.ignore-parse-errors' = 'true',
+    'json.timestamp-format.standard' = 'ISO-8601'
 );
 
 
@@ -102,7 +107,8 @@ CREATE TABLE products (
     'scan.startup.mode' = 'earliest-offset',
     'format' = 'json',
     'json.fail-on-missing-field' = 'false',
-    'json.ignore-parse-errors' = 'true'
+    'json.ignore-parse-errors' = 'true',
+    'json.timestamp-format.standard' = 'ISO-8601'
 );
 
 

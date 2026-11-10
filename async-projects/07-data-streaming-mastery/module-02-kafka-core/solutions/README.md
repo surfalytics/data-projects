@@ -21,14 +21,15 @@
    docker compose up -d
    ```
 
-2. Wait for Kafka to be healthy:
+2. Wait for Kafka to be healthy (about 30 seconds). Kafka runs in KRaft mode. There is no ZooKeeper:
    ```bash
    docker compose ps
    ```
 
-3. Install dependencies:
+3. Install dependencies (Python 3.12):
    ```bash
-   pip install -r requirements.txt
+   uv venv --python 3.12 && source .venv/bin/activate
+   uv pip install -r requirements.txt
    ```
 
 4. Run any solution:
