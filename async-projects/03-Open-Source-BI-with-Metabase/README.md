@@ -1,7 +1,7 @@
 ---
 title: "Open Source BI with Metabase"
-category: "BI"
-level: "Beginner"
+track: "BI / Data Analyst"
+level: "Base"
 roles: ["Data Analyst", "BI Developer"]
 duration: "4 assignments, ~2-4 hours each"
 cost: "Free"
@@ -17,7 +17,7 @@ status: "In progress"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Data Analyst, BI Developer | 4 assignments, ~2-4 h each | Free | In progress |
+| Base | Data Analyst, BI Developer | 4 assignments, ~2-4 h each | Free | In progress |
 
 ## Goal
 

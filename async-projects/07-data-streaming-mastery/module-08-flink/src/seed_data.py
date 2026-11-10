@@ -185,6 +185,21 @@ def setup_mysql_tables(conn: mysql.connector.MySQLConnection) -> None:
     """
     cursor = conn.cursor()
 
+    # The debezium/example-mysql image already has `customers`, `products` and
+    # `orders` tables with a different schema (id, order_number, ...).
+    # Replace them once, so the CREATE TABLE statements below take effect.
+    cursor.execute(
+        "SELECT COUNT(*) FROM information_schema.columns "
+        "WHERE table_schema = DATABASE() AND table_name = 'orders' "
+        "AND column_name = 'order_id'"
+    )
+    if cursor.fetchone()[0] == 0:
+        logger.warning("Replacing the sample inventory tables with the module schema")
+        cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
+        for table in ("products_on_hand", "orders", "products", "customers"):
+            cursor.execute(f"DROP TABLE IF EXISTS {table}")
+        cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS customers (
             customer_id INT AUTO_INCREMENT PRIMARY KEY,

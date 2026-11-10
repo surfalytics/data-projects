@@ -6,13 +6,13 @@ Start the environment:
 
 ```bash
 cd module-04-kafka-connect
-docker-compose up -d
+docker compose up -d
 ```
 
 Wait for all services to be healthy (especially `kafka-connect`):
 
 ```bash
-docker-compose ps
+docker compose ps
 # Wait until kafka-connect shows "healthy"
 curl http://localhost:8083/connectors
 # Should return: []

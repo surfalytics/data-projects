@@ -1,5 +1,5 @@
 view: orders {
-  sql_table_name: "RAW"."ORDERS" ;;
+  sql_table_name: "SUPERSTORE"."RAW"."ORDERS" ;;
   drill_fields: [order_id]
 
   parameter: profit_or_sales {
@@ -9,7 +9,6 @@ view: orders {
   }
 
   dimension: order_id {
-    primary_key: yes
     type: string
     sql: ${TABLE}."ORDER_ID" ;;
   }
@@ -62,6 +61,7 @@ view: orders {
     sql: ${TABLE}."REGION" ;;
   }
   dimension: row_id {
+    primary_key: yes   # one row per order line; order_id repeats
     type: number
     sql: ${TABLE}."ROW_ID" ;;
   }
@@ -89,36 +89,29 @@ view: orders {
     type: string
     sql: ${TABLE}."SUBCATEGORY" ;;
   }
-  measure: sales {
+  dimension: sales {
     type: number
     sql: ${TABLE}."SALES" ;;
   }
   measure: total_sales {
     type: sum
-    sql: ${TABLE}."SALES" ;;
+    sql: ${sales} ;;
     value_format: "$#,##0"  # Formats as currency with commas
   }
-  measure: profit {
+  dimension: profit {
     type: number
     sql: ${TABLE}."PROFIT" ;;
   }
   measure: total_profit {
     type: sum
-    sql: ${TABLE}."PROFIT" ;;
+    sql: ${profit} ;;
     value_format: "$#,##0"  # Formats as currency with commas
   }
   measure: dynamic_profit_or_sales {
-    type: number
-    sql: SUM(CASE
-            WHEN {% condition profit_or_sales %} 'Profit' {% endcondition %} THEN ${profit}
-            ELSE ${sales}
-          END) ;;
+    type: sum
+    sql: {% if profit_or_sales._parameter_value == 'Profit' %} ${profit} {% else %} ${sales} {% endif %} ;;
     value_format: "$#,##0"
-    html: "{% if profit_or_sales._parameter_value == 'Profit' %}
-    Profit: {{ rendered_value }}
-    {% else %}
-    Sales: {{ rendered_value }}
-    {% endif %}" ;;
+    html: {% if profit_or_sales._parameter_value == 'Profit' %}Profit: {{ rendered_value }}{% else %}Sales: {{ rendered_value }}{% endif %} ;;
   }
   measure: total_customers {
     type: count_distinct
@@ -127,10 +120,10 @@ view: orders {
   }
   measure: total_orders {
     type: count_distinct
-    sql: ${order_id} ;;  # Reference the customer_id field
+    sql: ${order_id} ;;  # Reference the order_id field
     label: "Total Orders"
   }
-  measure: discount {
+  dimension: discount {
     type: number
     sql: ${TABLE}."DISCOUNT" ;;
   }

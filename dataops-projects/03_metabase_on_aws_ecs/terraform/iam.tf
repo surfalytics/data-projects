@@ -11,7 +11,7 @@ data "aws_iam_policy_document" "ecs_task_assume_role" {
 }
 
 resource "aws_iam_role" "task_execution" {
-  name               = "MetabaseTaskExecutionRole"
+  name               = "${var.project_name}TaskExecutionRole"
   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
   description        = "Allows ECS tasks to call AWS services on your behalf."
 }

@@ -68,7 +68,7 @@ environment    = "dev"
 project_name   = "myproject"
 my_ip          = "YOUR_IP_HERE/32"
 enable_http    = true
-instance_type  = "t2.micro"
+instance_type  = "t3.micro"
 ```
 
 ### Step 3: Initialize and Apply

@@ -1,5 +1,9 @@
 # Module 1: Streaming Fundamentals
 
+![Architecture](images/architecture.png)
+
+*Diagram source: [`images/architecture.excalidraw`](images/architecture.excalidraw).*
+
 > **Theory-only module** -- no code or infrastructure required.
 > Estimated study time: 2-3 hours.
 
@@ -108,7 +112,7 @@ These three terms are often used interchangeably, but they have distinct meaning
 | **Complexity** | Lower | Higher |
 | **Error recovery** | Rerun the entire batch | Checkpointing, exactly-once semantics |
 | **Resource usage** | Bursty (peaks during runs) | Steady, constant |
-| **Typical tools** | Spark (batch), Hive, dbt, Airflow | Kafka Streams, Flink, Faust, ksqlDB |
+| **Typical tools** | Spark (batch), Hive, dbt, Airflow | Kafka Streams, Flink, Faust (`faust-streaming` fork), ksqlDB |
 | **Use case example** | Daily sales report | Real-time fraud detection |
 | **Data freshness** | Stale until next run | Near real-time |
 

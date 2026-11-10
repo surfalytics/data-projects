@@ -45,10 +45,10 @@ locals {
 
   # User data script
   user_data = templatefile("${path.module}/user-data.sh", {
-    environment   = var.environment
-    project_name  = var.project_name
-    bucket_name   = local.s3_bucket_name
-    aws_region    = var.aws_region
+    environment  = var.environment
+    project_name = var.project_name
+    bucket_name  = local.s3_bucket_name
+    aws_region   = var.aws_region
   })
 }
 

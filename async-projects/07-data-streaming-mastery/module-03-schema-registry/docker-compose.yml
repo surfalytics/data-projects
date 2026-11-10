@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -11,7 +9,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     healthcheck:
-      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      test: ["CMD-SHELL", "nc -z localhost 2181"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,7 +20,7 @@ services:
     container_name: module03-kafka
     depends_on:
       zookeeper:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "9092:9092"
       - "29092:29092"
@@ -39,7 +37,13 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      test:
+        [
+          "CMD",
+          "kafka-broker-api-versions",
+          "--bootstrap-server",
+          "localhost:9092",
+        ]
       interval: 10s
       timeout: 10s
       retries: 10
@@ -50,7 +54,7 @@ services:
     container_name: module03-schema-registry
     depends_on:
       kafka:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "8081:8081"
     environment:
@@ -70,9 +74,9 @@ services:
     container_name: module03-kafka-ui
     depends_on:
       kafka:
-        condition: service_started
+        condition: service_healthy
       schema-registry:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:

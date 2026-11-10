@@ -16,7 +16,6 @@ fastparquet = "^2023.10.1"  # Optional: alternative parquet engine
 requests = "^2.31.0"  # For downloading data
 polars = "^1.16.0"  # Adding Polars library
 ipython = "^8.0.0"  # Adding IPython
-polars-lts-cpu = "1.16.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"

@@ -102,18 +102,9 @@
     model: superstore_model
     explore: orders
     type: single_value
-    fields: [orders.sales]
+    fields: [orders.total_sales]
     limit: 5000
     column_limit: 50
-    dynamic_fields:
-    - category: table_calculation
-      expression: sum(${orders.sales})
-      label: Total sales
-      value_format:
-      value_format_name: usd_0
-      _kind_hint: measure
-      table_calculation: total_sales
-      _type_hint: number
     custom_color_enabled: true
     show_single_value_title: true
     show_comparison: false
@@ -126,7 +117,6 @@
     defaults_version: 1
     value_labels: legend
     label_type: labPer
-    hidden_fields: [orders.sales]
     listen:
       Period: orders.order_month
       Segment: orders.segment
@@ -141,18 +131,9 @@
     model: superstore_model
     explore: orders
     type: single_value
-    fields: [orders.profit]
+    fields: [orders.total_profit]
     limit: 5000
     column_limit: 50
-    dynamic_fields:
-    - category: table_calculation
-      expression: sum(${orders.profit})
-      label: Total profit
-      value_format:
-      value_format_name: usd_0
-      _kind_hint: measure
-      table_calculation: total_profit
-      _type_hint: number
     custom_color_enabled: true
     show_single_value_title: true
     show_comparison: false
@@ -163,7 +144,6 @@
     conditional_formatting_include_totals: false
     conditional_formatting_include_nulls: false
     defaults_version: 1
-    hidden_fields: [orders.profit]
     listen:
       Period: orders.order_month
       Segment: orders.segment
@@ -178,48 +158,9 @@
     model: superstore_model
     explore: orders
     type: single_value
-    fields: [orders.customer_id]
-    sorts: [orders.customer_id]
+    fields: [orders.total_customers]
     limit: 5000
     column_limit: 50
-    total: true
-    dynamic_fields:
-    - category: measure
-      expression:
-      label: count orders
-      value_format:
-      value_format_name:
-      based_on: orders.order_id
-      _kind_hint: measure
-      measure: count_orders
-      type: count_distinct
-      _type_hint: number
-    - category: measure
-      expression:
-      label: count returned orders
-      value_format:
-      value_format_name:
-      based_on: returned_orders.order_id
-      _kind_hint: measure
-      measure: count_returned_orders
-      type: count_distinct
-      _type_hint: number
-    - category: dimension
-      expression: '"returned orders ratio"'
-      label: returned orders ratio
-      value_format:
-      value_format_name: ''
-      dimension: returned_orders_ratio
-      _kind_hint: dimension
-      _type_hint: string
-    - category: table_calculation
-      expression: count_distinct(${orders.customer_id})
-      label: Customers
-      value_format:
-      value_format_name:
-      _kind_hint: dimension
-      table_calculation: customers
-      _type_hint: number
     custom_color_enabled: true
     show_single_value_title: true
     show_comparison: false
@@ -254,7 +195,6 @@
     defaults_version: 1
     value_labels: legend
     label_type: labPer
-    hidden_fields: [orders.customer_id]
     hidden_points_if_no: []
     x_axis_gridlines: false
     y_axis_gridlines: true
@@ -386,18 +326,9 @@
     model: superstore_model
     explore: orders
     type: single_value
-    fields: [orders.order_id]
+    fields: [orders.total_orders]
     limit: 5000
     column_limit: 50
-    dynamic_fields:
-    - category: table_calculation
-      expression: count_distinct(${orders.order_id})
-      label: Orders
-      value_format:
-      value_format_name:
-      _kind_hint: dimension
-      table_calculation: orders
-      _type_hint: number
     custom_color_enabled: true
     show_single_value_title: true
     show_comparison: false
@@ -408,7 +339,6 @@
     conditional_formatting_include_totals: false
     conditional_formatting_include_nulls: false
     defaults_version: 1
-    hidden_fields: [orders.order_id]
     hidden_pivots: {}
     listen:
       Period: orders.order_month
@@ -642,7 +572,7 @@
     title: Profit or Sales
     type: field_filter
     default_value: Profit
-    allow_multiple_values: true
+    allow_multiple_values: false
     required: false
     ui_config:
       type: button_toggles

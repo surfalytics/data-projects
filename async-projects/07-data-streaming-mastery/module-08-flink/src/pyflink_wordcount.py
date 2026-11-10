@@ -156,6 +156,11 @@ def run_wordcount() -> None:
     env_settings = EnvironmentSettings.in_streaming_mode()
     t_env = TableEnvironment.create(env_settings)
 
+    # When running on your laptop, point FLINK_JARS at the connector JARs.
+    # Example: FLINK_JARS="file:///abs/path/a.jar;file:///abs/path/b.jar"
+    if os.environ.get("FLINK_JARS"):
+        t_env.get_config().set("pipeline.jars", os.environ["FLINK_JARS"])
+
     # Configure checkpointing for fault tolerance
     t_env.get_config().set("execution.checkpointing.interval", "60000")
     t_env.get_config().set("execution.checkpointing.mode", "EXACTLY_ONCE")

@@ -1,5 +1,27 @@
 # Module 7: Stream Processing with Faust
 
+![Architecture](images/architecture.png)
+
+*Diagram source: [`images/architecture.excalidraw`](images/architecture.excalidraw).*
+
+## Versions used in this module
+
+- Python 3.10 or newer. `faust-streaming` 0.15.x needs `>=3.10` ([PyPI](https://pypi.org/project/faust-streaming/)).
+- Install with `pip install -r requirements.txt`. This installs `faust-streaming`. The old `faust` package on PyPI (1.10.x) is the dead Robinhood project. Do not install it.
+- Kafka: Confluent Platform 7.5.0 with ZooKeeper (see `docker-compose.yml`). Kafka UI is on http://localhost:8080.
+- All code in `src/` and `solutions/` uses `store="memory://"`. State is lost on restart. RocksDB is optional and needs the extra `python-rocksdb` package (see `requirements.txt`).
+
+### Run the examples
+
+```bash
+docker compose up -d
+python -m src.event_producer          # send test events (transactions, orders, customers, products)
+faust -A src.app_basic worker -l info # or: src.fraud_detection, src.order_enrichment
+faust -A src.realtime_analytics worker -l info --web-port 6066
+```
+
+Run these from the `module-07-faust-streaming` folder. Each solution file has its own `faust -A solutions.<file> worker` command in its docstring.
+
 ## Table of Contents
 
 1. [What is Faust?](#what-is-faust)
@@ -395,6 +417,8 @@ async def track_revenue(stream):
 Old windows are automatically expired to free memory:
 
 ```python
+from datetime import timedelta
+
 orders_per_minute = app.Table(
     'orders-per-minute',
     default=int,

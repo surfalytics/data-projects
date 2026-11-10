@@ -58,6 +58,12 @@ variable "db_instance_class" {
   default     = "db.t4g.micro"
 }
 
+variable "db_engine_version" {
+  description = "PostgreSQL major version. RDS picks the default minor version."
+  type        = string
+  default     = "18"
+}
+
 variable "db_allocated_storage" {
   description = "RDS allocated storage in GB"
   type        = number
@@ -67,7 +73,8 @@ variable "db_allocated_storage" {
 variable "metabase_image" {
   description = "Container image for the Metabase task"
   type        = string
-  default     = "metabase/metabase:latest"
+  # Pin a version. Check https://hub.docker.com/r/metabase/metabase/tags for newer tags.
+  default = "metabase/metabase:v0.65.4"
 }
 
 variable "task_cpu" {
@@ -77,7 +84,7 @@ variable "task_cpu" {
 }
 
 variable "task_memory" {
-  description = "Fargate task memory in MB"
+  description = "Fargate task memory in MB. 2048 is the smallest size that runs Metabase well."
   type        = string
-  default     = "3072"
+  default     = "2048"
 }

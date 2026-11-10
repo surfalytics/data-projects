@@ -18,12 +18,12 @@
 1. Start the Kafka infrastructure:
    ```bash
    cd module-02-kafka-core
-   docker-compose up -d
+   docker compose up -d
    ```
 
 2. Wait for Kafka to be healthy:
    ```bash
-   docker-compose ps
+   docker compose ps
    ```
 
 3. Install dependencies:

@@ -1,5 +1,9 @@
 # Module 10: Production Considerations
 
+![Architecture](images/architecture.png)
+
+*Diagram source: [`images/architecture.excalidraw`](images/architecture.excalidraw).*
+
 ## Table of Contents
 
 1. [Monitoring Kafka](#monitoring-kafka)
@@ -117,6 +121,7 @@ The JMX Exporter runs as a **Java agent** inside the Kafka broker JVM. It reads 
 ```bash
 # The JMX Exporter is configured via KAFKA_OPTS environment variable
 KAFKA_OPTS: "-javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent.jar=7071:/opt/jmx-exporter/kafka-jmx-config.yml"
+# The jar is downloaded by the one-shot "jmx-agent-init" service into a shared volume.
 ```
 
 ### Prometheus Scraping
@@ -128,7 +133,7 @@ scrape_configs:
   - job_name: 'kafka'
     static_configs:
       - targets: ['kafka:7071']
-    scrape_interval: 15s
+    scrape_interval: 10s
 ```
 
 ### Grafana Dashboards
@@ -842,3 +847,7 @@ You have completed **Data Streaming Mastery** -- all 10 modules covering the ful
 - **Join the community** -- Apache Kafka mailing lists, Confluent Community Slack, Stack Overflow
 
 Thank you for completing this course. The skills you have built -- designing streaming architectures, implementing producers and consumers, managing schemas, building processing pipelines, and operating Kafka in production -- are in high demand across the industry. Go build something great.
+
+---
+
+**[Back to the course overview](../README.md)**

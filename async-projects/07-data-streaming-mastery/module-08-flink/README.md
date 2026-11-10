@@ -1,5 +1,46 @@
 # Module 8: Apache Flink -- Real-Time Stream Processing
 
+![Architecture](images/architecture.png)
+
+*Diagram source: [`images/architecture.excalidraw`](images/architecture.excalidraw).*
+
+## Versions used in this module
+
+| Part | Version | Note |
+|---|---|---|
+| Flink cluster | `flink:1.17-scala_2.12-java11` | Set in `docker-compose.yml` |
+| PyFlink | `apache-flink==1.17.2` | Must match the cluster (1.17.x) |
+| Python for PyFlink | **3.8, 3.10** (3.7 to 3.10 allowed) | PyFlink 1.17 has no wheels for Python 3.11 or newer. [Docs](https://nightlies.apache.org/flink/flink-docs-release-1.17/docs/dev/python/installation/) |
+| Connector JARs | Kafka 1.17.2, JDBC 3.1.1-1.17, MySQL CDC 2.4.2 | Downloaded by the `sql-client` container |
+
+- Use a separate venv with Python 3.10 for this module: `python3.10 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`.
+- On Python 3.11+, `pip install apache-flink==1.17.2` fails or builds from source. Do not use it. Newer PyFlink (2.x) supports newer Python, but it needs a newer Flink cluster.
+- The `jobmanager` image has no Python. Run the PyFlink scripts on your laptop (local mini cluster), not with `flink run -py` in the container.
+
+### Run the module
+
+```bash
+./src/setup_flink.sh                 # start stack, create topics, create Kafka tables
+python src/seed_data.py              # keep it running (Kafka + MySQL data)
+docker exec -it flink-sql-client /opt/flink/bin/sql-client.sh   # SQL exercises
+```
+
+`seed_data.py` replaces the sample `customers`, `products` and `orders` tables in the MySQL `inventory` database with the module schema.
+
+To run a PyFlink script on your laptop, give it the connector JARs and local addresses:
+
+```bash
+mkdir -p jars && cd jars
+curl -fLO https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka/1.17.2/flink-sql-connector-kafka-1.17.2.jar
+curl -fLO https://repo1.maven.org/maven2/com/ververica/flink-sql-connector-mysql-cdc/2.4.2/flink-sql-connector-mysql-cdc-2.4.2.jar
+cd ..
+export FLINK_JARS="file://$PWD/jars/flink-sql-connector-kafka-1.17.2.jar;file://$PWD/jars/flink-sql-connector-mysql-cdc-2.4.2.jar"
+export KAFKA_BOOTSTRAP_SERVERS=localhost:9092 MYSQL_HOST=localhost
+python src/pyflink_wordcount.py
+```
+
+The files: `sql/01..05-*.sql` (SQL Client scripts), `src/pyflink_*.py` (PyFlink jobs), `src/seed_data.py` (data generator), `src/setup_flink.sh` (start and stop; `--down` stops it).
+
 ## Overview
 
 Apache Flink is a **distributed stream processing framework** designed for stateful computations over unbounded and bounded data streams. While tools like Kafka Streams and ksqlDB handle stream processing at different levels of abstraction, Flink is the **industrial-strength engine** built for the most demanding real-time workloads -- millisecond latency, exactly-once guarantees, and petabyte-scale state.
@@ -58,9 +99,9 @@ Apache Flink is an open-source, unified stream and batch processing framework. U
 | **Deployment** | Standalone cluster | Embedded in app | Standalone server | Embedded in app |
 | **Language** | Java/Scala/Python/SQL | Java/Kotlin | SQL only | Python only |
 | **State Management** | Managed, large state (TB+) | RocksDB local | ksqlDB managed | RocksDB/memory |
-| **Exactly-Once** | Yes (end-to-end) | Yes (Kafka-to-Kafka) | Yes (Kafka-to-Kafka) | At-least-once |
+| **Exactly-Once** | Yes (end-to-end) | Yes (Kafka-to-Kafka) | Yes (Kafka-to-Kafka) | Yes (Kafka-to-Kafka, optional) |
 | **Event Time** | Native watermarks | Yes | Yes (limited) | Basic support |
-| **Windowing** | Tumbling, sliding, session, global, custom | Tumbling, sliding, session | Tumbling, hopping, session | Tumbling |
+| **Windowing** | Tumbling, sliding, session, global, custom | Tumbling, sliding, session | Tumbling, hopping, session | Tumbling, hopping |
 | **SQL Support** | Full Flink SQL | No | Native SQL | No |
 | **Batch Processing** | Yes (unified) | No | No | No |
 | **CDC Support** | Native (flink-cdc) | Via Kafka Connect | Via Kafka Connect | Via Kafka Connect |
@@ -141,7 +182,7 @@ graph TB
 | **Task Slot** | A fixed subset of a TaskManager's resources (memory). Each slot can run one parallel pipeline of operators. Slots allow multiple tasks to share a single JVM. |
 | **Parallelism** | The number of parallel instances of an operator. A parallelism of 4 means 4 copies of the operator run simultaneously across slots. |
 | **Dispatcher** | Provides a REST interface for submitting jobs and serves the Flink Web UI. |
-| **ResourceManager** | Manages TaskManager slots and communicates with external resource providers (YARN, Kubernetes, Mesos). |
+| **ResourceManager** | Manages TaskManager slots and communicates with external resource providers (YARN, Kubernetes). |
 
 ### Parallelism and Slots
 
@@ -165,7 +206,7 @@ Each slot runs a full pipeline slice (operator chaining)
 | Mode | Description | Use Case |
 |---|---|---|
 | **Session Mode** | Long-running cluster; multiple jobs share it | Development, interactive SQL |
-| **Per-Job Mode** | Dedicated cluster per job; torn down after | Production (YARN) |
+| **Per-Job Mode** | Dedicated cluster per job; torn down after. Deprecated since Flink 1.15, YARN only | Legacy (YARN) |
 | **Application Mode** | Main() runs on the cluster, not the client | Production (Kubernetes) |
 
 ---
@@ -260,6 +301,8 @@ CREATE TABLE orders (
 
 ### Querying Streams
 
+> **Note:** `TUMBLE(...)` / `HOP(...)` / `SESSION(...)` in `GROUP BY` are the older "group window" syntax. They work in Flink 1.17 and are used in this module. Newer Flink docs prefer window table-valued functions: `FROM TABLE(TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE))`.
+
 ```sql
 -- Continuous query: orders per minute
 SELECT
@@ -309,6 +352,7 @@ Python User Code
 
 ```python
 from pyflink.table import EnvironmentSettings, TableEnvironment
+from pyflink.table.expressions import col
 
 # Create a TableEnvironment for streaming
 env_settings = EnvironmentSettings.in_streaming_mode()
@@ -330,7 +374,7 @@ t_env.execute_sql("""
 # Query with Table API
 result = t_env.from_path("source_table") \
     .group_by(col("word")) \
-    .select(col("word"), lit(1).count.alias("count"))
+    .select(col("word"), col("word").count.alias("count"))
 ```
 
 ### PyFlink vs Java/Scala Flink
@@ -666,7 +710,7 @@ state.savepoints.dir: s3://my-bucket/flink/savepoints
 
 ## CDC with Flink
 
-Flink has **native CDC (Change Data Capture) support** through the `flink-cdc-connectors` project. This allows Flink to directly consume database changelogs without needing Kafka Connect or Debezium as a separate service.
+Flink has **native CDC (Change Data Capture) support** through the Flink CDC project (`flink-cdc-connectors`, now an Apache Flink sub-project). This module uses `flink-sql-connector-mysql-cdc` 2.4.2, the `com.ververica` release that works with Flink 1.17. This allows Flink to directly consume database changelogs without needing Kafka Connect or Debezium as a separate service.
 
 ### Flink CDC Architecture
 

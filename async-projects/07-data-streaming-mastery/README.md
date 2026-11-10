@@ -1,7 +1,8 @@
 ---
 title: "Data Streaming Mastery"
-category: "Streaming"
-level: "Intermediate"
+track: "Data Engineer"
+focus: "Streaming"
+level: "Senior"
 roles: ["Data Engineer", "DataOps Engineer"]
 duration: "10 assignments, ~3-6 hours each"
 cost: "Free"
@@ -17,7 +18,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Data Engineer, DataOps Engineer | 10 assignments, ~3-6 h each | Free | Ready |
+| Senior | Data Engineer, DataOps Engineer | 10 assignments, ~3-6 h each | Free | Ready |
 
 ## Goal
 
@@ -51,7 +52,7 @@ You learn data streaming from Kafka basics to a production-grade real-time pipel
 | MySQL, PostgreSQL | Source and analytics databases | yes |
 | Kafka UI | Inspect topics and consumers | yes |
 | Prometheus, Grafana | Metrics and dashboards | yes |
-| Docker, Python 3.9+ | Run all services and scripts locally | yes |
+| Docker, Python 3.10 | Run all services and scripts locally | yes |
 
 ## Architecture
 
@@ -125,7 +126,7 @@ Modules 06, 07 and 08 are three ways to process streams. You can do them in any 
 ## Prerequisites
 
 - Docker Desktop v4.20+ with Docker Compose v2.
-- Python 3.9+ with `pip` and `venv`.
+- Python 3.10 with `pip` and `venv`. Module 07 (Faust) needs 3.10 or newer. Module 08 (PyFlink 1.17) needs 3.10 or older. Python 3.10 works for every module.
 - Basic SQL: `SELECT`, `JOIN`, `GROUP BY`, window functions.
 - Command line basics (bash or zsh).
 - 16 GB RAM recommended (8 GB minimum). 20 GB free disk space.
@@ -149,9 +150,19 @@ cd module-01-fundamentals
 # Follow the module README for exercises
 
 # 4. (Optional) Launch the full capstone stack
-cd ../
-docker compose up -d
+cd module-09-capstone
+./setup.sh
 ```
+
+### Versions used in this course
+
+| Component | Version | Note |
+|---|---|---|
+| Confluent Platform (Kafka, Schema Registry, Connect, ksqlDB) | 7.5.0 | Runs Kafka with **ZooKeeper**. Kafka 4.0 removed ZooKeeper (KRaft only). The course keeps ZooKeeper so that every module uses the same stack. |
+| Debezium | 2.4 (module 05), 2.5.4 plugin (module 09) | Debezium 3.x renamed some options, see module 05 |
+| Flink / PyFlink | 1.17 | PyFlink 1.17 needs Python 3.10 or older |
+| Prometheus / Grafana | 2.47 / 10.1 | |
+| Python | 3.10 | See prerequisites |
 
 Each module has its own `exercises/` and `solutions/` folders. Do the exercises first. Then check your work against the solutions.
 
@@ -161,7 +172,6 @@ Each module has its own `exercises/` and `solutions/` folders. Do the exercises 
 07-data-streaming-mastery/
 ├── README.md                  # This file
 ├── SETUP.md                   # Detailed environment setup
-├── docker-compose.yml         # Master compose for the capstone
 ├── data-generators/           # Shared data generators
 ├── module-01-fundamentals/    # Concepts and theory
 ├── module-02-kafka-core/      # Kafka producers and consumers
@@ -472,7 +482,7 @@ Module folder: [`module-09-capstone/`](module-09-capstone/)
 **Steps:**
 
 1. Read the [module README](module-09-capstone/README.md).
-2. Free these ports: 3000, 3306, 5432, 8080, 8081, 8083, 8088, 9090, 9092. Give Docker 8 GB RAM.
+2. Free these ports: 2181, 3000, 3306, 5432, 8080, 8081, 8083, 8088, 9090, 9092, 29092. Give Docker 8 GB RAM.
 3. Run the setup:
 
    ```bash

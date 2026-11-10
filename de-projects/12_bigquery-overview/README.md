@@ -1,340 +1,332 @@
-# Table of Contents
+---
+title: "Google BigQuery Overview: Partitioning and Clustering"
+track: "Data Engineer"
+focus: "Warehouse and lakehouse"
+level: "Base"
+roles: ["Data Engineer", "Analytics Engineer", "Data Analyst"]
+duration: "4 assignments, ~1-2 hours each"
+cost: "Free"
+tools: ["Google BigQuery", "SQL"]
+status: "Ready"
+---
 
-- [Introduction](#introduction)
-- [Databases vs. Data Warehouses vs. Data Lakes](#databases-vs-data-warehouses-vs-data-lakes)
-  - [Databases](#databases)
-  - [Data Warehouses](#data-warehouses)
-  - [Data Lakes](#data-lakes)
-  - [Summary](#summary)
-- [BigQuery Overview](#bigquery-overview)
-- [Architecture](#architecture)
-- [BigQuery vs Snowflake](#bigquery-vs-snowflake)
-  - [Architecture](#architecture-1)
-  - [Scalability](#scalability)
-  - [Performance](#performance)
-  - [Pricing](#pricing)
-- [How to get started with BigQuery?](#how-to-get-started-with-bigquery)
-  - [BigQuery Sandbox](#bigquery-sandbox)
-- [Storage Overview. How to partition and cluster data?](#storage-overview-how-to-partition-and-cluster-data)
-  - [Resource Model](#resource-model)
-  - [Partitioning](#partitioning)
-    - [Partitioning: Hands-on](#partitioning-hands-on)
-  - [Clustering](#clustering)
-    - [Clustering: Hands-On](#clustering-hands-on)
+# Google BigQuery Overview: Partitioning and Clustering
 
-## **Introduction**
+![Architecture](images/architecture.png)
 
-In this lesson, we’ll dive into Google BigQuery’s essentials, exploring how it’s designed for big data analytics and how it compares to other tools like Snowflake. You’ll learn practical techniques to optimize your queries with partitioning and clustering, keeping performance high and costs low. Plus, we’ll guide you on getting started with BigQuery for free, so you can start running queries right away. By the end, you’ll have a solid foundation to use BigQuery effectively in your own data projects.
+## Project card
 
-## **Databases vs. Data Warehouses vs. Data Lakes**
+| Level | Roles | Duration | Cost | Status |
+|---|---|---|---|---|
+| Base | Data Engineer, Analytics Engineer, Data Analyst | 4 assignments, ~1-2 h each | Free | Ready |
 
-As data volumes grow, choosing the right storage solution is crucial. Databases, data warehouses, and data lakes each offer unique advantages and serve different needs. Let’s explore their key differences, architectures, and strengths.
+## Goal
 
-![image](https://github.com/user-attachments/assets/b00457ad-3807-45c6-ae08-c7d98fb5764b)
+You learn how Google BigQuery works and how it compares to Snowflake. You start BigQuery for free with the Sandbox. Then you use partitioning and clustering on a public StackOverflow dataset and measure how much less data your queries scan.
 
+## What you will learn
 
-### Databases
+- The difference between databases, data warehouses and data lakes.
+- BigQuery architecture: Dremel, Colossus, Jupiter and Borg.
+- How BigQuery differs from Snowflake.
+- How to start BigQuery for free with the Sandbox.
+- How to create partitioned and clustered tables.
+- How to compare bytes scanned and query time.
 
-Databases are designed for quick, transactional operations, making them ideal for real-time business applications. Common examples include MySQL, PostgreSQL, and MongoDB.
+## Who it is for
 
-- **Architecture**: Row-based, optimized for Online Transaction Processing (OLTP).
-- **Pros**: Fast transactions, data integrity, structured accessibility.
-- **Cons**: Limited scalability, not ideal for large-scale analytics.
+- **Data Engineer**: you design tables that are fast and cheap to query.
+- **Analytics Engineer**: you choose partition and cluster keys for your models.
+- **Data Analyst**: you learn why some queries cost more than others.
 
-### Data Warehouses
+## Tools and services
 
-Data warehouses like Google BigQuery, Amazon Redshift, and Snowflake aggregate data from multiple sources for high-performance analytics, making them essential for business intelligence.
-
-- **Architecture**: Columnar, optimized for Online Analytical Processing (OLAP).
-- **Pros**: Fast query performance, centralized data, historical data storage.
-- **Cons**: High costs, rigid ETL processes, limited support for unstructured data.
-
-### Data Lakes
-
-Data lakes, such as those on Google Cloud Storage, Amazon S3 and Azure Data Lake, provide scalable storage for both structured and unstructured data, supporting diverse use cases like big data and machine learning.
-
-- **Architecture**: Distributed, schema-on-read for flexibility.
-- **Pros**: High scalability, flexible data formats, suitable for advanced analytics.
-- **Cons**: Risk of “data swamps,” slower retrieval, potential data quality issues.
-
-### Summary
-
-Each solution serves specific purposes: databases for transactions, data warehouses for analytics, and data lakes for scalable storage. In this landscape, Google BigQuery is a data warehouse, combining analytics performance with data lake flexibility, making it a valuable tool for modern data-driven organizations.
-
-## BigQuery Overview
-
-![image](https://github.com/user-attachments/assets/41e9d672-5344-49a1-8fa5-c75e50bd1d1e)
-
-
-[BigQuery](https://airbyte.com/connectors/bigquery) is a serverless data warehouse that was released in 2011 by Google
-
-- **Enterprise Data Warehouse**: BigQuery serves as a robust data warehouse solution, ideal for large-scale enterprise analytics needs.
-- **Serverless**: Fully managed by Google Cloud, BigQuery removes the need for infrastructure management, letting users focus purely on data analytics.
-- **Separate Storage and Compute**: BigQuery’s architecture separates storage from compute, enabling flexible scaling and efficient resource allocation based on workload needs.
-- **Scalability**: Designed to handle petabytes of data, BigQuery scales seamlessly, making it suitable for datasets of any size.
-- **Cost Efficiency**: With a pricing model based on usage, BigQuery only charges for the storage and compute resources actually used, optimizing cost-effectiveness.
+| Tool | Used for | Free option |
+|---|---|---|
+| Google BigQuery | Data warehouse | yes (Sandbox, no credit card) |
+| BigQuery public datasets | Sample data | yes |
+| Google Cloud free trial | Full BigQuery features | trial ($300 credit) |
 
 ## Architecture
 
-BigQuery’s serverless architecture decouples storage and compute and allows them to scale independently on demand. This is very different from traditional node-based cloud data warehouse solutions or on-premise massively parallel processing (MPP) systems.
+The diagram is at the top of this page. Source file: [`images/architecture.excalidraw`](images/architecture.excalidraw). Open it at [excalidraw.com](https://excalidraw.com) to copy or edit it.
 
-![image](https://github.com/user-attachments/assets/f625aaee-ca66-4713-8197-3bbd42767bb7)
+Data flow:
 
+1. You open the BigQuery console in the Sandbox.
+2. You read the public table `bigquery-public-data.stackoverflow.posts_questions`.
+3. You copy 6 months of 2018 data into 3 tables in your `stackoverflow` dataset: plain, partitioned, and partitioned + clustered.
+4. You run the same query on each table and compare bytes scanned and time.
 
-Under the hood, BigQuery employs a vast set of multi-tenant services driven by low-level Google infrastructure technologies like [Dremel, Colossus, Jupiter and Borg](https://cloud.google.com/blog/big-data/2016/01/bigquery-under-the-hood).
+## Dataset
 
-![image](https://github.com/user-attachments/assets/d58052ed-3940-4efd-96f5-fc089714eedf)
+- **Source:** [BigQuery public datasets](https://console.cloud.google.com/marketplace/browse?filter=solution-type:dataset), StackOverflow (`bigquery-public-data.stackoverflow`).
+- **Tables / entities:** `posts_questions` (questions with title, body, tags, dates, counts). `stackoverflow_posts` for the first query.
+- **Size:** about 3.2 GB for January to June 2018 questions.
 
+## Prerequisites
 
-**Compute is [Dremel](https://research.google.com/pubs/pub36632.html), a large multi-tenant cluster that executes SQL queries.**
+- Google account.
+- Basic SQL.
+- New to Git, CLI or Docker? Start with [Surfalytics Module 0](https://www.youtube.com/watch?v=LJIiCLu2gr8&list=PLNCDg7zJiXhP5Z_-TXUdorz2n7sjYHHKE&index=1).
 
-- Dremel turns SQL queries into execution trees. The leaves of the tree are called slots and do the heavy lifting of reading data from storage and any necessary computation. The branches of the tree are ‘mixers’, which perform the aggregation.
-- Dremel dynamically apportions slots to queries on an as-needed basis, maintaining fairness for concurrent queries from multiple users. A single user can get thousands of slots to run their queries.
+## Assignments
 
-**Storage is [Colossus](https://www.systutorials.com/3202/colossus-successor-to-google-file-system-gfs/), Google’s global storage system.**
+Work at your own pace. Each assignment shows the expected time.
 
-- BigQuery leverages the [columnar storage format](https://cloud.google.com/blog/products/gcp/inside-capacitor-bigquerys-next-generation-columnar-storage-format) and compression algorithm to store data in Colossus, optimized for reading large amounts of structured data.
-- Colossus also handles replication, recovery (when disks crash) and distributed management (so there is no single point of failure). Colossus allows BigQuery users to scale to dozens of petabytes of data stored seamlessly, without paying the penalty of attaching much more expensive compute resources as in traditional data warehouses.
+### Assignment 1: Learn the concepts (~1.5 h)
 
-**Compute and storage talk to each other through the petabit [Jupiter](https://cloudplatform.googleblog.com/2015/06/A-Look-Inside-Googles-Data-Center-Networks.html) network.**
+**Goal:** Understand where BigQuery fits and how it works inside.
 
-- In between storage and compute is ‘shuffle’, which takes advantage of Google’s Jupiter network to move data extremely rapidly from one place to another.
+**Steps:**
 
-**BigQuery is orchestrated via [Borg](https://research.google.com/pubs/pub43438.html), Google’s precursor to [Kubernetes](https://kubernetes.io/).**
+1. Learn the difference between databases, data warehouses and data lakes.
 
-- The mixers and slots are all run by Borg, which allocates hardware resources.
+   ![Databases vs data warehouses vs data lakes](https://github.com/user-attachments/assets/b00457ad-3807-45c6-ae08-c7d98fb5764b)
 
-## BigQuery vs Snowflake
+   | Type | Examples | Architecture | Pros | Cons |
+   |---|---|---|---|---|
+   | Database | MySQL, PostgreSQL, MongoDB | Row-based, OLTP | Fast transactions, data integrity | Limited scale, weak for analytics |
+   | Data warehouse | BigQuery, Redshift, Snowflake | Columnar, OLAP | Fast queries, central data, history | Higher cost, rigid ETL, weak for unstructured data |
+   | Data lake | Google Cloud Storage, Amazon S3, Azure Data Lake | Distributed, schema-on-read | High scale, any format, good for ML | Can become a "data swamp", slower, data quality risks |
 
-![image](https://github.com/user-attachments/assets/de5a3bfd-91c5-4d42-a992-3e13d652a85d)
+2. Learn what [BigQuery](https://cloud.google.com/bigquery) is. Google released it in 2011.
 
+   ![BigQuery overview](https://github.com/user-attachments/assets/41e9d672-5344-49a1-8fa5-c75e50bd1d1e)
 
-### Architecture
+   - Enterprise data warehouse for large-scale analytics.
+   - Serverless. Google manages all infrastructure.
+   - Storage and compute are separate and scale on their own.
+   - Handles petabytes of data.
+   - You pay only for the storage and compute you use.
 
-Snowflake and BigQuery both offer decoupled storage and compute resources that can elastically scale to meet all your mission-critical workload requirements. But they also have slightly different architectures.
+3. Learn the architecture. Storage and compute are decoupled. This is different from node-based cloud warehouses and on-premise MPP systems. Read [BigQuery under the hood](https://cloud.google.com/blog/products/bigquery/bigquery-under-the-hood).
 
-![image](https://github.com/user-attachments/assets/26bb44f0-d491-4c85-8a70-70b1e7e3e020)
+   ![BigQuery architecture](https://github.com/user-attachments/assets/f625aaee-ca66-4713-8197-3bbd42767bb7)
 
-**Snowflake** has a [three-layer architecture](https://docs.snowflake.com/en/user-guide/intro-key-concepts.html#snowflake-architecture).
+   ![BigQuery internals](https://github.com/user-attachments/assets/d58052ed-3940-4efd-96f5-fc089714eedf)
 
-- Centralized storage layer: Uses cloud storage infrastructure from platforms such as AWS, Microsoft Azure, and GCP to store all your data records persistently, without any losses.
-- Multi-cluster compute layer: Contains multiple massively parallel processing (MPP) compute clusters that are capable of quickly processing all your complex queries.
-- Cloud services layer: This layer is a collection of different services, such as query management, optimization, transactions, security, metadata, and sharing.
+   | Component | Role |
+   |---|---|
+   | [Dremel](https://research.google.com/pubs/pub36632.html) (compute) | Multi-tenant cluster that runs SQL. It turns a query into an execution tree. Leaves are **slots**: they read data and compute. Branches are **mixers**: they aggregate. Slots are given to queries as needed. One user can get thousands of slots. |
+   | [Colossus](https://cloud.google.com/blog/products/storage-data-transfer/a-peek-behind-colossus-googles-file-system) (storage) | Google's global storage. Data is stored in a [columnar format](https://cloud.google.com/blog/products/gcp/inside-capacitor-bigquerys-next-generation-columnar-storage-format) with compression. It handles replication and recovery. |
+   | [Jupiter](https://cloudplatform.googleblog.com/2015/06/A-Look-Inside-Googles-Data-Center-Networks.html) (network) | Petabit network between storage and compute. The **shuffle** step uses it to move data fast. |
+   | [Borg](https://research.google.com/pubs/pub43438.html) (orchestration) | Allocates hardware for mixers and slots. It is the predecessor of [Kubernetes](https://kubernetes.io/). |
 
-Snowflake’s unique three-layered architecture offers the data management simplicity of a shared-disk architecture along with the scalability of a shared-nothing architecture.
+4. Compare BigQuery and Snowflake.
 
-![image](https://github.com/user-attachments/assets/718e274f-8f59-441e-9e0d-fd62dfe10415)
+   ![BigQuery vs Snowflake](https://github.com/user-attachments/assets/de5a3bfd-91c5-4d42-a992-3e13d652a85d)
 
+   - Both separate storage and compute and scale on demand.
+   - Snowflake has a [three-layer architecture](https://docs.snowflake.com/en/user-guide/intro-key-concepts.html#snowflake-architecture):
+     - Storage layer: cloud storage on AWS, Azure or GCP.
+     - Compute layer: many MPP compute clusters (virtual warehouses).
+     - Cloud services layer: query management, optimization, transactions, security, metadata, sharing.
+   - Snowflake mixes the simple data management of shared-disk with the scale of shared-nothing.
 
-### Scalability
+   ![Architecture comparison](https://github.com/user-attachments/assets/26bb44f0-d491-4c85-8a70-70b1e7e3e020)
 
-![image](https://github.com/user-attachments/assets/318aa49b-2fff-40f8-afa8-8d1a0c247b19)
+   ![Snowflake architecture](https://github.com/user-attachments/assets/718e274f-8f59-441e-9e0d-fd62dfe10415)
 
+   Scalability:
 
-### Performance
+   ![Scalability](https://github.com/user-attachments/assets/318aa49b-2fff-40f8-afa8-8d1a0c247b19)
 
-![image](https://github.com/user-attachments/assets/9a18541b-8c7c-4f32-bda5-15aaff96a968)
+   Performance:
 
+   ![Performance 1](https://github.com/user-attachments/assets/9a18541b-8c7c-4f32-bda5-15aaff96a968)
 
-![image](https://github.com/user-attachments/assets/68d950ed-f78b-4bbb-a643-cfc483b89587)
+   ![Performance 2](https://github.com/user-attachments/assets/68d950ed-f78b-4bbb-a643-cfc483b89587)
 
+   Pricing:
 
-### Pricing
+   ![Pricing](https://github.com/user-attachments/assets/b6224531-0fe7-4342-bf9a-5d11e352737b)
 
-![image](https://github.com/user-attachments/assets/b6224531-0fe7-4342-bf9a-5d11e352737b)
+**Deliverable:** a short note (5-10 bullets) in your repo: when to use a database, a warehouse and a lake, and BigQuery vs Snowflake.
 
-## **How to get started with BigQuery?**
+**Done when:**
 
-- **BigQuery Sandbox** allows you to easily access BigQuery features without providing your credit card information. There are some limitations.
-- The **GCP free trial** includes a $300-worth free credit that is applicable across all GCP products.
+- [ ] You can explain slots, mixers and shuffle.
+- [ ] You can name 2 differences between BigQuery and Snowflake.
 
-For both: 10 GB per month storage for free, 1 TB of query data processed per month
+### Assignment 2: Start with the BigQuery Sandbox (~1 h)
+
+**Goal:** Open BigQuery for free and run your first query on public data.
+
+**Steps:**
+
+1. Choose how to start:
+   - **BigQuery Sandbox**: no credit card. Some limits, for example tables expire after 60 days.
+   - **Google Cloud free trial**: $300 credit for all Google Cloud products.
+   - Both: 10 GB storage and 1 TB of query processing free per month.
+2. Log in with your Google account and open [console.cloud.google.com/bigquery](https://console.cloud.google.com/bigquery).
+3. Run this query:
 
-- Using official **BigQuery learning** courses from Google. [Example](https://www.cloudskillsboost.google/course_templates/14)
+   ```sql
+   SELECT
+     EXTRACT(YEAR FROM creation_date) AS year,
+     EXTRACT(MONTH FROM creation_date) AS month,
+     COUNT(creation_date) AS number_posts
+   FROM
+     `bigquery-public-data.stackoverflow.stackoverflow_posts`
+   WHERE
+     answer_count > 0
+   GROUP BY year, month
+   ORDER BY year ASC, month ASC;
+   ```
 
-### **BigQuery Sandbox**
+4. Learn the resource model: **project → dataset → table**.
 
-- Create google account
-- Go to the following link: `https://console.cloud.google.com/bigquery`
-- Login to BigQuery console and run the following sql query:
+   ![Resource model](https://github.com/user-attachments/assets/a47f31d1-83e6-46e3-b144-4200fa55b3eb)
 
-```sql
-SELECT 
-  EXTRACT(YEAR FROM creation_date) AS year,
-  EXTRACT(MONTH FROM creation_date) AS month,
-  COUNT(creation_date) AS number_posts
-FROM
-  `bigquery-public-data.stackoverflow.stackoverflow_posts`
-WHERE
-  answer_count > 0
-GROUP BY year, month
-ORDER BY year ASC, month ASC;
-```
+5. Learn the storage basics:
+   - Columnar storage: each column is in a separate block. Good for OLAP. MySQL stores rows, which is good for OLTP.
+   - BigQuery supports streaming and unlimited DML (`INSERT`, `UPDATE`, `MERGE`, `DELETE`).
+   - The internal format is [Capacitor](https://cloud.google.com/blog/products/gcp/inside-capacitor-bigquerys-next-generation-columnar-storage-format).
+   - Batch loads are [free](https://cloud.google.com/bigquery/pricing#free). You pay for [storage](https://cloud.google.com/bigquery/pricing#storage). The first 10 GB per month is free.
+   - A table or partition changed in the last 90 days is **active storage**. Older data is **long-term storage** and costs less.
 
-## Storage Overview. How to partition and cluster data?
+   ![Columnar storage](https://github.com/user-attachments/assets/d6faa897-cc0c-4c8c-915a-204474f558a8)
 
-### Resource Model
+   ![Storage pricing](https://github.com/user-attachments/assets/bda5ede4-b90e-493c-ab15-2cad383b3e29)
 
-Folder structure: project, dataset, and table - helps you structure your information logically
+6. Create a dataset named `stackoverflow` in your project. You need it in the next assignments.
 
-![image](https://github.com/user-attachments/assets/a47f31d1-83e6-46e3-b144-4200fa55b3eb)
+**Deliverable:** screenshot of the query result.
 
+**Done when:**
 
-BigQuery uses columnar storage, storing each column in a separate file block, making it ideal for OLAP use cases. Unlike traditional databases like MySQL, which store data row-by-row for OLTP tasks, BigQuery supports efficient data streaming, updates, and deletions. It allows unlimited data mutations (INSERT, UPDATE, MERGE, DELETE).
+- [ ] The query returns posts per month.
+- [ ] The `stackoverflow` dataset exists in your project.
 
-![image](https://github.com/user-attachments/assets/d6faa897-cc0c-4c8c-915a-204474f558a8)
+### Assignment 3: Partitioning (~1.5 h)
 
-BigQuery uses variations and advancements on columnar storage. Internally, BigQuery stores data in a proprietary columnar format called [Capacitor](https://cloud.google.com/blog/products/gcp/inside-capacitor-bigquerys-next-generation-columnar-storage-format), which has a number of benefits for data warehouse workloads. 
+**Goal:** Create a partitioned table and compare it with a plain table.
 
-You can load data into BigQuery at [no cost](https://cloud.google.com/bigquery/pricing#free) (for batch loads) because [BigQuery storage costs](https://cloud.google.com/bigquery/pricing#storage) are based on the amount of data stored (first 10 GB is free each month) and whether storage is considered active or long-term.
+**Steps:**
 
-- If you have a table or partition modified in the last 90 days, it is considered as active storage and incurs a monthly charge for data stored at BigQuery storage rates.
+1. Learn the partition types. A partitioned table is split into segments (partitions). This makes it easier to manage and query.
 
-![image](https://github.com/user-attachments/assets/bda5ede4-b90e-493c-ab15-2cad383b3e29)
+   ![Partitioning](https://github.com/user-attachments/assets/423d0f32-d790-4680-9479-ae4d72f3fa00)
 
-### **Partitioning**
+   | Type | How it works |
+   |---|---|
+   | Ingestion time | Partitions by load date. Adds `_PARTITIONTIME` and `_PARTITIONDATE` columns. |
+   | `DATE` / `TIMESTAMP` column | Partitions by a date column. Supports hourly granularity. Special partitions for `NULL` and out-of-range values. |
+   | `INTEGER` range | Partitions by integer ranges. Special partitions for `NULL` and out-of-range values. |
 
-A partitioned table is a special table that is divided into segments, called partitions, that make it easier to manage and query your data. You can typically split large tables into many smaller partitions using data ingestion time or `TIMESTAMP/DATE` column or an `INTEGER` column.
+2. [Disable cached results](https://cloud.google.com/bigquery/docs/cached-results#console) in query settings. This makes the comparison fair.
+3. Create a plain (non-partitioned) table with questions from the first half of 2018. See [creating a table from an existing table](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#creating_a_new_table_from_an_existing_table).
 
-![image](https://github.com/user-attachments/assets/423d0f32-d790-4680-9479-ae4d72f3fa00)
+   ```sql
+   CREATE OR REPLACE TABLE `stackoverflow.questions_2018` AS
+   SELECT *
+   FROM `bigquery-public-data.stackoverflow.posts_questions`
+   WHERE creation_date BETWEEN '2018-01-01' AND '2018-07-01';
+   ```
 
-BigQuery supports following ways to create partitioned tables:
+4. Query Android questions from January 2018:
 
-***Ingestion time partitioned tables*:**
+   ```sql
+   SELECT
+     id,
+     title,
+     body,
+     accepted_answer_id,
+     creation_date,
+     answer_count,
+     comment_count,
+     favorite_count,
+     view_count
+   FROM
+     `stackoverflow.questions_2018`
+   WHERE
+     creation_date BETWEEN '2018-01-01' AND '2018-02-01'
+     AND tags = 'android';
+   ```
 
-- Automatically partitions data by ingestion date, adding `_PARTITIONTIME` and `_PARTITIONDATE` columns.
+5. Create a table partitioned by `creation_date` with [BigQuery DDL](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language). Other ways are in the [docs](https://cloud.google.com/bigquery/docs/creating-partitioned-tables).
 
-***DATE/TIMESTAMP column partitioned tables*:**
+   ```sql
+   CREATE OR REPLACE TABLE `stackoverflow.questions_2018_partitioned`
+   PARTITION BY DATE(creation_date) AS
+   SELECT *
+   FROM `bigquery-public-data.stackoverflow.posts_questions`
+   WHERE creation_date BETWEEN '2018-01-01' AND '2018-07-01';
+   ```
 
-- Partitions based on a `TIMESTAMP` or `DATE` column, with special partitions for `NULL` and out-of-range values. Supports hourly granularity.
+6. Run the same query on `stackoverflow.questions_2018_partitioned`.
+7. Compare bytes processed and time.
 
-***INTEGER range partitioned tables*:**
+**Deliverable:** a table with bytes processed and time for both queries.
 
-- Partitions based on integer ranges, with special partitions for `NULL` and out-of-range values.
+**Done when:**
 
-### Partitioning: Hands-on
+- [ ] The plain table query scans about 3.2 GB.
+- [ ] The partitioned table query scans about 290 MB in less than 2 seconds.
 
-By running the following SQL query, we will create a non-partitioned table with data loaded from a [public data set](https://console.cloud.google.com/marketplace/browse?filter=solution-type:dataset&_ga=2.99891288.755387171.1599359331-1764086539.1598401521) based on StackOverflow posts by [creating a new table from an existing table](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#creating_a_new_table_from_an_existing_table). This table will contain the StackOverflow posts created in 2018.
+### Assignment 4: Clustering (~1 h)
 
-```sql
-CREATE OR REPLACE TABLE `stackoverflow.questions_2018` AS
-SELECT *
-FROM `bigquery-public-data.stackoverflow.posts_questions`
-WHERE creation_date BETWEEN '2018-01-01' AND '2018-07-01'
-```
+**Goal:** Add clustering to the partitioned table and measure the gain.
 
-Let’s **query the non-partitioned table** to fetch all StackOverflow questions tagged with ‘android’ in the month of January 2018.
+**Steps:**
 
-```sql
-SELECT
- id,
- title,
- body,
- accepted_answer_id,
- creation_date,
- answer_count,
- comment_count,
- favorite_count,
- view_count
-FROM
- `stackoverflow.questions_2018`
-WHERE
- creation_date BETWEEN '2018-01-01' AND '2018-02-01'
- AND tags = 'android';
-```
+1. Learn how clustering works:
+   - Data is sorted by the cluster columns into storage blocks.
+   - Best for high-cardinality, non-date columns.
+   - BigQuery re-clusters new data automatically, at no extra cost.
+   - It helps filter and aggregation queries skip data.
+   - Works on partitioned and non-partitioned tables. Up to 4 cluster columns.
 
-Before the query runs, [caching is disabled](https://cloud.google.com/bigquery/docs/cached-results#console) to be fair when comparing performance with partitioned and clustered tables.
+   ![Clustering](https://github.com/user-attachments/assets/c9ad7d05-521c-42cb-ba7d-79e33f116e65)
 
-Now let’s see whether partitioned tables can do better. You can create partitioned tables in [multiple ways](https://cloud.google.com/bigquery/docs/creating-partitioned-tables#creating_ingestion-time_partitioned_tables). We will create a `DATE/TIMESTAMP` partitioned table using [BigQuery DDL statements](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language). We chose the partitioning column as `creation_date` based on the query access pattern.
+2. Create a table partitioned by `creation_date` and clustered by `tags`. See [creating clustered tables](https://cloud.google.com/bigquery/docs/creating-clustered-tables) and [DDL for clustered tables](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#creating_a_clustered_table).
 
-```sql
-CREATE OR REPLACE TABLE `stackoverflow.questions_2018_partitioned`
-PARTITION BY
- DATE(creation_date) AS
-SELECT
- *
-FROM
- `bigquery-public-data.stackoverflow.posts_questions`
-WHERE
- creation_date BETWEEN '2018-01-01' AND '2018-07-01';
-```
+   ```sql
+   CREATE OR REPLACE TABLE `stackoverflow.questions_2018_clustered`
+   PARTITION BY DATE(creation_date)
+   CLUSTER BY tags AS
+   SELECT *
+   FROM `bigquery-public-data.stackoverflow.posts_questions`
+   WHERE creation_date BETWEEN '2018-01-01' AND '2018-07-01';
+   ```
 
-Now let’s run the previous **query on the partitioned table**, [with cache disabled](https://cloud.google.com/bigquery/docs/cached-results#console), to fetch all StackOverflow questions tagged with ‘android’ in the month of January 2018.
+3. Run the same Android query on `stackoverflow.questions_2018_clustered`, with cache disabled.
+4. Compare the estimate before the run with the actual bytes processed.
+5. Do the [Partitioning and Clustering codelab](https://codelabs.developers.google.com/codelabs/gcp-bq-partitioning-and-clustering/#0).
 
-```sql
-SELECT
- id,
- title,
- body,
- accepted_answer_id,
- creation_date,
- answer_count,
- comment_count,
- favorite_count,
- view_count
-FROM
- `stackoverflow.questions_2018_partitioned`
-WHERE
- creation_date BETWEEN '2018-01-01' AND '2018-02-01'
- AND tags = 'android';
-```
+**Deliverable:** the comparison table from Assignment 3 with a third row for the clustered table.
 
-**With partitioned table query scanned only the required partitions in <2s processing ~290MB data** compared to query running with non-partitioned table processing 3.2GB.
+**Done when:**
 
-### **Clustering**
+- [ ] The clustered query scans about 275 MB in less than 1 second.
+- [ ] You can explain why the estimate (~286 MB) differs from the actual bytes.
 
-In BigQuery, clustering organizes table data based on specified columns, ideally high-cardinality and non-temporal columns. Data is sorted by clustering column values into storage blocks. BigQuery automatically re-clusters data when new data is added, maintaining order without extra cost or user intervention.
+**Hints:**
 
-![image](https://github.com/user-attachments/assets/c9ad7d05-521c-42cb-ba7d-79e33f116e65)
+- Clustering gives no strict cost guarantee before the query runs. The estimate is an upper bound.
+- Use clustering only when you need more detail than partitioning alone gives.
 
-Clustering improves query performance, especially for filter and aggregation queries, by allowing BigQuery to skip unnecessary data scans. Clustering can be applied to both partitioned and non-partitioned tables, allowing partitioning by `DATE` or `TIMESTAMP` and clustering on up to four other columns.
+## Final result
 
-### Clustering: Hands-On
+- A comparison table: plain vs partitioned vs partitioned + clustered, with bytes and time.
+- Post the table and a short summary on LinkedIn.
+- Interview pitch: "I tested BigQuery partitioning and clustering on StackOverflow data. Partitioning by date cut the scan from 3.2 GB to 290 MB. Adding clustering by tag cut it to 275 MB and the query ran in under 1 second."
 
-You can create clustered tables in [multiple ways](https://cloud.google.com/bigquery/docs/creating-clustered-tables#creating_clustered_tables). We will create a new `DATE/TIMESTAMP` partitioned and clustered table using [BigQuery DDL statements](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-definition-language#creating_a_clustered_table). We chose the partitioning column as `creation_date` and cluster key as `tag` based on the query access pattern.
+## Clean up
 
-```sql
-CREATE OR REPLACE TABLE `stackoverflow.questions_2018_clustered`
-PARTITION BY
- DATE(creation_date)
-CLUSTER BY
- tags AS
-SELECT
- *
-FROM
- `bigquery-public-data.stackoverflow.posts_questions`
-WHERE
- creation_date BETWEEN '2018-01-01' AND '2018-07-01';
-```
+- Delete the `stackoverflow` dataset in your project: in the console, open the dataset and click **Delete**. Or run `DROP SCHEMA stackoverflow CASCADE;`.
+- In the Sandbox nothing is billed. Tables also expire after 60 days.
+- On the free trial, delete the project if you do not need it.
 
-Now let’s run the **query on the partitioned and clustered table**, [with cache disabled](https://cloud.google.com/bigquery/docs/cached-results#console), to fetch all StackOverflow questions tagged with ‘android’ in the month of January 2018.
+## Resources
 
-```sql
-SELECT
- id,
- title,
- body,
- accepted_answer_id,
- creation_date,
- answer_count,
- comment_count,
- favorite_count,
- view_count
-FROM
- `stackoverflow.questions_2018_clustered`
-WHERE
- creation_date BETWEEN '2018-01-01'
- AND '2018-02-01'
- AND tags = 'android';
-```
+- [BigQuery documentation](https://cloud.google.com/bigquery/docs): official docs.
+- [BigQuery pricing](https://cloud.google.com/bigquery/pricing): free tier and storage prices.
+- [Partitioned tables](https://cloud.google.com/bigquery/docs/partitioned-tables) and [clustered tables](https://cloud.google.com/bigquery/docs/clustered-tables): details and limits.
+- [BigQuery learning course](https://www.cloudskillsboost.google/course_templates/14): official Google course.
+- [Partitioning and Clustering codelab](https://codelabs.developers.google.com/codelabs/gcp-bq-partitioning-and-clustering/#0): guided hands-on.
 
-With a partitioned and clustered table, the query scanned ~275MB of data in less than 1s, which is better than a partitioned table. The way data is organized by partitioning and clustering minimizes the amount of data scanned by slot workers thereby improving query performance and optimizing costs.
+## Community solutions
 
-Few things to note when using clustering:
-
-- Clustering does not provide strict cost guarantees before running the query. Notice in the results above with clustering, query validation reported processing of 286.1MB but actually query processed only 275.2MB of data.
-- Use clustering only when you need more granularity than partitioning alone allows.
-
-### CodeLab: Partitioning & Clustering
-
-https://codelabs.developers.google.com/codelabs/gcp-bq-partitioning-and-clustering/#0
+Share your repo in Discord. We add the best ones here.

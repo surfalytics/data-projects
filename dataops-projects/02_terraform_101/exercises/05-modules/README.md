@@ -13,6 +13,8 @@ Learn to create reusable Terraform modules for maximum code reuse and maintainab
 
 ## Project Structure
 
+> The `modules/` and `environments/` folders are empty on purpose. You write these files yourself in this exercise.
+
 ```
 05-modules/
 ├── modules/
@@ -80,7 +82,7 @@ module "web_server" {
   source = "../../modules/ec2"
 
   environment   = "dev"
-  instance_type = "t2.micro"
+  instance_type = "t3.micro"
 }
 ```
 
@@ -88,7 +90,7 @@ module "web_server" {
 ```hcl
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "5.0.0"
+  version = "~> 6.0"
 
   name = "my-vpc"
   cidr = "10.0.0.0/16"
@@ -338,7 +340,7 @@ terraform-docs markdown table ./modules/ec2 > ./modules/ec2/README.md
 | Name | Version |
 |------|---------|
 | terraform | >= 1.0 |
-| aws | ~> 5.0 |
+| aws | ~> 6.0 |
 
 ## Inputs
 

@@ -5,8 +5,10 @@ FROM python:3.11.7-bullseye
 RUN apt-get update && \
     apt-get install -y openjdk-11-jdk-headless
 
-# Set JAVA_HOME environment variable
-ENV JAVA_HOME=/usr/lib/jvm/java-1.11.0-openjdk-arm64
+# Set JAVA_HOME environment variable.
+# The JDK folder name depends on the CPU (arm64 or amd64), so link it to a fixed path.
+RUN ln -s /usr/lib/jvm/java-11-openjdk-$(dpkg --print-architecture) /usr/lib/jvm/java-11
+ENV JAVA_HOME=/usr/lib/jvm/java-11
 ENV PATH=$JAVA_HOME/bin:$PATH
 
 # Ensure that Python is installed and upgrade pip

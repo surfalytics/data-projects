@@ -11,7 +11,7 @@ This document walks you through every dependency you need for the **Data Streami
 | CPU cores | 4 | 8 |
 | OS | macOS 12+, Windows 10/11, Ubuntu 20.04+ | macOS 14+, Ubuntu 22.04+ |
 
-> The capstone module runs 15+ containers simultaneously. If you only have 8 GB RAM, close other applications and allocate at least 6 GB to Docker.
+> The capstone module runs about 12 containers at the same time. If you only have 8 GB RAM, close other applications and allocate at least 8 GB to Docker.
 
 ---
 
@@ -74,16 +74,16 @@ newgrp docker
 
 ---
 
-## 2. Python 3.9+
+## 2. Python 3.10
 
 ### macOS
 
 ```bash
 # Homebrew
-brew install python@3.11
+brew install python@3.10
 
 # Verify
-python3 --version   # Should print 3.9 or higher
+python3 --version   # Should print 3.10.x
 ```
 
 ### Windows
@@ -116,7 +116,7 @@ pip install \
   confluent-kafka==2.3.0 \
   fastavro==1.9.3 \
   requests==2.31.0 \
-  faust-streaming==0.11.0 \
+  faust-streaming>=0.11.0 \
   httpx==0.25.2 \
   psycopg2-binary==2.9.9 \
   mysql-connector-python==8.2.0 \
@@ -139,7 +139,7 @@ docker compose version
 
 # Python
 python3 --version
-# Python 3.9+
+# Python 3.10
 
 # Test Docker can pull and run images
 docker run --rm hello-world
@@ -219,7 +219,7 @@ The course uses these ports. Make sure nothing else is listening on them:
 | Port | Service |
 |------|---------|
 | 2181 | ZooKeeper |
-| 9092, 9093, 9094 | Kafka brokers |
+| 9092 | Kafka broker |
 | 8081 | Schema Registry |
 | 8083 | Kafka Connect REST API |
 | 8088 | ksqlDB |
@@ -233,26 +233,28 @@ Check for conflicts:
 
 ```bash
 # macOS / Linux
-for port in 2181 9092 9093 9094 8081 8083 8088 3306 5432 8080 3000 9090; do
+for port in 2181 9092 8081 8083 8088 3306 5432 8080 3000 9090; do
   lsof -i :$port 2>/dev/null && echo "^^^ Port $port is in use"
 done
 ```
 
-To free a port:
+To free a port, first find out what uses it. Do not kill a process you do not know. On macOS and Windows, Docker Desktop itself can show up as the owner of a published port.
 
 ```bash
-# Find the PID
-lsof -ti :8080
-# Kill it
-kill -9 $(lsof -ti :8080)
+# Which process listens on the port?
+lsof -nP -iTCP:8080 -sTCP:LISTEN
+
+# Is a container using it?
+docker ps --format '{{.Names}}  {{.Ports}}' | grep 8080
 ```
+
+If a container from another project uses the port, stop that container, or stop the course stack and start it later. You can also change the host port in `docker-compose.yml`, for example `"18080:8080"`.
 
 ### Docker Compose Errors
 
 ```bash
 # Reset everything and start fresh
 docker compose down -v --remove-orphans
-docker system prune -f
 docker compose up -d
 ```
 
@@ -262,10 +264,10 @@ If producers or consumers fail to connect immediately after `docker compose up`:
 
 ```bash
 # Wait for Kafka to be fully ready
-docker compose exec kafka-1 cub kafka-ready -b kafka-1:29092 1 60
+docker compose exec kafka cub kafka-ready -b kafka:29092 1 60
 
 # Or use a retry loop
-until docker compose exec kafka-1 kafka-topics --bootstrap-server kafka-1:29092 --list 2>/dev/null; do
+until docker compose exec kafka kafka-topics --bootstrap-server kafka:29092 --list 2>/dev/null; do
   echo "Waiting for Kafka..."
   sleep 5
 done

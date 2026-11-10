@@ -1,5 +1,9 @@
 # Module 2: Apache Kafka Core Concepts
 
+![Architecture](images/architecture.png)
+
+*Diagram source: [`images/architecture.excalidraw`](images/architecture.excalidraw).*
+
 ## Table of Contents
 
 1. [What is Apache Kafka?](#what-is-apache-kafka)
@@ -426,6 +430,14 @@ The ISR is the set of replicas that are "caught up" to the leader:
 2. For each partition where the failed broker was the leader, a new leader is elected from the ISR
 3. Producers and consumers update their metadata and redirect to the new leader
 4. When the broker comes back, it rejoins as a follower and catches up
+
+---
+
+## Versions Used in This Module
+
+- Confluent Platform 7.5.0 (Kafka 3.5) with ZooKeeper. This is for the lab only.
+- ZooKeeper mode is removed in Kafka 4.0. New clusters use KRaft. KRaft is production-ready since Kafka 3.3.
+- Python client: `confluent-kafka` (librdkafka). Its default partitioner for keys is `consistent_random` (CRC32), not the Java murmur2 hash. The idea is the same: same key, same partition.
 
 ---
 

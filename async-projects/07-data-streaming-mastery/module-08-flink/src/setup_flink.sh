@@ -11,7 +11,7 @@
 #   ./setup_flink.sh --down   # Tear down the stack
 #
 # Prerequisites:
-#   - Docker and docker-compose installed
+#   - Docker with Compose v2 installed
 #   - Run from the module-08-flink directory (or set MODULE_DIR)
 # =============================================================================
 
@@ -82,7 +82,7 @@ wait_for_service() {
 
 teardown() {
     log_info "Tearing down Flink stack..."
-    docker-compose -f "$COMPOSE_FILE" down -v --remove-orphans
+    docker compose -f "$COMPOSE_FILE" down -v --remove-orphans
     log_success "Stack torn down"
 }
 
@@ -96,11 +96,11 @@ start_stack() {
 
     # Pull images first
     log_info "Pulling Docker images..."
-    docker-compose -f "$COMPOSE_FILE" pull
+    docker compose -f "$COMPOSE_FILE" pull
 
     # Start all services
     log_info "Starting services..."
-    docker-compose -f "$COMPOSE_FILE" up -d zookeeper kafka mysql jobmanager taskmanager kafka-ui
+    docker compose -f "$COMPOSE_FILE" up -d zookeeper kafka mysql jobmanager taskmanager kafka-ui
 
     # Wait for Zookeeper
     wait_for_service "Zookeeper" \
@@ -170,7 +170,7 @@ submit_sql() {
 
     # Start the sql-client container (it downloads JARs on first run)
     log_info "Starting SQL Client container (downloading connector JARs)..."
-    docker-compose -f "$COMPOSE_FILE" up -d sql-client
+    docker compose -f "$COMPOSE_FILE" up -d sql-client
 
     # Wait for the SQL client container to be ready
     log_info "Waiting for SQL Client to download JARs and start..."

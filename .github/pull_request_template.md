@@ -1,16 +1,15 @@
-# Description of change
+## What changed
 
-# Links
+<!-- 2-4 short sentences. What changed and why. -->
 
-# Testing
+## Projects
 
-# Before Merge
+<!-- Which project folders does this PR touch? -->
 
----
-# Diligence
+## Checklist
 
-- [ ] I have checked affected models for appropriate tests and metadata
-- [ ] Project has been built locally
-- [ ] Project has been tested locally
-- [ ] Each model has YAML file with model description, tests
-- [ ] dbt CI pass
+- [ ] Project README follows [TEMPLATE.md](../TEMPLATE.md).
+- [ ] Architecture diagram is updated (`images/architecture.png` + `.excalidraw`).
+- [ ] Catalog row is updated (group `README.md` and root `README.md`).
+- [ ] Steps were tested, or untested parts are marked.
+- [ ] No secrets, passwords or real account IDs in files.

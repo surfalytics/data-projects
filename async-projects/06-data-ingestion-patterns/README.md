@@ -1,7 +1,8 @@
 ---
 title: "Data Ingestion Patterns: From API to Snowflake"
-category: "Data Engineering"
-level: "Intermediate"
+track: "Data Engineer"
+focus: "Ingestion"
+level: "Middle"
 roles: ["Data Engineer", "Analytics Engineer"]
 duration: "6 assignments, ~4-8 hours each"
 cost: "Free trial"
@@ -17,7 +18,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Data Engineer, Analytics Engineer | 6 assignments, ~4-8 h each | Free trial | Ready |
+| Middle | Data Engineer, Analytics Engineer | 6 assignments, ~4-8 h each | Free trial | Ready |
 
 ## Goal
 
@@ -413,7 +414,7 @@ Delete cloud resources so you do not pay for them.
 - [Snowflake Free Trial](https://signup.snowflake.com/): 30-day trial.
 - [Fivetran Free Trial](https://fivetran.com/): managed connectors.
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/): local containers.
-- [AWS Data Engineering Learning Path](https://aws.amazon.com/training/learning-paths/data-engineering/): AWS training.
+- [AWS Data Engineering Learning Path](https://skillbuilder.aws/learning-plan/data-engineer): AWS training.
 - [Snowflake Learning Resources](https://learn.snowflake.com/): Snowflake training.
 
 ## Community solutions

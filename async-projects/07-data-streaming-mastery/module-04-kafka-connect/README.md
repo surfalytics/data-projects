@@ -1,5 +1,9 @@
 # Module 4: Kafka Connect
 
+![Architecture](images/architecture.png)
+
+*Diagram source: [`images/architecture.excalidraw`](images/architecture.excalidraw).*
+
 ## Overview
 
 Kafka Connect is the **integration framework** of the Apache Kafka ecosystem. Think of it as the **bridge** between Kafka and every other system in your data architecture. Instead of writing custom producer and consumer code for every database, file system, cloud service, or search engine, Kafka Connect provides a standardized, scalable, and fault-tolerant way to move data **in** and **out** of Kafka.
@@ -483,6 +487,21 @@ Response:
 8. **Tasks** are the unit of parallelism -- increase `tasks.max` to scale throughput.
 9. Always use **Schema Registry** with Avro or Protobuf converters in production.
 10. Internal topics (`connect-configs`, `connect-offsets`, `connect-status`) store cluster state in distributed mode.
+
+---
+
+## Versions used in this module
+
+| Item | Version | Note |
+|------|---------|------|
+| Confluent Platform | 7.5.0 (with ZooKeeper) | Kafka 4.0 removed ZooKeeper. This course still uses it. |
+| JDBC connector | 10.7.4 | Installed in the `Dockerfile` from Confluent Hub. |
+| MySQL driver | Connector/J 8.0.33 | The JDBC connector does not include a MySQL driver. The `Dockerfile` adds it. |
+| FileStream connectors | Bundled with Kafka | Not on Confluent Hub. Not installed separately. |
+
+In this module's `docker-compose.yml` the internal topics are named `_connect-configs`, `_connect-offsets` and `_connect-status` (with a leading underscore). The text above uses the names without the underscore.
+
+Run the module with `docker compose up -d --build`. The first build downloads the connectors.
 
 ---
 

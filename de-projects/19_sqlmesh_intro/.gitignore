@@ -1,2 +1,8 @@
 .env
 .cache
+
+# Local state. Do not commit.
+*.db
+*.db.wal
+logs/
+__pycache__/

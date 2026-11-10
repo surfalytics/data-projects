@@ -1,3 +1,10 @@
+import tempfile
+
+import pyarrow as pa
+import pyarrow.compute as pc
+import pyarrow.parquet as pq
+import requests
+
 # URL for NYC Taxi data (2023 Yellow Taxi Trip Data)
 PARQUET_URL = "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-01.parquet"
 

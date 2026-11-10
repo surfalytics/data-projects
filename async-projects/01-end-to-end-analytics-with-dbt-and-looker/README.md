@@ -1,7 +1,7 @@
 ---
 title: "End-to-End Analytics with dbt and Looker"
-category: "Analytics Engineering"
-level: "Intermediate"
+track: "Analytics Engineer"
+level: "Middle"
 roles: ["Analytics Engineer", "Data Engineer", "BI Developer"]
 duration: "8 assignments, ~1-8 hours each"
 cost: "Free"
@@ -17,7 +17,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Analytics Engineer, Data Engineer, BI Developer | 8 assignments, ~1-8 h each | Free | Ready |
+| Middle | Analytics Engineer, Data Engineer, BI Developer | 8 assignments, ~1-8 h each | Free | Ready |
 
 ## Goal
 
@@ -495,7 +495,7 @@ You should now have: a dbt project in GitHub, pre-commit locally and in CI, and 
    mv ./target/catalog.json ./target/manifest.json ./prod_artifacts/
    ```
 
-3. Add a `Makefile` with shortcuts for CLI commands. Read [what is a Makefile](https://blog.det.life/what-is-a-makefile-and-how-i-use-it-in-a-dbt-project-703b922be2ef). Example for the commands above (recipe lines must start with a tab):
+3. Add a `Makefile` with shortcuts for CLI commands. Read [what is a Makefile](https://medium.com/data-engineer-things/what-is-a-makefile-and-how-i-use-it-in-a-dbt-project-703b922be2ef). Example for the commands above (recipe lines must start with a tab):
 
    ```makefile
    prod-artifacts:
@@ -527,7 +527,7 @@ You should now have: a dbt project in GitHub, pre-commit locally and in CI, and 
    - Use the Surfalytics [Rock Your Data](https://rockyourdata.looker.com/login) Looker instance. Ask for credentials in Discord.
    - Create your own connection to your Postgres warehouse. Then create a new Looker project.
    - You can connect the Looker project to your own Git repo.
-   - Follow the [Looker project](https://github.com/surfalytics/data-projects/blob/main/bi-projects/02_looker_snowflake/readme.md).
+   - Follow the [Looker project](../../bi-projects/02_looker_snowflake/README.md).
    - See an [example from Maksim](https://medium.com/@kazarmax/creating-a-superstore-kpi-dashboard-using-looker-and-snowflake-73fec857132d).
 
 **Deliverable:** A pull request with `Makefile`, the snapshot for `dim_product`, the physical model, and a screenshot or link to your Looker dashboard.

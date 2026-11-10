@@ -1,5 +1,9 @@
 # Module 9: Capstone Project - Real-Time E-Commerce Analytics Platform
 
+![Architecture](images/architecture.png)
+
+*Diagram source: [`images/architecture.excalidraw`](images/architecture.excalidraw).*
+
 ## Project Overview
 
 This capstone project brings together every concept from the Data Streaming Mastery course into a single, production-grade real-time analytics platform. You will deploy a complete end-to-end streaming pipeline that captures changes from a transactional MySQL database, streams them through Kafka, enriches and aggregates data with ksqlDB, sinks results to PostgreSQL, and visualizes everything on a live Grafana dashboard.
@@ -52,14 +56,25 @@ flowchart LR
 | Component | Port | Purpose |
 |---|---|---|
 | MySQL | 3306 | Transactional e-commerce database (source of truth) |
-| Debezium (Kafka Connect) | 8083 | Change Data Capture from MySQL binlog |
-| Apache Kafka | 9092 | Central event streaming backbone |
+| Kafka Connect | 8083 | Runs the Debezium source and the JDBC sink connectors |
+| ZooKeeper | 2181 | Kafka metadata (this course uses ZooKeeper, not KRaft) |
+| Apache Kafka | 9092 (host), 29092 (Docker network), 7071 (JMX metrics) | Central event streaming backbone |
 | Schema Registry | 8081 | Avro schema management |
 | ksqlDB | 8088 | Real-time stream processing (enrichment, aggregation) |
 | PostgreSQL | 5432 | Analytics sink database |
 | Kafka UI | 8080 | Visual Kafka topic/consumer inspection |
 | Grafana | 3000 | Real-time dashboards |
-| Prometheus | 9090 | Metrics collection |
+| Prometheus | 9090 | Metrics collection (Kafka broker via JMX exporter, Prometheus, Grafana) |
+
+Containers: `module-09-zookeeper`, `-kafka`, `-schema-registry`, `-kafka-connect`, `-ksqldb-server`, `-mysql`, `-postgres`, `-kafka-ui`, `-grafana`, `-prometheus`. A one-shot container `module-09-jmx-agent-init` downloads the JMX exporter agent and then exits.
+
+### Versions used in this module
+
+- Confluent Platform 7.5.0 with ZooKeeper (Kafka 4.0 removed ZooKeeper; this course does not use it).
+- Kafka Connect uses `confluentinc/cp-kafka-connect:7.5.0`. It has the Confluent Avro converter and the JDBC sink.
+- On first start, it installs Debezium MySQL 2.5.4 and JDBC sink 10.7.4 from Confluent Hub. **It needs internet access.**
+- The `debezium/connect` image does not include the Confluent Avro converter (removed in 2.0), so we do not use it.
+- Debezium MySQL 2.5.4 uses the same config keys as 2.4.
 
 ---
 
@@ -87,7 +102,8 @@ flowchart LR
 - Docker and Docker Compose (v2+)
 - Python 3.9+ with pip
 - 8 GB RAM allocated to Docker (recommended)
-- Ports 3000, 3306, 5432, 8080, 8081, 8083, 8088, 9090, 9092 available
+- Internet access on first start (downloads connector plugins and the JMX agent)
+- Ports 2181, 3000, 3306, 5432, 7071, 8080, 8081, 8083, 8088, 9090, 9092, 29092 available
 
 ---
 
@@ -107,12 +123,14 @@ open http://localhost:3000
 ```
 
 The setup script will:
-- Start all Docker containers
-- Wait for every service to become healthy
-- Register the Debezium source connector
-- Register the JDBC sink connector
-- Submit ksqlDB queries
-- Start the e-commerce simulator in the background
+- Start all Docker containers (`docker compose up -d`)
+- Wait for MySQL, Schema Registry, Kafka Connect, ksqlDB, PostgreSQL and Grafana
+- Register the Debezium source connector (`config/mysql-source-connector.json`)
+- Wait 15 seconds, then submit the ksqlDB queries (`src/setup_ksqldb.py`, from `config/ksqldb-queries.sql`)
+- Register the JDBC sink connector (`config/postgres-sink-connector.json`). If this fails, start `src/sink_consumer.py` instead
+- Start the e-commerce simulator in the background (`src/ecommerce_simulator.py`)
+
+`src/register_connectors.py` can register both connectors by hand.
 
 ---
 
@@ -179,7 +197,7 @@ Navigate to [http://localhost:3000](http://localhost:3000) (admin/admin). The **
 ./teardown.sh
 ```
 
-This stops all containers and removes volumes.
+This stops the simulator and the sink consumer, stops all containers, and removes volumes.
 
 ---
 

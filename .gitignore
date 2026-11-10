@@ -1,0 +1,20 @@
+# OS and editor files
+.DS_Store
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Local data, logs and secrets
+*.log
+*.db
+*.db.wal
+.env
+*.tfstate
+*.tfstate.*
+.terraform/

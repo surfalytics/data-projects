@@ -6,7 +6,7 @@ Ensure the environment is running:
 
 ```bash
 cd module-04-kafka-connect
-docker-compose up -d
+docker compose up -d
 ```
 
 ---
@@ -76,7 +76,7 @@ Deploy a connector that routes records to different topics based on the current 
 
 3. Now create a second connector configuration `smt-regex-connector.json` that:
    - Reads from the `departments` table
-   - Uses RegexRouter to transform the topic name from `mysql-departments` to `company-dept-data`
+   - Uses RegexRouter to transform the topic name from `mysql-departments` to `company-departments-data`
    - RegexRouter config: `regex=mysql-(.*)` and `replacement=company-$1-data`
 
 4. Deploy both connectors and verify the topic names are as expected.

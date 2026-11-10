@@ -1,7 +1,8 @@
 ---
 title: "Getting Started with Databricks"
-category: "Data Engineering"
-level: "Beginner"
+track: "Data Engineer"
+focus: "Warehouse and lakehouse"
+level: "Base"
 roles: ["Data Engineer", "Analytics Engineer"]
 duration: "4 assignments, ~3-4 hours each"
 cost: "Free"
@@ -17,7 +18,7 @@ status: "In progress"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Data Engineer, Analytics Engineer | 4 assignments, ~3-4 h each | Free | In progress |
+| Base | Data Engineer, Analytics Engineer | 4 assignments, ~3-4 h each | Free | In progress |
 
 ## Goal
 

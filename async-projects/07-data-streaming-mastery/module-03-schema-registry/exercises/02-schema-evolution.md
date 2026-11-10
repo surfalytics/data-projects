@@ -160,7 +160,7 @@ Test your solutions by running them against the local infrastructure:
 
 ```bash
 # Start infrastructure
-docker-compose up -d
+docker compose up -d
 
 # Run your solutions
 python solutions/exercise_2_1.py
