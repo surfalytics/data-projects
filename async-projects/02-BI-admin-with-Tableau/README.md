@@ -1,7 +1,7 @@
 ---
 title: "BI Admin with Tableau Server"
-category: "BI"
-level: "Intermediate"
+track: "BI / Data Analyst"
+level: "Middle"
 roles: ["Data Analyst", "BI Developer"]
 duration: "4 assignments, ~4-8 hours each"
 cost: "Free trial"
@@ -17,7 +17,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Data Analyst, BI Developer | 4 assignments, ~4-8 h each | Free trial | Ready |
+| Middle | Data Analyst, BI Developer | 4 assignments, ~4-8 h each | Free trial | Ready |
 
 ## Goal
 

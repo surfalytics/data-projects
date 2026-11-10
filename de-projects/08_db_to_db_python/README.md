@@ -1,7 +1,8 @@
 ---
 title: "Move Data Between PostgreSQL and Snowflake with Python and pandas"
-category: "Data Engineering"
-level: "Beginner"
+track: "Data Engineer"
+focus: "Ingestion"
+level: "Base"
 roles: ["Data Engineer", "Data Analyst"]
 duration: "5 assignments, ~1-2 hours each"
 cost: "Free trial"
@@ -17,7 +18,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Data Engineer, Data Analyst | 5 assignments, ~1-2 h each | Free trial | Ready |
+| Base | Data Engineer, Data Analyst | 5 assignments, ~1-2 h each | Free trial | Ready |
 
 ## Goal
 

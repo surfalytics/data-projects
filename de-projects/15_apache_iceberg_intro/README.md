@@ -1,7 +1,8 @@
 ---
 title: "Getting Started with Apache Iceberg"
-category: "Data Engineering"
-level: "Intermediate"
+track: "Data Engineer"
+focus: "Warehouse and lakehouse"
+level: "Middle"
 roles: ["Data Engineer"]
 duration: "3 assignments, ~3-5 hours each"
 cost: "Free trial"
@@ -17,7 +18,7 @@ status: "Draft"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Data Engineer | 3 assignments, ~3-5 h each | Free trial | Draft |
+| Middle | Data Engineer | 3 assignments, ~3-5 h each | Free trial | Draft |
 
 ## Goal
 

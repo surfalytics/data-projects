@@ -1,7 +1,8 @@
 ---
 title: "Introduction to PyArrow"
-category: "Data Engineering"
-level: "Beginner"
+track: "Data Engineer"
+focus: "Processing"
+level: "Base"
 roles: ["Data Engineer"]
 duration: "4 assignments, ~1-2 hours each"
 cost: "Free"
@@ -17,7 +18,7 @@ status: "In progress"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Data Engineer | 4 assignments, ~1-2 h each | Free | In progress |
+| Base | Data Engineer | 4 assignments, ~1-2 h each | Free | In progress |
 
 ## Goal
 

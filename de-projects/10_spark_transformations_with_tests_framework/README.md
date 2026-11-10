@@ -1,7 +1,8 @@
 ---
 title: "Spark ML Logs Transformer with Unit Tests"
-category: "Data Engineering"
-level: "Beginner"
+track: "Data Engineer"
+focus: "Processing"
+level: "Base"
 roles: ["Data Engineer"]
 duration: "5 assignments, ~1-2 hours each"
 cost: "Free"
@@ -17,7 +18,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Data Engineer | 5 assignments, ~1-2 h each | Free | Ready |
+| Base | Data Engineer | 5 assignments, ~1-2 h each | Free | Ready |
 
 ## Goal
 

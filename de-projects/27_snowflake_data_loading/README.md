@@ -1,7 +1,8 @@
 ---
 title: "Snowflake Data Loading: Azure Blob with COPY INTO and Snowpipe"
-category: "Data Engineering"
-level: "Intermediate"
+track: "Data Engineer"
+focus: "Ingestion"
+level: "Middle"
 roles: ["Data Engineer", "Analytics Engineer"]
 duration: "6 assignments, ~1-3 hours each"
 cost: "Free trial"
@@ -17,7 +18,7 @@ status: "In progress"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Data Engineer, Analytics Engineer | 6 assignments, ~1-3 h each | Free trial | In progress |
+| Middle | Data Engineer, Analytics Engineer | 6 assignments, ~1-3 h each | Free trial | In progress |
 
 ## Goal
 

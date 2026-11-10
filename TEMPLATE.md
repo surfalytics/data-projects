@@ -1,7 +1,8 @@
 ---
 title: "<Project title>"
-category: "<BI | Analytics Engineering | Data Engineering | Streaming | DataOps>"
-level: "<Beginner | Intermediate | Advanced>"
+track: "<Fundamentals | BI / Data Analyst | Analytics Engineer | Data Engineer>"
+focus: "<Data Engineer only: End-to-end | Ingestion | Processing | Warehouse and lakehouse | Orchestration | Streaming | Data quality | Infrastructure>"
+level: "<Base | Middle | Senior>"
 roles: ["<Data Analyst | BI Developer | Analytics Engineer | Data Engineer | DataOps Engineer>"]
 duration: "<N assignments, ~X-Y hours each>"
 cost: "<Free | Free trial | Paid (~$X)>"
@@ -17,7 +18,7 @@ status: "<Ready | In progress | Draft>"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Data Analyst, BI Developer | 4 assignments, ~3-5 h each | Free | Ready |
+| Base | Data Analyst, BI Developer | 4 assignments, ~3-5 h each | Free | Ready |
 
 ## Goal
 

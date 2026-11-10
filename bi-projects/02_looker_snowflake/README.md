@@ -1,7 +1,7 @@
 ---
 title: "KPI Dashboard with Looker and Snowflake"
-category: "BI"
-level: "Intermediate"
+track: "BI / Data Analyst"
+level: "Middle"
 roles: ["BI Developer", "Analytics Engineer"]
 duration: "4 assignments, ~1-4 hours each"
 cost: "Free trial"
@@ -17,7 +17,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | BI Developer, Analytics Engineer | 4 assignments, ~1-4 h each | Free trial | Ready |
+| Middle | BI Developer, Analytics Engineer | 4 assignments, ~1-4 h each | Free trial | Ready |
 
 ## Goal
 

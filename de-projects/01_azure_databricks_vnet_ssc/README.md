@@ -1,7 +1,8 @@
 ---
 title: "Azure Databricks in a Private VNet (No Public IP)"
-category: "Data Engineering"
-level: "Advanced"
+track: "Data Engineer"
+focus: "Infrastructure"
+level: "Senior"
 roles: ["Data Engineer", "DataOps Engineer"]
 duration: "3 assignments, ~3-5 hours each"
 cost: "Free trial"
@@ -17,7 +18,7 @@ status: "Draft"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Advanced | Data Engineer, DataOps Engineer | 3 assignments, ~3-5 h each | Free trial | Draft |
+| Senior | Data Engineer, DataOps Engineer | 3 assignments, ~3-5 h each | Free trial | Draft |
 
 ## Goal
 

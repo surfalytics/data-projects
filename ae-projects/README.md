@@ -6,6 +6,9 @@ Every project uses the same structure: project card, goal, roles, tools, archite
 
 ## Catalog
 
-| # | Project | Category | Level | Roles | Cost | Status |
-|---|---|---|---|---|---|---|
-| 01 | [Analytics Engineering Mock Interview](01_mock_ae_interview/) | Analytics Engineering | Intermediate | Analytics Engineer, Data Analyst | Free | Ready |
+To see these projects in learning order, use the [roadmap](../README.md#roadmap).
+
+
+| # | Project | Track | Level | Cost | Status |
+|---|---|---|---|---|---|
+| 01 | [Analytics Engineering Mock Interview](01_mock_ae_interview/) | Analytics Engineer | Middle | Free | Ready |

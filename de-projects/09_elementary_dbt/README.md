@@ -1,7 +1,8 @@
 ---
 title: "dbt Observability with Elementary"
-category: "DataOps"
-level: "Intermediate"
+track: "Data Engineer"
+focus: "Data quality"
+level: "Middle"
 roles: ["Analytics Engineer", "Data Engineer", "DataOps Engineer"]
 duration: "5 assignments, ~1-2 hours each"
 cost: "Free trial"
@@ -17,7 +18,7 @@ status: "In progress"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Analytics Engineer, Data Engineer, DataOps Engineer | 5 assignments, ~1-2 h each | Free trial | In progress |
+| Middle | Analytics Engineer, Data Engineer, DataOps Engineer | 5 assignments, ~1-2 h each | Free trial | In progress |
 
 ## Goal
 

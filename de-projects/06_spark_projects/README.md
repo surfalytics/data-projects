@@ -1,7 +1,8 @@
 ---
 title: "Apache Spark Basics with PySpark and Docker"
-category: "Data Engineering"
-level: "Beginner"
+track: "Data Engineer"
+focus: "Processing"
+level: "Base"
 roles: ["Data Engineer"]
 duration: "6 assignments, ~2-4 hours each"
 cost: "Free"
@@ -17,7 +18,7 @@ status: "In progress"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Data Engineer | 6 assignments, ~2-4 h each | Free | In progress |
+| Base | Data Engineer | 6 assignments, ~2-4 h each | Free | In progress |
 
 ## Goal
 

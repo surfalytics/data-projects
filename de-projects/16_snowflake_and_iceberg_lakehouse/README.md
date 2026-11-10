@@ -1,7 +1,8 @@
 ---
 title: "Getting Started with Snowflake and Apache Iceberg"
-category: "Data Engineering"
-level: "Intermediate"
+track: "Data Engineer"
+focus: "Warehouse and lakehouse"
+level: "Middle"
 roles: ["Data Engineer", "Analytics Engineer"]
 duration: "3 assignments, ~3-4 hours each"
 cost: "Free trial"
@@ -17,7 +18,7 @@ status: "Draft"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Data Engineer, Analytics Engineer | 3 assignments, ~3-4 h each | Free trial | Draft |
+| Middle | Data Engineer, Analytics Engineer | 3 assignments, ~3-4 h each | Free trial | Draft |
 
 ## Goal
 

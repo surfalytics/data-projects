@@ -1,7 +1,8 @@
 ---
 title: "Data Quality Checks with Databricks DQX"
-category: "Data Engineering"
-level: "Intermediate"
+track: "Data Engineer"
+focus: "Data quality"
+level: "Middle"
 roles: ["Data Engineer", "Analytics Engineer"]
 duration: "4 assignments, ~1-3 hours each"
 cost: "Free"
@@ -17,7 +18,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Data Engineer, Analytics Engineer | 4 assignments, ~1-3 h each | Free | Ready |
+| Middle | Data Engineer, Analytics Engineer | 4 assignments, ~1-3 h each | Free | Ready |
 
 ## Goal
 

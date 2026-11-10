@@ -1,7 +1,8 @@
 ---
 title: "End-to-End ETL Pipeline with AWS"
-category: "Data Engineering"
-level: "Intermediate"
+track: "Data Engineer"
+focus: "End-to-end"
+level: "Middle"
 roles: ["Data Engineer"]
 duration: "6 assignments, ~2-4 hours each"
 cost: "Free trial"
@@ -17,7 +18,7 @@ status: "Draft"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Data Engineer | 6 assignments, ~2-4 h each | Free trial | Draft |
+| Middle | Data Engineer | 6 assignments, ~2-4 h each | Free trial | Draft |
 
 ## Goal
 

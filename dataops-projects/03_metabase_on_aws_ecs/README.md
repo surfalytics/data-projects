@@ -1,7 +1,8 @@
 ---
 title: "Metabase on AWS ECS Fargate"
-category: "DataOps"
-level: "Intermediate"
+track: "Data Engineer"
+focus: "Infrastructure"
+level: "Middle"
 roles: ["DataOps Engineer", "Data Engineer", "BI Developer"]
 duration: "4 assignments, ~1-3 hours each"
 cost: "Paid (~$2.5/day)"
@@ -17,7 +18,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | DataOps Engineer, Data Engineer, BI Developer | 4 assignments, ~1-3 h each | Paid (~$2.5/day) | Ready |
+| Middle | DataOps Engineer, Data Engineer, BI Developer | 4 assignments, ~1-3 h each | Paid (~$2.5/day) | Ready |
 
 ## Goal
 

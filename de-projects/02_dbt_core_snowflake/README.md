@@ -1,7 +1,7 @@
 ---
 title: "dbt Core, Snowflake and Docker Pipelines"
-category: "Analytics Engineering"
-level: "Intermediate"
+track: "Analytics Engineer"
+level: "Middle"
 roles: ["Analytics Engineer", "Data Engineer"]
 duration: "3 assignments, ~3-5 hours each"
 cost: "Free trial"
@@ -17,7 +17,7 @@ status: "Draft"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Analytics Engineer, Data Engineer | 3 assignments, ~3-5 h each | Free trial | Draft |
+| Middle | Analytics Engineer, Data Engineer | 3 assignments, ~3-5 h each | Free trial | Draft |
 
 ## Goal
 

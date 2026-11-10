@@ -1,7 +1,7 @@
 ---
 title: "Getting Started with SQLMesh"
-category: "Analytics Engineering"
-level: "Beginner"
+track: "Analytics Engineer"
+level: "Base"
 roles: ["Analytics Engineer", "Data Engineer"]
 duration: "3 assignments, ~2-3 hours each"
 cost: "Free"
@@ -17,7 +17,7 @@ status: "In progress"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Analytics Engineer, Data Engineer | 3 assignments, ~2-3 h each | Free | In progress |
+| Base | Analytics Engineer, Data Engineer | 3 assignments, ~2-3 h each | Free | In progress |
 
 ## Goal
 

@@ -1,7 +1,8 @@
 ---
 title: "Google BigQuery Overview: Partitioning and Clustering"
-category: "Data Engineering"
-level: "Beginner"
+track: "Data Engineer"
+focus: "Warehouse and lakehouse"
+level: "Base"
 roles: ["Data Engineer", "Analytics Engineer", "Data Analyst"]
 duration: "4 assignments, ~1-2 hours each"
 cost: "Free"
@@ -17,7 +18,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Data Engineer, Analytics Engineer, Data Analyst | 4 assignments, ~1-2 h each | Free | Ready |
+| Base | Data Engineer, Analytics Engineer, Data Analyst | 4 assignments, ~1-2 h each | Free | Ready |
 
 ## Goal
 

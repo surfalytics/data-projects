@@ -1,7 +1,8 @@
 ---
 title: "Trino 101: Distributed SQL Query Engine"
-category: "Data Engineering"
-level: "Beginner"
+track: "Data Engineer"
+focus: "Processing"
+level: "Base"
 roles: ["Data Engineer", "Analytics Engineer"]
 duration: "4 assignments, ~2-4 hours each"
 cost: "Free"
@@ -17,7 +18,7 @@ status: "In progress"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Data Engineer, Analytics Engineer | 4 assignments, ~2-4 h each | Free | In progress |
+| Base | Data Engineer, Analytics Engineer | 4 assignments, ~2-4 h each | Free | In progress |
 
 ## Goal
 

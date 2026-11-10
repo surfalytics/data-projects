@@ -1,7 +1,7 @@
 ---
 title: "Analytics Engineering Mock Interview"
-category: "Analytics Engineering"
-level: "Intermediate"
+track: "Analytics Engineer"
+level: "Middle"
 roles: ["Analytics Engineer", "Data Analyst"]
 duration: "5 assignments, ~1-2 hours each"
 cost: "Free"
@@ -17,7 +17,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Analytics Engineer, Data Analyst | 5 assignments, ~1-2 h each | Free | Ready |
+| Middle | Analytics Engineer, Data Analyst | 5 assignments, ~1-2 h each | Free | Ready |
 
 ## Goal
 

@@ -1,7 +1,7 @@
 ---
 title: "End-to-End Power BI Dashboard with Microsoft Fabric"
-category: "BI"
-level: "Beginner"
+track: "BI / Data Analyst"
+level: "Base"
 roles: ["BI Developer", "Data Analyst"]
 duration: "4 assignments, ~1-3 hours each"
 cost: "Free trial"
@@ -17,7 +17,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | BI Developer, Data Analyst | 4 assignments, ~1-3 h each | Free trial | Ready |
+| Base | BI Developer, Data Analyst | 4 assignments, ~1-3 h each | Free trial | Ready |
 
 ## Goal
 

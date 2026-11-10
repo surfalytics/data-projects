@@ -1,7 +1,8 @@
 ---
 title: "Getting Started with Airbyte and Data Ingestion"
-category: "Data Engineering"
-level: "Beginner"
+track: "Data Engineer"
+focus: "Ingestion"
+level: "Base"
 roles: ["Data Engineer", "Analytics Engineer"]
 duration: "3 assignments, ~2-3 hours each"
 cost: "Free"
@@ -17,7 +18,7 @@ status: "Draft"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Data Engineer, Analytics Engineer | 3 assignments, ~2-3 h each | Free | Draft |
+| Base | Data Engineer, Analytics Engineer | 3 assignments, ~2-3 h each | Free | Draft |
 
 ## Goal
 

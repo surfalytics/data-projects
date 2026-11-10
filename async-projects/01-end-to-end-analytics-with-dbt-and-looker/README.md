@@ -1,7 +1,7 @@
 ---
 title: "End-to-End Analytics with dbt and Looker"
-category: "Analytics Engineering"
-level: "Intermediate"
+track: "Analytics Engineer"
+level: "Middle"
 roles: ["Analytics Engineer", "Data Engineer", "BI Developer"]
 duration: "8 assignments, ~1-8 hours each"
 cost: "Free"
@@ -17,7 +17,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Analytics Engineer, Data Engineer, BI Developer | 8 assignments, ~1-8 h each | Free | Ready |
+| Middle | Analytics Engineer, Data Engineer, BI Developer | 8 assignments, ~1-8 h each | Free | Ready |
 
 ## Goal
 

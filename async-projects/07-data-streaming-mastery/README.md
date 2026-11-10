@@ -1,7 +1,8 @@
 ---
 title: "Data Streaming Mastery"
-category: "Streaming"
-level: "Intermediate"
+track: "Data Engineer"
+focus: "Streaming"
+level: "Senior"
 roles: ["Data Engineer", "DataOps Engineer"]
 duration: "10 assignments, ~3-6 hours each"
 cost: "Free"
@@ -17,7 +18,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Data Engineer, DataOps Engineer | 10 assignments, ~3-6 h each | Free | Ready |
+| Senior | Data Engineer, DataOps Engineer | 10 assignments, ~3-6 h each | Free | Ready |
 
 ## Goal
 

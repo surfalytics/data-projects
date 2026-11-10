@@ -1,7 +1,8 @@
 ---
 title: "Data Quality Checks with Soda Core and Snowflake"
-category: "DataOps"
-level: "Beginner"
+track: "Data Engineer"
+focus: "Data quality"
+level: "Base"
 roles: ["Data Engineer", "Analytics Engineer", "DataOps Engineer"]
 duration: "3 assignments, ~2-3 hours each"
 cost: "Free trial"
@@ -17,7 +18,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Data Engineer, Analytics Engineer, DataOps Engineer | 3 assignments, ~2-3 h each | Free trial | Ready |
+| Base | Data Engineer, Analytics Engineer, DataOps Engineer | 3 assignments, ~2-3 h each | Free trial | Ready |
 
 ## Goal
 

@@ -1,7 +1,8 @@
 ---
 title: "Getting Started with Polars"
-category: "Data Engineering"
-level: "Beginner"
+track: "Data Engineer"
+focus: "Processing"
+level: "Base"
 roles: ["Data Engineer", "Data Analyst", "Analytics Engineer"]
 duration: "3 assignments, ~2-3 hours each"
 cost: "Free"
@@ -17,7 +18,7 @@ status: "In progress"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Data Engineer, Data Analyst, Analytics Engineer | 3 assignments, ~2-3 h each | Free | In progress |
+| Base | Data Engineer, Data Analyst, Analytics Engineer | 3 assignments, ~2-3 h each | Free | In progress |
 
 ## Goal
 

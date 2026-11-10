@@ -1,7 +1,8 @@
 ---
 title: "Getting Started with Apache Airflow"
-category: "Data Engineering"
-level: "Beginner"
+track: "Data Engineer"
+focus: "Orchestration"
+level: "Base"
 roles: ["Data Engineer"]
 duration: "4 assignments, ~2-4 hours each"
 cost: "Free"
@@ -17,7 +18,7 @@ status: "Draft"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Data Engineer | 4 assignments, ~2-4 h each | Free | Draft |
+| Base | Data Engineer | 4 assignments, ~2-4 h each | Free | Draft |
 
 ## Goal
 

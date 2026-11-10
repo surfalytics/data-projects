@@ -1,7 +1,8 @@
 ---
 title: "Airflow ETL: Adzuna API to Databricks Delta"
-category: "Data Engineering"
-level: "Intermediate"
+track: "Data Engineer"
+focus: "Orchestration"
+level: "Middle"
 roles: ["Data Engineer"]
 duration: "4 assignments, ~1-3 hours each"
 cost: "Free"
@@ -17,7 +18,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Data Engineer | 4 assignments, ~1-3 h each | Free | Ready |
+| Middle | Data Engineer | 4 assignments, ~1-3 h each | Free | Ready |
 
 ## Goal
 

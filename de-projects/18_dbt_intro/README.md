@@ -1,7 +1,7 @@
 ---
 title: "dbt Fundamentals with Postgres and GitHub Actions"
-category: "Analytics Engineering"
-level: "Beginner"
+track: "Analytics Engineer"
+level: "Base"
 roles: ["Analytics Engineer", "Data Engineer"]
 duration: "6 assignments, ~2-4 hours each"
 cost: "Free"
@@ -17,7 +17,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Analytics Engineer, Data Engineer | 6 assignments, ~2-4 h each | Free | Ready |
+| Base | Analytics Engineer, Data Engineer | 6 assignments, ~2-4 h each | Free | Ready |
 
 ## Goal
 

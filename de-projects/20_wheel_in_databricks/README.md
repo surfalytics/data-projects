@@ -1,7 +1,8 @@
 ---
 title: "Databricks Job with a Python Wheel Task"
-category: "Data Engineering"
-level: "Intermediate"
+track: "Data Engineer"
+focus: "Processing"
+level: "Middle"
 roles: ["Data Engineer"]
 duration: "3 assignments, ~3-6 hours each"
 cost: "Free trial"
@@ -17,7 +18,7 @@ status: "In progress"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Data Engineer | 3 assignments, ~3-6 h each | Free trial | In progress |
+| Middle | Data Engineer | 3 assignments, ~3-6 h each | Free trial | In progress |
 
 ## Goal
 

@@ -1,7 +1,8 @@
 ---
 title: "Snowflake Data Warehouse and Hex Notebooks"
-category: "Data Engineering"
-level: "Beginner"
+track: "Data Engineer"
+focus: "Warehouse and lakehouse"
+level: "Base"
 roles: ["Data Engineer", "Data Analyst", "Analytics Engineer"]
 duration: "3 assignments, ~3-4 hours each"
 cost: "Free trial"
@@ -17,7 +18,7 @@ status: "Draft"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Data Engineer, Data Analyst, Analytics Engineer | 3 assignments, ~3-4 h each | Free trial | Draft |
+| Base | Data Engineer, Data Analyst, Analytics Engineer | 3 assignments, ~3-4 h each | Free trial | Draft |
 
 ## Goal
 

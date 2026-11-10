@@ -1,7 +1,7 @@
 ---
 title: "Getting Started with Git and CI/CD"
-category: "DataOps"
-level: "Beginner"
+track: "Fundamentals"
+level: "Base"
 roles: ["Data Engineer", "Analytics Engineer", "DataOps Engineer"]
 duration: "8 assignments, ~1-3 hours each"
 cost: "Free"
@@ -17,7 +17,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | Data Engineer, Analytics Engineer, DataOps Engineer | 8 assignments, ~1-3 h each | Free | Ready |
+| Base | Data Engineer, Analytics Engineer, DataOps Engineer | 8 assignments, ~1-3 h each | Free | Ready |
 
 ## Goal
 

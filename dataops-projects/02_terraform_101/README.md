@@ -1,7 +1,8 @@
 ---
 title: "Terraform 101"
-category: "DataOps"
-level: "Beginner"
+track: "Data Engineer"
+focus: "Infrastructure"
+level: "Base"
 roles: ["DataOps Engineer", "Data Engineer"]
 duration: "6 assignments, ~1-3 hours each"
 cost: "Free trial"
@@ -17,7 +18,7 @@ status: "In progress"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Beginner | DataOps Engineer, Data Engineer | 6 assignments, ~1-3 h each | Free trial | In progress |
+| Base | DataOps Engineer, Data Engineer | 6 assignments, ~1-3 h each | Free trial | In progress |
 
 ## Goal
 

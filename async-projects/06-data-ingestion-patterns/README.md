@@ -1,7 +1,8 @@
 ---
 title: "Data Ingestion Patterns: From API to Snowflake"
-category: "Data Engineering"
-level: "Intermediate"
+track: "Data Engineer"
+focus: "Ingestion"
+level: "Middle"
 roles: ["Data Engineer", "Analytics Engineer"]
 duration: "6 assignments, ~4-8 hours each"
 cost: "Free trial"
@@ -17,7 +18,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Data Engineer, Analytics Engineer | 6 assignments, ~4-8 h each | Free trial | Ready |
+| Middle | Data Engineer, Analytics Engineer | 6 assignments, ~4-8 h each | Free trial | Ready |
 
 ## Goal
 

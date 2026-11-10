@@ -1,7 +1,8 @@
 ---
 title: "Data Warehouse on Azure and Snowflake"
-category: "Data Engineering"
-level: "Intermediate"
+track: "Data Engineer"
+focus: "End-to-end"
+level: "Middle"
 roles: ["Data Engineer", "Analytics Engineer"]
 duration: "4 assignments, ~4-6 hours each"
 cost: "Free trial"
@@ -17,7 +18,7 @@ status: "Ready"
 
 | Level | Roles | Duration | Cost | Status |
 |---|---|---|---|---|
-| Intermediate | Data Engineer, Analytics Engineer | 4 assignments, ~4-6 h each | Free trial | Ready |
+| Middle | Data Engineer, Analytics Engineer | 4 assignments, ~4-6 h each | Free trial | Ready |
 
 ## Goal
 
