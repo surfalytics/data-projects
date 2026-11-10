@@ -6,7 +6,7 @@ Ensure the environment is running:
 
 ```bash
 cd module-04-kafka-connect
-docker-compose up -d
+docker compose up -d
 ```
 
 Verify MySQL is accessible and has data:

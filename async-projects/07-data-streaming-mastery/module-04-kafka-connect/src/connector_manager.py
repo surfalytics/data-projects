@@ -60,7 +60,7 @@ class ConnectorManager:
             return response
         except requests.exceptions.ConnectionError:
             print(f"ERROR: Cannot connect to Kafka Connect at {self.connect_url}")
-            print("Make sure the Connect worker is running: docker-compose up -d")
+            print("Make sure the Connect worker is running: docker compose up -d")
             sys.exit(1)
 
     def wait_for_connect(self, timeout: int = 120, interval: int = 5) -> bool:

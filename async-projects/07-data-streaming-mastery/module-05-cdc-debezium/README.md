@@ -1,5 +1,9 @@
 # Module 05 -- Change Data Capture with Debezium
 
+![Architecture](images/architecture.png)
+
+*Diagram source: [`images/architecture.excalidraw`](images/architecture.excalidraw).*
+
 ## Table of Contents
 
 1. [What is Change Data Capture?](#what-is-change-data-capture)
@@ -105,13 +109,13 @@ server-id         = 1
 log_bin           = mysql-bin
 binlog_format     = ROW
 binlog_row_image  = FULL
-expire_logs_days  = 3
+binlog_expire_logs_seconds = 259200   # 3 days
 ```
 
 - `server-id` -- unique identifier; required for binlog to be enabled.
 - `binlog_format = ROW` -- logs actual row changes, not SQL statements.
 - `binlog_row_image = FULL` -- logs all columns in before/after images (not just changed ones).
-- `expire_logs_days` -- how long to keep old binlog files.
+- `binlog_expire_logs_seconds` -- how long to keep old binlog files. The old `expire_logs_days` is deprecated in MySQL 8.0 ([docs](https://dev.mysql.com/doc/refman/8.0/en/replication-options-binary-log.html)).
 
 ---
 
@@ -365,7 +369,7 @@ When a Debezium connector starts for the first time (or when certain conditions 
 
 ### Why Snapshot?
 
-The binlog only retains a limited history (controlled by `expire_logs_days`). If the connector has never run, it does not know the existing data in the tables. The snapshot bootstraps the connector with the current state.
+The binlog only retains a limited history (controlled by `binlog_expire_logs_seconds`). If the connector has never run, it does not know the existing data in the tables. The snapshot bootstraps the connector with the current state.
 
 ### Snapshot Process
 
@@ -551,6 +555,15 @@ Work through the exercises in the `exercises/` directory:
 - [02-advanced-cdc.md](exercises/02-advanced-cdc.md) -- Filtering, transforms, and schema evolution
 
 Check your solutions against `solutions/`.
+
+### Versions used in this module
+
+| Item | Version | Note |
+|------|---------|------|
+| Debezium | 2.4 (`debezium/connect:2.4`, `debezium/example-mysql:2.4`) | Config names in this module are for 2.4. |
+| Confluent Platform | 7.5.0 (with ZooKeeper) | Kafka 4.0 removed ZooKeeper. This course still uses it. |
+
+Debezium 3.x renamed some snapshot modes ([docs](https://debezium.io/documentation/reference/stable/connectors/mysql.html)): `schema_only` is now `no_data`, and `schema_only_recovery` is now `recovery`. The old names still work in 2.4, which this module uses.
 
 ---
 

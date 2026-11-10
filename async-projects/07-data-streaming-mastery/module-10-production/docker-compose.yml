@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -11,10 +9,27 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     healthcheck:
-      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181"]
+      test: ["CMD-SHELL", "nc -z localhost 2181"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # One-shot job. Downloads the Prometheus JMX exporter java agent and the
+  # config into a shared volume. Kafka loads the agent with KAFKA_OPTS.
+  jmx-agent-init:
+    image: curlimages/curl:8.5.0
+    container_name: module10-jmx-agent-init
+    user: root
+    entrypoint: ["sh", "-c"]
+    command:
+      - >
+        curl -fsSL -o /agent/jmx_prometheus_javaagent.jar
+        https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+        && cp /config/kafka-jmx-config.yml /agent/kafka-jmx-config.yml
+    volumes:
+      - jmx-agent:/agent
+      - ./config/kafka-jmx-config.yml:/config/kafka-jmx-config.yml:ro
+    restart: "no"
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -23,6 +38,8 @@ services:
     depends_on:
       zookeeper:
         condition: service_healthy
+      jmx-agent-init:
+        condition: service_completed_successfully
     ports:
       - "9092:9092"
       - "7071:7071"
@@ -38,24 +55,25 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: kafka
-      KAFKA_OPTS: "-javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent-0.20.0.jar=7071:/opt/jmx-exporter/kafka-jmx-config.yml"
     volumes:
-      - ./config/kafka-jmx-config.yml:/opt/jmx-exporter/kafka-jmx-config.yml:ro
-      - ./jmx-exporter:/opt/jmx-exporter/jmx_prometheus_javaagent-0.20.0.jar:ro
-    command: >
-      bash -c "
-        # Download JMX Exporter agent if not present
-        if [ ! -f /opt/jmx-exporter/jmx_prometheus_javaagent-0.20.0.jar ]; then
-          echo 'Downloading JMX Exporter...'
-          mkdir -p /opt/jmx-exporter
-          curl -sL https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar \
-            -o /opt/jmx-exporter/jmx_prometheus_javaagent-0.20.0.jar
-        fi
-        # Start Kafka
-        /etc/confluent/docker/run
-      "
+      - jmx-agent:/opt/jmx-exporter:ro
+    # The JMX agent is set only for the broker process. If it were set in the container
+    # environment, every "docker exec ... kafka-topics" command would try to start a second
+    # agent on port 7071 and crash.
+    command:
+      - bash
+      - -c
+      - |
+        export KAFKA_OPTS="-javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent.jar=7071:/opt/jmx-exporter/kafka-jmx-config.yml"
+        exec /etc/confluent/docker/run
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      test:
+        [
+          "CMD",
+          "kafka-broker-api-versions",
+          "--bootstrap-server",
+          "localhost:9092",
+        ]
       interval: 15s
       timeout: 10s
       retries: 10
@@ -70,10 +88,10 @@ services:
       - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=7d'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
+      - "--web.enable-lifecycle"
     depends_on:
       kafka:
         condition: service_healthy
@@ -112,5 +130,6 @@ services:
         condition: service_healthy
 
 volumes:
+  jmx-agent:
   prometheus-data:
   grafana-data:

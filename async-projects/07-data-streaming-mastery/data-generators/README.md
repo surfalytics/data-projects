@@ -7,8 +7,10 @@ that can run independently or alongside the others.
 | Generator | Sink | Default Topic / DB | Primary Modules |
 |---|---|---|---|
 | `ecommerce_simulator.py` | MySQL | `ecommerce` database | 05 (CDC/Debezium), 09 (Capstone) |
-| `clickstream_generator.py` | Kafka | `clickstream` topic | 02 (Kafka Core), 06 (ksqlDB), 07 (Faust), 08 (Flink) |
-| `iot_sensor_generator.py` | Kafka | `iot-sensors` topic | 02 (Kafka Core), 03 (Schema Registry), 08 (Flink) |
+| `clickstream_generator.py` | Kafka | `clickstream` topic | 02, 06, 07, 08 |
+| `iot_sensor_generator.py` | Kafka | `iot-sensors` topic | 02, 03, 08 |
+
+The "Primary Modules" column says where each generator can be used. The module code does not call these scripts. Module 06 has its own `seed_topics.py`. Module 09 has its own copy of the simulator in `module-09-capstone/src/` (it also writes an `inventory_log` table).
 
 ---
 
@@ -19,12 +21,12 @@ that can run independently or alongside the others.
    ```bash
    pip install -r requirements.txt
    ```
-3. **Docker services** (started from the project root):
+3. **Docker services.** Start the course stack from the course folder (`07-data-streaming-mastery/`):
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
-   The compose file brings up Kafka, Zookeeper, Schema Registry, MySQL,
-   and other services used by downstream modules.
+   It starts ZooKeeper, 3 Kafka brokers, Schema Registry, Kafka Connect, ksqlDB, MySQL, PostgreSQL and the monitoring services.
+   The generators connect to `localhost:9092` (Kafka) and `localhost:3306` (MySQL).
 
 ---
 
@@ -229,6 +231,7 @@ Run the clickstream or IoT generator, then consume with `kafka-console-consumer`
 ```bash
 python clickstream_generator.py --speed 2 --duration 120
 ```
+Topics are created automatically if the broker allows it. Create them first if auto-create is off.
 
 ### Module 03 — Schema Registry
 Use the IoT generator output and register an Avro/JSON schema for the sensor events.
@@ -249,7 +252,7 @@ Create Flink SQL jobs that join clickstream data with IoT sensor data for
 real-time analytics dashboards.
 
 ### Module 09 — Capstone
-All three generators run simultaneously, feeding the full end-to-end pipeline.
+The capstone runs its own copy of the e-commerce simulator (`module-09-capstone/src/ecommerce_simulator.py`). It does not use the clickstream or IoT generators.
 
 ---
 
@@ -257,8 +260,8 @@ All three generators run simultaneously, feeding the full end-to-end pipeline.
 
 All generators handle `Ctrl+C` (SIGINT) gracefully. They will:
 1. Stop producing new events
-2. Flush any buffered Kafka messages
-3. Close database connections
+2. Flush any buffered Kafka messages (Kafka generators)
+3. Close database connections (e-commerce simulator)
 4. Print a summary of events produced
 
 ---

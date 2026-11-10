@@ -15,6 +15,7 @@ Usage:
     python schema_registry_client.py set-config <level> [--subject <subject>]
     python schema_registry_client.py delete-subject <subject> [--permanent]
     python schema_registry_client.py get-schema-by-id <schema-id>
+    python schema_registry_client.py register <subject> <schema-file>
 
 Prerequisites:
     - Schema Registry running on localhost:8081
@@ -289,6 +290,11 @@ def main():
     gsi_parser = subparsers.add_parser("get-schema-by-id", help="Get a schema by global ID.")
     gsi_parser.add_argument("schema_id", type=int, help="Global schema ID.")
 
+    # register
+    rg_parser = subparsers.add_parser("register", help="Register a schema under a subject.")
+    rg_parser.add_argument("subject", help="Subject name.")
+    rg_parser.add_argument("schema_file", help="Path to JSON file containing the Avro schema.")
+
     # check-compatibility
     cc_parser = subparsers.add_parser("check-compatibility", help="Check schema compatibility.")
     cc_parser.add_argument("subject", help="Subject name.")
@@ -356,6 +362,15 @@ def main():
             print(f"Schema ID: {args.schema_id}")
             print("Schema:")
             print_json(schema.get("schema_parsed", {}))
+
+    elif args.command == "register":
+        with open(args.schema_file, "r") as f:
+            schema = json.load(f)
+        schema_id = client.register_schema(args.subject, schema)
+        if schema_id >= 0:
+            print(f"Registered under '{args.subject}'. Schema ID: {schema_id}")
+        else:
+            sys.exit(1)
 
     elif args.command == "check-compatibility":
         with open(args.schema_file, "r") as f:

@@ -91,11 +91,12 @@ echo -e "${BLUE}Step 2: Waiting for services to become healthy...${NC}"
 echo ""
 
 wait_for_mysql
-wait_for_service "Kafka" "http://localhost:9092" 30 5 || true
 wait_for_service "Schema Registry" "http://localhost:8081/subjects" 30 5
 wait_for_service "Kafka Connect" "http://localhost:8083/connectors" 40 5
 wait_for_service "ksqlDB" "http://localhost:8088/info" 40 5
-wait_for_service "PostgreSQL" "http://localhost:5432" 20 3 || true
+echo -e "${BLUE}Waiting for PostgreSQL...${NC}"
+until docker exec module-09-postgres pg_isready -U postgres -d analytics > /dev/null 2>&1; do sleep 3; done
+echo -e "${GREEN}  PostgreSQL is ready.${NC}"
 wait_for_service "Grafana" "http://localhost:3000/api/health" 20 5
 
 echo ""

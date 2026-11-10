@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ---------- ZooKeeper ----------
   zookeeper:
@@ -12,13 +10,31 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     healthcheck:
-      test: ["CMD", "bash", "-c", "echo ruok | nc localhost 2181 | grep imok"]
+      test: ["CMD-SHELL", "nc -z localhost 2181"]
       interval: 10s
       timeout: 5s
       retries: 5
     volumes:
       - zookeeper-data:/var/lib/zookeeper/data
       - zookeeper-log:/var/lib/zookeeper/log
+    networks:
+      - streaming
+
+  # ---------- JMX exporter agent (one-shot download) ----------
+  jmx-agent-init:
+    image: curlimages/curl:8.5.0
+    container_name: module-09-jmx-agent-init
+    user: root
+    entrypoint: ["sh", "-c"]
+    command:
+      - >
+        curl -fsSL -o /agent/jmx_prometheus_javaagent.jar
+        https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar
+        && cp /config/kafka-jmx-config.yml /agent/kafka-jmx-config.yml
+    volumes:
+      - jmx-agent:/agent
+      - ./config/kafka-jmx-config.yml:/config/kafka-jmx-config.yml:ro
+    restart: "no"
     networks:
       - streaming
 
@@ -43,16 +59,34 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: kafka
+    # The JMX agent is set only for the broker process. If it were set in the container
+    # environment, every "docker exec ... kafka-topics" command would try to start a second
+    # agent on port 7071 and crash.
+    command:
+      - bash
+      - -c
+      - |
+        export KAFKA_OPTS="-javaagent:/opt/jmx-exporter/jmx_prometheus_javaagent.jar=7071:/opt/jmx-exporter/kafka-jmx-config.yml"
+        exec /etc/confluent/docker/run
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:29092"]
+      test:
+        [
+          "CMD",
+          "kafka-broker-api-versions",
+          "--bootstrap-server",
+          "kafka:29092",
+        ]
       interval: 10s
       timeout: 10s
       retries: 10
     depends_on:
       zookeeper:
         condition: service_healthy
+      jmx-agent-init:
+        condition: service_completed_successfully
     volumes:
       - kafka-data:/var/lib/kafka/data
+      - jmx-agent:/opt/jmx-exporter:ro
     networks:
       - streaming
 
@@ -78,33 +112,44 @@ services:
     networks:
       - streaming
 
-  # ---------- Kafka Connect (Debezium) ----------
+  # ---------- Kafka Connect (Debezium source + JDBC sink) ----------
+  # The debezium/connect image has no Confluent Avro converter and no JDBC sink.
+  # So we use cp-kafka-connect (has both) and install Debezium from Confluent Hub.
   kafka-connect:
-    image: debezium/connect:2.4
+    image: confluentinc/cp-kafka-connect:7.5.0
     container_name: module-09-kafka-connect
     hostname: kafka-connect
     ports:
       - "8083:8083"
     environment:
-      BOOTSTRAP_SERVERS: kafka:29092
-      GROUP_ID: connect-cluster
-      CONFIG_STORAGE_TOPIC: _connect-configs
-      OFFSET_STORAGE_TOPIC: _connect-offsets
-      STATUS_STORAGE_TOPIC: _connect-status
-      CONFIG_STORAGE_REPLICATION_FACTOR: 1
-      OFFSET_STORAGE_REPLICATION_FACTOR: 1
-      STATUS_STORAGE_REPLICATION_FACTOR: 1
-      KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
-      VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
-      KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
-      VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_BOOTSTRAP_SERVERS: kafka:29092
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: connect-cluster
+      CONNECT_CONFIG_STORAGE_TOPIC: _connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: _connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: _connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
       CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
       CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components
+    # Needs internet on first start (Confluent Hub download).
+    command:
+      - bash
+      - -c
+      - |
+        confluent-hub install --no-prompt debezium/debezium-connector-mysql:2.5.4-5
+        confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.7.4
+        /etc/confluent/docker/run
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/connectors"]
       interval: 10s
       timeout: 5s
-      retries: 15
+      retries: 30
     depends_on:
       kafka:
         condition: service_healthy
@@ -113,7 +158,7 @@ services:
       mysql:
         condition: service_healthy
     volumes:
-      - connect-plugins:/kafka/connect
+      - connect-plugins:/usr/share/confluent-hub-components
     networks:
       - streaming
 
@@ -158,7 +203,8 @@ services:
       MYSQL_USER: mysqluser
       MYSQL_PASSWORD: mysqlpw
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pdebezium"]
+      test:
+        ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pdebezium"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -205,7 +251,11 @@ services:
       KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://kafka-connect:8083
       KAFKA_CLUSTERS_0_KSQLDBSERVER: http://ksqldb-server:8088
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/clusters"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget --spider --quiet http://localhost:8080/api/clusters || exit 1",
+        ]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -261,6 +311,7 @@ services:
       - streaming
 
 volumes:
+  jmx-agent:
   zookeeper-data:
   zookeeper-log:
   kafka-data:

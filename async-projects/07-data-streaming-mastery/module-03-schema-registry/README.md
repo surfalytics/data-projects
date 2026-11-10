@@ -1,5 +1,9 @@
 # Module 3: Schema Registry & Serialization
 
+![Architecture](images/architecture.png)
+
+*Diagram source: [`images/architecture.excalidraw`](images/architecture.excalidraw).*
+
 ## Table of Contents
 
 1. [Why Schemas Matter in Streaming](#why-schemas-matter-in-streaming)
@@ -135,7 +139,7 @@ Schema Registry supports three serialization formats. Here is a detailed compari
 
 **Avro**
 - Pros: Compact binary format, excellent schema evolution, no field tags needed, first-class Kafka ecosystem support
-- Cons: Not human-readable, requires schema for both reading and writing, slower code generation
+- Cons: Not human-readable, requires schema for both reading and writing
 
 **Protobuf**
 - Pros: Very compact, strong typing, great code generation, widely adopted in microservices
@@ -292,7 +296,7 @@ Old consumers ignore the new field. New consumers reading old data get the defau
 {"name": "order_id", "type": "string"}
 ```
 
-**Unsafe:** Remove a field that had no default value.
+**Unsafe for FORWARD and FULL:** Remove a field that had no default value. Old readers still expect it.
 
 ### Renaming Fields
 
@@ -346,12 +350,10 @@ graph LR
 **BACKWARD compatibility is broken by:**
 - Adding a required field (no default)
 - Changing a field type incompatibly (e.g., `int` to `string`)
-- Removing a default from an existing field
 
 **FORWARD compatibility is broken by:**
 - Removing a required field (no default)
 - Changing a field type incompatibly
-- Adding a field that old readers cannot handle
 
 **FULL compatibility is broken by:**
 - Any of the above
@@ -407,13 +409,13 @@ Subject: events-com.ecommerce.Order
 
 ```bash
 # Start the infrastructure
-docker-compose up -d
+docker compose up -d
 
 # Install Python dependencies
 pip install -r requirements.txt
 
 # Wait for Schema Registry to be ready
-curl -s http://localhost:8081/ | python -m json.tool
+curl -s http://localhost:8081/subjects
 ```
 
 ### Exercises
@@ -430,6 +432,14 @@ curl -s http://localhost:8081/ | python -m json.tool
 | `src/schema_evolution_demo.py` | Demonstrate schema evolution with backward compatibility |
 | `src/schema_registry_client.py` | Interact with Schema Registry REST API |
 | `src/json_schema_producer.py` | Produce messages using JSON Schema serialization |
+
+---
+
+## Versions Used in This Module
+
+- Confluent Platform 7.5.0 (Schema Registry 7.5, with ZooKeeper). This is for the lab only.
+- Default compatibility is `BACKWARD`. It checks only the latest version. Use `BACKWARD_TRANSITIVE` to check all versions.
+- Python: `confluent-kafka[avro]` (Avro support needs `fastavro` and `requests`).
 
 ---
 

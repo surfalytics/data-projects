@@ -56,7 +56,7 @@ echo ""
 # Step 2: Register the Debezium connector
 # --------------------------------------------------
 echo "[Step 2/5] Registering the Debezium MySQL source connector ..."
-python src/register_connector.py
+python3 src/register_connector.py
 echo ""
 
 # --------------------------------------------------
@@ -72,7 +72,7 @@ echo ""
 # Step 4: Trigger database changes
 # --------------------------------------------------
 echo "[Step 4/5] Triggering database changes ..."
-python src/trigger_changes.py
+python3 src/trigger_changes.py
 echo ""
 
 # --------------------------------------------------
@@ -80,7 +80,7 @@ echo ""
 # --------------------------------------------------
 echo "[Step 5/5] Consuming CDC events (will stop after 20s of silence) ..."
 echo ""
-python src/cdc_consumer.py --timeout 20
+python3 src/cdc_consumer.py --timeout 20
 echo ""
 
 # --------------------------------------------------

@@ -10,7 +10,7 @@ the transforms are applied correctly. Covers:
 
 Usage:
     # Start the environment first:
-    #   docker-compose up -d
+    #   docker compose up -d
     #
     # Then run this demo:
     python smt_demo.py

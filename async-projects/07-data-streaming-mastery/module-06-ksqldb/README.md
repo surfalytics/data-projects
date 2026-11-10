@@ -1,5 +1,9 @@
 # Module 6: ksqlDB -- Streaming SQL for Apache Kafka
 
+![Architecture](images/architecture.png)
+
+*Diagram source: [`images/architecture.excalidraw`](images/architecture.excalidraw).*
+
 ## Table of Contents
 
 1. [What is ksqlDB?](#what-is-ksqldb)
@@ -109,7 +113,7 @@ CREATE STREAM orders_stream (
     product_id VARCHAR,
     quantity INT,
     price DOUBLE,
-    order_timestamp VARCHAR
+    `timestamp` VARCHAR
 ) WITH (
     KAFKA_TOPIC = 'orders',
     VALUE_FORMAT = 'JSON'
@@ -492,8 +496,10 @@ public class MaskEmail {
 
 ## ksqlDB and Kafka Connect Integration
 
-ksqlDB can manage Kafka Connect connectors directly via SQL -- no separate
-Connect cluster configuration needed (when running in embedded mode).
+ksqlDB can manage Kafka Connect connectors directly via SQL. It needs either
+embedded Connect or a link to a Connect cluster (`ksql.connect.url`).
+**The Docker Compose stack in this module has no Connect worker**, so the
+statements below are for reading only. You cannot run them in this lab.
 
 ### Creating a Source Connector
 
@@ -542,14 +548,23 @@ docker compose up -d
 
 ### Step-by-Step
 
-1. **Seed data:** `python src/seed_topics.py`
-2. **Create schemas:** `bash src/setup_ksqldb.sh`
+1. **Seed data:** `python src/seed_topics.py` (keep it running in its own terminal)
+2. **Create schemas:** `bash src/setup_ksqldb.sh` (runs `queries/01`, `02` and `06`)
 3. **Open ksqlDB CLI:** `docker exec -it ksqldb-cli ksql http://ksqldb-server:8088`
 4. **Explore:**
    - Run push queries from `queries/03-aggregations.sql`
    - Run join queries from `queries/04-joins.sql`
    - Experiment with windowed aggregations
 5. **Use the Python client:** `python src/ksqldb_client.py`
+
+### Versions used in this module
+
+| Item | Version | Note |
+|------|---------|------|
+| Confluent Platform | 7.5.0 (with ZooKeeper) | Kafka 4.0 removed ZooKeeper. This course still uses it. |
+| ksqlDB | 0.29.0 (inside `cp-ksqldb-server:7.5.0`) | Still shipped and documented in Confluent Platform 8.x. |
+
+Confluent now points users to Flink for new, complex stream processing ([docs](https://docs.confluent.io/platform/8.1/ksqldb/operate-and-deploy/index.html)). Module 8 covers Flink.
 
 ### Exercises
 
