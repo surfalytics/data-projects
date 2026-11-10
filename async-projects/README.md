@@ -8,7 +8,7 @@ Self-paced, hands-on data projects. Every project uses the same structure:
 - Assignments with Goal, Steps, Deliverable and "Done when" checklist.
 - Final result, clean up and community solutions.
 
-Want to add a project? Copy [TEMPLATE.md](TEMPLATE.md).
+Want to add a project? Copy [TEMPLATE.md](../TEMPLATE.md).
 
 ## Catalog
 
