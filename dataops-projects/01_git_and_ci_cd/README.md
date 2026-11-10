@@ -88,6 +88,24 @@ Data flow:
 4. After merge or a new GitHub Release, GitHub Actions builds the image and pushes it to Docker Hub with a tag.
 5. Anyone can pull the image and run it. The container downloads the COVID-19 CSV and runs the DuckDB analysis.
 
+### How the CI works
+
+You build the CI in **your own repo**. This repo does not run these workflows, so they do not start on every pull request here. The full YAML is in Assignments 5-7.
+
+| Workflow | Trigger | What it does | Assignment |
+|---|---|---|---|
+| `pre-commit.yml` | Pull request or push to `main` | Runs pre-commit hooks (whitespace, YAML, prettier, sqlfmt) on changed files | 5 |
+| `verify-duckdb.yml` | Pull request or push to `main` | Builds the Docker image, runs it, and compares the DuckDB output with the expected table | 5 |
+| `combined-pipeline.yml` | Pull request, push to `main`, release, manual | Joins both jobs. `needs: pre-commit` makes the test wait for the lint job. On a release it pushes the image to Docker Hub with the release tag | 5-7 |
+
+Flow of one pull request:
+
+1. You push a branch and open a pull request.
+2. The `pre-commit` job checks only the changed files.
+3. If it passes, the `verify-duckdb` job builds the image and runs the analysis.
+4. The job compares the output with the expected result. A different result fails the check and blocks the merge.
+5. After a GitHub Release, the pipeline builds the image again and pushes it to Docker Hub.
+
 ## Dataset
 
 - **Source:** [Our World in Data COVID-19 dataset](https://github.com/owid/covid-19-data). File: `owid-covid-data.csv`.
