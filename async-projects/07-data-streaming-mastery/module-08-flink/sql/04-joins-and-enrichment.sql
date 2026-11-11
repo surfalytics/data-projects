@@ -5,17 +5,15 @@
 -- Flink supports several join types for streams and changelog tables.
 --
 -- Join Types in Flink SQL:
---   1. Regular Join      -- Joins two dynamic tables; both sides can change
---   2. Temporal Join     -- Joins a stream with a versioned (temporal) table
---   3. Lookup Join       -- Joins a stream with an external lookup source
---   4. Interval Join     -- Joins two streams within a time interval
+-- 1. Regular Join      -- Joins two dynamic tables; both sides can change
+-- 2. Temporal Join     -- Joins a stream with a versioned (temporal) table
+-- 3. Lookup Join       -- Joins a stream with an external lookup source
+-- 4. Interval Join     -- Joins two streams within a time interval
 --
 -- Prerequisites:
---   - Kafka tables from 01-create-kafka-tables.sql
---   - CDC tables from 03-cdc-source.sql
+-- - Kafka tables from 01-create-kafka-tables.sql
+-- - CDC tables from 03-cdc-source.sql
 -- =============================================================================
-
-
 -- =============================================================================
 -- Join 1: Enrich orders with customer data (Regular Join)
 -- =============================================================================
@@ -26,8 +24,7 @@
 -- grow indefinitely (Flink must remember all rows from both sides).
 -- Use interval joins or temporal joins for production workloads.
 -- =============================================================================
-
-SELECT
+select
     o.order_id,
     o.amount,
     o.order_status,
@@ -37,9 +34,9 @@ SELECT
     c.email,
     c.city,
     c.state
-FROM orders AS o
-INNER JOIN customers AS c
-    ON o.customer_id = c.customer_id;
+from orders as o
+inner join customers as c on o.customer_id = c.customer_id
+;
 
 
 -- =============================================================================
@@ -47,8 +44,7 @@ INNER JOIN customers AS c
 -- =============================================================================
 -- Adds product name, category, and brand to each order.
 -- =============================================================================
-
-SELECT
+select
     o.order_id,
     o.customer_id,
     o.quantity,
@@ -57,10 +53,10 @@ SELECT
     p.product_name,
     p.category,
     p.brand,
-    p.price AS unit_price
-FROM orders AS o
-INNER JOIN products AS p
-    ON o.product_id = p.product_id;
+    p.price as unit_price
+from orders as o
+inner join products as p on o.product_id = p.product_id
+;
 
 
 -- =============================================================================
@@ -69,28 +65,26 @@ INNER JOIN products AS p
 -- Combines orders with both customer and product dimensions.
 -- This is the typical "enriched order" pattern in streaming pipelines.
 -- =============================================================================
-
-SELECT
+select
     o.order_id,
     o.order_time,
     o.quantity,
     o.amount,
     o.order_status,
     -- Customer details
-    c.first_name || ' ' || c.last_name AS customer_name,
-    c.email                             AS customer_email,
-    c.city                              AS customer_city,
-    c.country                           AS customer_country,
+    c.first_name || ' ' || c.last_name as customer_name,
+    c.email as customer_email,
+    c.city as customer_city,
+    c.country as customer_country,
     -- Product details
     p.product_name,
-    p.category                          AS product_category,
-    p.brand                             AS product_brand,
-    p.price                             AS unit_price
-FROM orders AS o
-INNER JOIN customers AS c
-    ON o.customer_id = c.customer_id
-INNER JOIN products AS p
-    ON o.product_id = p.product_id;
+    p.category as product_category,
+    p.brand as product_brand,
+    p.price as unit_price
+from orders as o
+inner join customers as c on o.customer_id = c.customer_id
+inner join products as p on o.product_id = p.product_id
+;
 
 
 -- =============================================================================
@@ -103,19 +97,19 @@ INNER JOIN products AS p
 -- Example: Match orders with customer events that occurred within 1 hour
 -- before the order (e.g., customer logged in, then placed an order).
 -- =============================================================================
-
-SELECT
+select
     o.order_id,
     o.amount,
     o.order_time,
     c.customer_id,
     c.first_name,
-    c.created_at AS customer_event_time
-FROM orders AS o
-INNER JOIN customers AS c
-    ON o.customer_id = c.customer_id
-    AND c.created_at BETWEEN o.order_time - INTERVAL '1' HOUR
-                         AND o.order_time;
+    c.created_at as customer_event_time
+from orders as o
+inner join
+    customers as c
+    on o.customer_id = c.customer_id
+    and c.created_at between o.order_time - interval '1' hour and o.order_time
+;
 
 
 -- =============================================================================
@@ -125,44 +119,51 @@ INNER JOIN customers AS c
 -- The CDC tables act as continuously-updated dimension tables.
 -- When a customer's address changes in MySQL, it is reflected here in real time.
 -- =============================================================================
-
-SELECT
+select
     o.order_id,
     o.amount,
     o.order_time,
     o.order_status,
     -- Customer info from MySQL CDC
-    mc.first_name || ' ' || mc.last_name AS customer_name,
+    mc.first_name || ' ' || mc.last_name as customer_name,
     mc.email,
     mc.city,
     -- Product info from MySQL CDC
     mp.product_name,
     mp.category,
     mp.brand
-FROM orders AS o
-LEFT JOIN mysql_customers AS mc
-    ON o.customer_id = CAST(mc.customer_id AS STRING)
-LEFT JOIN mysql_products AS mp
-    ON o.product_id = CAST(mp.product_id AS STRING);
+from orders as o
+left join mysql_customers as mc on o.customer_id = cast(mc.customer_id as string)
+left join mysql_products as mp on o.product_id = cast(mp.product_id as string)
+;
 
 
 -- =============================================================================
 -- Join 6: Aggregation after enrichment
 -- =============================================================================
--- After enriching orders, compute revenue by product category per 5-minute
--- window. This pattern is extremely common in real-time analytics pipelines.
+-- Compute revenue by product category per 5-minute window.
+-- Pattern: window first, then join the dimension, then group by the dimension.
 -- =============================================================================
-
-SELECT
-    TUMBLE_START(o.order_time, INTERVAL '5' MINUTE) AS window_start,
-    TUMBLE_END(o.order_time, INTERVAL '5' MINUTE)   AS window_end,
+-- A regular join drops the time attribute of order_time.
+-- Window functions need a time attribute. So the window comes FIRST
+-- (per product_id), and the join with products comes AFTER it.
+select
+    w.window_start,
+    w.window_end,
     p.category,
-    COUNT(*)                                          AS order_count,
-    SUM(o.amount)                                     AS total_revenue,
-    AVG(o.amount)                                     AS avg_order_value
-FROM orders AS o
-INNER JOIN products AS p
-    ON o.product_id = p.product_id
-GROUP BY
-    TUMBLE(o.order_time, INTERVAL '5' MINUTE),
-    p.category;
+    sum(w.order_count) as order_count,
+    sum(w.total_revenue) as total_revenue
+from
+    (
+        select
+            window_start,
+            window_end,
+            product_id,
+            count(*) as order_count,
+            sum(amount) as total_revenue
+        from table(tumble(table orders, descriptor(order_time), interval '5' minute))
+        group by window_start, window_end, product_id
+    ) as w
+inner join products as p on w.product_id = p.product_id
+group by w.window_start, w.window_end, p.category
+;

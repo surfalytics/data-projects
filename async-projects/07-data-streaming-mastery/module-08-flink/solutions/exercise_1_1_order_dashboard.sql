@@ -6,7 +6,6 @@
 --
 -- Run the table creation from sql/01-create-kafka-tables.sql first.
 -- =============================================================================
-
 -- Step 1: Create the sink table for the dashboard
 CREATE TABLE order_dashboard_5min_sink (
     window_start      TIMESTAMP(3),
@@ -27,11 +26,12 @@ CREATE TABLE order_dashboard_5min_sink (
 -- Step 2: Insert windowed aggregation results
 INSERT INTO order_dashboard_5min_sink
 SELECT
-    TUMBLE_START(order_time, INTERVAL '5' MINUTE)       AS window_start,
-    TUMBLE_END(order_time, INTERVAL '5' MINUTE)         AS window_end,
+    window_start,
+    window_end,
     COUNT(*)                                             AS order_count,
     SUM(amount)                                          AS total_revenue,
     CAST(AVG(amount) AS DECIMAL(10, 2))                  AS avg_order_value,
     COUNT(DISTINCT customer_id)                          AS distinct_customers
-FROM orders
-GROUP BY TUMBLE(order_time, INTERVAL '5' MINUTE);
+FROM TABLE(
+    TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '5' MINUTE))
+GROUP BY window_start, window_end;

@@ -51,7 +51,7 @@ Consumer lag measures the difference between the latest message offset in a part
 | Metric | Source | Description |
 |---|---|---|
 | Records Lag Max | Consumer client metric | Maximum lag across all partitions for a consumer |
-| Consumer Group Lag | `kafka-consumer-groups.sh --describe` | Per-partition lag for a consumer group |
+| Consumer Group Lag | `kafka-consumer-groups --describe` | Per-partition lag for a consumer group |
 | Commit Rate | Consumer client metric | Rate of offset commits -- dropping rate may indicate consumer issues |
 
 **Common causes of consumer lag:**
@@ -75,7 +75,7 @@ Consumer lag measures the difference between the latest message offset in a part
 | Metric | MBean | Description |
 |---|---|---|
 | Active Controller Count | `kafka.controller:type=KafkaController,name=ActiveControllerCount` | Should be exactly 1 across the cluster |
-| Broker Count | Via ZooKeeper or AdminClient | Total number of live brokers |
+| Active Broker Count | `kafka.controller:type=KafkaController,name=ActiveBrokerCount` | Brokers registered with the KRaft controller |
 | Log Flush Latency | `kafka.log:type=LogFlushStats,name=LogFlushRateAndTimeMs` | Time to flush log segments to disk |
 | JVM Heap Usage | `java.lang:type=Memory` | JVM memory usage -- high pressure causes GC pauses |
 | Network Processor Idle | `kafka.network:type=SocketServer,name=NetworkProcessorAvgIdlePercent` | Below 0.3 (30%) indicates network thread saturation |
@@ -148,16 +148,47 @@ Grafana connects to Prometheus as a data source and renders dashboards with pane
 
 ```bash
 # Start the full stack
-docker-compose up -d
+docker compose up -d
 
 # Access Grafana at http://localhost:3000 (admin/admin)
 # Access Prometheus at http://localhost:9090
 # Access Kafka UI at http://localhost:8080
 
 # Generate load for monitoring
-pip install -r requirements.txt
-python src/monitoring_producer.py
+uv venv --python 3.12 .venv && source .venv/bin/activate   # or: python3.12 -m venv .venv
+uv pip install -r requirements.txt                          # or: pip install -r requirements.txt
+python src/monitoring_producer.py                           # metrics on :8000
+python src/consumer_lag_monitor.py                          # consumer lag metrics on :8001
 ```
+
+Prometheus scrapes the broker (`kafka:7071`) and your two Python scripts (`host.docker.internal:8000` and `:8001`).
+
+### Versions used in this module
+
+| Component | Version | Note |
+|---|---|---|
+| Kafka | Confluent Platform 8.4.1 (Kafka 4.x) | KRaft only. One node is broker and controller. No ZooKeeper. |
+| JMX exporter agent | 1.0.1 | Loaded only into the broker process (see below) |
+| Prometheus / Grafana | 3.16.0 / 13.2.6 | |
+| Kafka UI | kafbat/kafka-ui v1.5.0 | |
+| Python | 3.12 | confluent-kafka 2.16, prometheus-client 0.26 |
+
+**JMX agent trap.** Do not put `-javaagent` in the container-level `KAFKA_OPTS`. Every `docker exec ... kafka-topics` starts a new JVM that would load the agent too, and it fails with `BindException` on port 7071. The compose file sets `KAFKA_OPTS` only inside the broker `command`. For the same reason there is no `KAFKA_JMX_PORT`.
+
+### Metric Names in Kafka 4.x (KRaft)
+
+We checked every metric in the dashboard against the running broker. What changed:
+
+| Old (ZooKeeper era) | Now (KRaft, Kafka 4.x) |
+|---|---|
+| ZooKeeper metrics (`zk_*`, session expirations) | Gone. There is no ZooKeeper. |
+| `kafka.server:type=FetcherLagMetrics,name=ConsumerLag` as "consumer lag" | This is **replica** fetcher lag (follower behind leader). It is empty on one broker. Use `src/consumer_lag_monitor.py` for consumer group lag (`kafka_consumer_group_lag`). |
+| `jvm_gc_collection_count` (custom JMX rule) | The agent exports `jvm_gc_collection_seconds_count` and `_sum` by itself. |
+| (new) `kafka.controller:type=KafkaController,name=ActiveBrokerCount` | `kafka_controller_active_broker_count` |
+| (new) `kafka.server:type=raft-metrics` | `kafka_server_raft_current_epoch`, `kafka_server_raft_high_watermark`, ... |
+| (new) `kafka.server:type=broker-metadata-metrics` | `kafka_server_broker_metadata_last_applied_record_lag_ms` (how far the node is behind the metadata log). Alert when it grows. |
+
+`ActiveControllerCount`, `OfflinePartitionsCount` and the request metrics still work. The dashboard has a "KRaft Metadata" row for the new metrics. Rules are in `config/kafka-jmx-config.yml`.
 
 ---
 
@@ -193,28 +224,58 @@ sequenceDiagram
 - **Truststore**: Contains the CA certificate(s) that the broker/client trusts. Used to verify the other party's identity.
 - **CA (Certificate Authority)**: Signs certificates. Both client and broker trust the same CA.
 
+#### Listeners in KRaft
+
+In KRaft mode a node has up to three kinds of traffic. Each kind has its own listener and its own protocol:
+
+| Traffic | Listener | Set with |
+|---|---|---|
+| Clients to broker | `SSL`, `SASL_SSL`, `SASL_PLAINTEXT` | `listeners`, `advertised.listeners` |
+| Broker to broker | `inter.broker.listener.name` | `listener.security.protocol.map` |
+| Broker to controller, controller to controller | `controller.listener.names` | `listener.security.protocol.map` (the controller listener needs a protocol too) |
+
+The controller listener is **not** secure by default in a KRaft quorum. Anyone who can reach the controller port can talk to the controller. Secure it with SASL or SSL, and keep it on a private network.
+
+`docker-compose.secure.yml` in this module is a tested single-node example. It has four listeners:
+
+| Listener | Address | Protocol | Use |
+|---|---|---|---|
+| `CONTROLLER` | `kafka:29093` | `SASL_PLAINTEXT` (PLAIN) | KRaft controller traffic |
+| `BROKER` | `kafka:29092` | `SSL` (mutual TLS) | Broker to broker |
+| `SSL` | `localhost:9093` | `SSL` (mutual TLS) | Your Python clients |
+| `SASL` | `localhost:9094` | `SASL_PLAINTEXT` (PLAIN, SCRAM-SHA-512) | Your Python clients (demo only) |
+
+```bash
+bash config/ssl-setup.sh                          # make certificates in ./ssl
+docker compose -f docker-compose.secure.yml up -d  # run it alone: stop the monitoring stack first
+```
+
 #### Broker Configuration for SSL
 
 ```properties
-# Listener configuration
-listeners=SSL://0.0.0.0:9093
-advertised.listeners=SSL://broker1:9093
-security.inter.broker.protocol=SSL
+listeners=BROKER://kafka:29092,CONTROLLER://kafka:29093,SSL://0.0.0.0:9093
+advertised.listeners=BROKER://kafka:29092,SSL://localhost:9093
+listener.security.protocol.map=CONTROLLER:SASL_PLAINTEXT,BROKER:SSL,SSL:SSL
+inter.broker.listener.name=BROKER
 
-# SSL configuration
-ssl.keystore.location=/var/kafka/ssl/kafka.broker.keystore.jks
-ssl.keystore.password=broker-ks-password
-ssl.key.password=broker-key-password
-ssl.truststore.location=/var/kafka/ssl/kafka.broker.truststore.jks
-ssl.truststore.password=broker-ts-password
+# SSL configuration (PKCS12 stores, made by config/ssl-setup.sh)
+# In the Confluent Docker image, use KAFKA_SSL_KEYSTORE_FILENAME and KAFKA_SSL_KEYSTORE_CREDENTIALS
+# (a file with the password) instead of the location and password settings.
+ssl.keystore.location=/etc/kafka/secrets/kafka.broker.keystore.p12
+ssl.keystore.type=PKCS12
+ssl.keystore.password=changeit-demo
+ssl.truststore.location=/etc/kafka/secrets/kafka.broker.truststore.p12
+ssl.truststore.type=PKCS12
+ssl.truststore.password=changeit-demo
 
 # Require client authentication (mutual TLS)
 ssl.client.auth=required
 
-# Protocol and cipher configuration
-ssl.enabled.protocols=TLSv1.3,TLSv1.2
-ssl.protocol=TLSv1.3
+# Use the certificate CN as the user name: "CN=kafka-client,OU=..." becomes User:kafka-client
+ssl.principal.mapping.rules=RULE:^CN=([^,]+).*$/$1/,DEFAULT
 ```
+
+The broker certificate must list the host names that clients use in its Subject Alternative Name (SAN). Clients check this name (`ssl.endpoint.identification.algorithm=https` is the default). `ssl-setup.sh` adds `kafka` and `localhost`.
 
 #### Client Configuration for SSL
 
@@ -222,16 +283,32 @@ ssl.protocol=TLSv1.3
 from confluent_kafka import Producer
 
 producer = Producer({
-    'bootstrap.servers': 'broker1:9093',
+    'bootstrap.servers': 'localhost:9093',
     'security.protocol': 'SSL',
-    'ssl.ca.location': '/path/to/ca-cert.pem',
-    'ssl.certificate.location': '/path/to/client-cert.pem',
-    'ssl.key.location': '/path/to/client-key.pem',
-    'ssl.key.password': 'client-key-password',
+    'ssl.ca.location': './ssl/ca-cert.pem',
+    'ssl.certificate.location': './ssl/client-cert.pem',
+    'ssl.key.location': './ssl/client-key.pem',
 })
 ```
 
-The `config/ssl-setup.sh` script in this module generates all necessary certificates for demonstration purposes.
+The `config/ssl-setup.sh` script in this module generates all necessary certificates for demonstration purposes. It needs `openssl` and `keytool` (from any JDK).
+
+#### Controller Listener Security
+
+The controller listener has its own SASL mechanism. The same JAAS entry works for both sides: the controller checks the `user_*` lines, and the broker uses `username` and `password` when it connects to the controller.
+
+```properties
+controller.listener.names=CONTROLLER
+listener.security.protocol.map=CONTROLLER:SASL_PLAINTEXT,...
+sasl.mechanism.controller.protocol=PLAIN
+listener.name.controller.sasl.enabled.mechanisms=PLAIN
+listener.name.controller.plain.sasl.jaas.config=\
+  org.apache.kafka.common.security.plain.PlainLoginModule required \
+  username="controller" password="controller-secret" \
+  user_controller="controller-secret";
+```
+
+Use `SSL` instead of `SASL_PLAINTEXT` in production, so that the password is encrypted.
 
 ### SASL Authentication
 
@@ -249,35 +326,37 @@ SASL (Simple Authentication and Security Layer) provides username/password or ti
 #### SASL/PLAIN Broker Configuration
 
 ```properties
-listeners=SASL_PLAINTEXT://0.0.0.0:9092
-security.inter.broker.protocol=SASL_PLAINTEXT
-sasl.mechanism.inter.broker.protocol=PLAIN
-sasl.enabled.mechanisms=PLAIN
+listeners=SASL://0.0.0.0:9094
+listener.security.protocol.map=SASL:SASL_PLAINTEXT,...
+listener.name.sasl.sasl.enabled.mechanisms=PLAIN,SCRAM-SHA-512
 
-# JAAS configuration
-listener.name.sasl_plaintext.plain.sasl.jaas.config=\
+# JAAS configuration (the listener name "sasl" is part of the key)
+listener.name.sasl.plain.sasl.jaas.config=\
   org.apache.kafka.common.security.plain.PlainLoginModule required \
-  username="admin" \
-  password="admin-secret" \
   user_admin="admin-secret" \
   user_producer="producer-secret" \
   user_consumer="consumer-secret";
 ```
 
+In the Confluent image you set these as environment variables: `KAFKA_LISTENER_NAME_SASL_PLAIN_SASL_JAAS_CONFIG`. In an env var name, `_` becomes `.`, `__` becomes `_` and `___` becomes `-`. So `SCRAM___SHA___512` becomes `scram-sha-512`.
+
 #### SASL/SCRAM Broker Configuration
 
 ```properties
-listeners=SASL_SSL://0.0.0.0:9094
-security.inter.broker.protocol=SASL_SSL
-sasl.mechanism.inter.broker.protocol=SCRAM-SHA-512
-sasl.enabled.mechanisms=SCRAM-SHA-512
-
-# SCRAM credentials are stored in ZooKeeper
-# Create credentials with:
-# kafka-configs.sh --zookeeper localhost:2181 --alter \
-#   --add-config 'SCRAM-SHA-512=[password=producer-secret]' \
-#   --entity-type users --entity-name producer
+listener.name.sasl.sasl.enabled.mechanisms=PLAIN,SCRAM-SHA-512
+listener.name.sasl.scram-sha-512.sasl.jaas.config=\
+  org.apache.kafka.common.security.scram.ScramLoginModule required;
 ```
+
+In KRaft, SCRAM credentials are stored in the **cluster metadata log**, not in ZooKeeper. Create them through the broker (`--bootstrap-server`), with an authenticated admin client:
+
+```bash
+kafka-configs --bootstrap-server localhost:9094 --command-config /etc/kafka/admin-sasl.properties \
+  --alter --add-config 'SCRAM-SHA-512=[password=scram-secret]' \
+  --entity-type users --entity-name producer
+```
+
+For the first start of a new cluster you can also add users when you format the storage: `kafka-storage format --add-scram 'SCRAM-SHA-512=[name=admin,password=admin-secret]' ...`.
 
 #### Kerberos Overview
 
@@ -303,26 +382,29 @@ listener.name.sasl_ssl.gssapi.sasl.jaas.config=\
 
 ### ACLs (Authorization)
 
-After authentication, ACLs control what authenticated users can do. Kafka's built-in `AclAuthorizer` manages permissions.
+After authentication, ACLs control what authenticated users can do. In KRaft mode the authorizer is `StandardAuthorizer`. It stores ACLs in the cluster metadata. The old `AclAuthorizer` needs ZooKeeper and is removed in Kafka 4.0.
+
+```properties
+authorizer.class.name=org.apache.kafka.metadata.authorizer.StandardAuthorizer
+# Deny access when no ACL matches
+allow.everyone.if.no.acl.found=false
+# The broker (inter-broker TLS user) and the controller MUST be super users,
+# or the cluster cannot talk to itself.
+super.users=User:kafka;User:controller;User:admin
+```
 
 ```bash
-# Enable ACLs on the broker
-authorizer.class.name=kafka.security.authorizer.AclAuthorizer
-super.users=User:admin
+# Run inside the broker container as the admin user (the CLI tools have no .sh suffix in the Confluent image)
+A="--bootstrap-server localhost:9094 --command-config /etc/kafka/admin-sasl.properties"
 
-# Grant produce permission to user "producer" on topic "orders"
-kafka-acls.sh --bootstrap-server localhost:9092 \
-  --add --allow-principal User:producer \
-  --operation Write --topic orders
+# Grant produce permission to user "producer" on topic "orders" (--producer = Write + Describe + Create)
+kafka-acls $A --add --allow-principal User:producer --producer --topic orders
 
 # Grant consume permission to user "consumer" on topic "orders" with group "order-processors"
-kafka-acls.sh --bootstrap-server localhost:9092 \
-  --add --allow-principal User:consumer \
-  --operation Read --topic orders \
-  --group order-processors
+kafka-acls $A --add --allow-principal User:consumer --consumer --topic orders --group order-processors
 
 # List all ACLs
-kafka-acls.sh --bootstrap-server localhost:9092 --list
+kafka-acls $A --list
 
 # Common ACL operations
 # Read    -- consume from topic
@@ -555,7 +637,7 @@ Amazon MSK is a fully managed Apache Kafka service.
 
 **Key features:**
 - Runs open-source Apache Kafka (not a proprietary API)
-- Manages brokers, ZooKeeper (or KRaft), patching, and monitoring
+- Manages brokers and controllers (KRaft), patching, and monitoring
 - Integrates with AWS IAM, VPC, CloudWatch, and AWS Glue Schema Registry
 - MSK Serverless: auto-scaling, pay-per-use (no broker management)
 - MSK Connect: managed Kafka Connect with auto-scaling
@@ -754,11 +836,11 @@ Consumer group offsets can be exported and restored:
 
 ```bash
 # Export consumer group offsets
-kafka-consumer-groups.sh --bootstrap-server kafka:9092 \
+kafka-consumer-groups --bootstrap-server kafka:9092 \
   --group my-app --describe --export > offsets.csv
 
 # Reset consumer group offsets on DR cluster
-kafka-consumer-groups.sh --bootstrap-server kafka-dr:9092 \
+kafka-consumer-groups --bootstrap-server kafka-dr:9092 \
   --group my-app --reset-offsets --from-file offsets.csv --execute
 ```
 
@@ -768,10 +850,10 @@ Back up all topic configurations and ACLs:
 
 ```bash
 # Export topic configurations
-kafka-topics.sh --bootstrap-server kafka:9092 --describe > topics-backup.txt
+kafka-topics --bootstrap-server kafka:9092 --describe > topics-backup.txt
 
 # Export ACLs
-kafka-acls.sh --bootstrap-server kafka:9092 --list > acls-backup.txt
+kafka-acls --bootstrap-server kafka:9092 --list > acls-backup.txt
 ```
 
 ### Failover Procedures

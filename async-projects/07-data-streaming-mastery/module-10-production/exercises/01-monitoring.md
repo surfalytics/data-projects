@@ -8,7 +8,7 @@
 
 1. Start the monitoring stack using Docker Compose:
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 2. Wait for all services to be healthy, then create the monitoring topic:
@@ -79,7 +79,7 @@
 - `kafka_network_produce_total_time_ms_p99` increased from 5ms to 2500ms
 - `kafka_request_handler_avg_idle_percent` dropped from 0.85 to 0.10
 - `jvm_heap_memory_used_bytes / jvm_heap_memory_max_bytes` is at 0.95
-- `jvm_gc_collection_count` rate increased 10x
+- `jvm_gc_collection_seconds_count` rate increased 10x
 - One broker's `kafka_server_messages_in_per_sec_aggregate` dropped to 0
 
 **Tasks:**

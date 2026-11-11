@@ -42,7 +42,7 @@ kafka_network_produce_total_time_ms_p99
 # When this alert fires, an on-call engineer should:
 # 1. Check if the consumer application is running (it may have crashed or been scaled to 0)
 # 2. Check consumer application logs for errors (serialization failures, downstream timeouts)
-# 3. Check if the consumer group is stuck in a rebalance (kafka-consumer-groups.sh --describe)
+# 3. Check if the consumer group is stuck in a rebalance (kafka-consumer-groups --describe)
 # 4. Check if the production rate spiked (look at kafka_server_messages_in_per_sec)
 # 5. If the consumer is running but slow, consider scaling out (add more consumers)
 # 6. If the consumer crashed, restart it and monitor lag recovery
@@ -90,7 +90,7 @@ groups:
 
 1. **`jvm_heap_memory_used_bytes / jvm_heap_memory_max_bytes` at 0.95** -- The JVM heap is nearly full. This is the primary indicator. When heap usage is this high, the JVM spends most of its time in garbage collection rather than processing requests.
 
-2. **`jvm_gc_collection_count` rate increased 10x** -- Confirms the GC hypothesis. The JVM is running GC constantly but cannot free enough memory. This is a "GC death spiral."
+2. **`jvm_gc_collection_seconds_count` rate increased 10x** -- Confirms the GC hypothesis. The JVM is running GC constantly but cannot free enough memory. This is a "GC death spiral."
 
 3. **`kafka_request_handler_avg_idle_percent` dropped from 0.85 to 0.10** -- The I/O threads are nearly 100% busy. But they are not busy processing real requests -- they are stalled waiting for GC pauses to complete. During a GC pause, the entire JVM freezes.
 

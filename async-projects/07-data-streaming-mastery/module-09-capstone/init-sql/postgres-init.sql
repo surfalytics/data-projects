@@ -3,11 +3,11 @@
 -- These tables receive aggregated and enriched data from
 -- ksqlDB via the JDBC Sink Connector or Python consumer.
 -- =============================================================
-
 -- ----- Enriched Orders -----
 -- Each row represents an order joined with customer information.
 CREATE TABLE IF NOT EXISTS orders_enriched (
     order_id INT PRIMARY KEY,
+    customer_id INT,
     customer_name VARCHAR(255),
     customer_email VARCHAR(255),
     status VARCHAR(50),

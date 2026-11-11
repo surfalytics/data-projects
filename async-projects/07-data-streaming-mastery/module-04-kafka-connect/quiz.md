@@ -16,7 +16,7 @@ D) To monitor Kafka cluster health
 ### Question 2: In distributed mode, where does Kafka Connect store connector configurations?
 
 A) In a local file on each worker node
-B) In ZooKeeper
+B) In the Schema Registry
 C) In internal Kafka topics
 D) In an external database
 

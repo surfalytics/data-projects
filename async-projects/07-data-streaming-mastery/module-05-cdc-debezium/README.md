@@ -99,7 +99,7 @@ MySQL's **binary log (binlog)** is a sequential record of every data modificatio
 | Log size | Larger (full row data) | Smaller (just the SQL text) |
 | CDC compatible | Yes -- Debezium requires this | No -- cannot reliably extract row-level changes |
 
-**Debezium requires `binlog_format = ROW`**. The `debezium/example-mysql` Docker image comes pre-configured with this setting.
+**Debezium requires `binlog_format = ROW`**. MySQL 8.4 uses `ROW` by default and has the binlog on. `docker-compose.yml` sets `--binlog-format=ROW --binlog-row-image=FULL` to make it clear.
 
 ### Key MySQL Configuration for CDC
 
@@ -228,7 +228,7 @@ The value wraps the change in an **envelope** with four key fields:
       "updated_at": "2024-03-20T14:22:00Z"
     },
     "source": {
-      "version": "2.4.0.Final",
+      "version": "3.7.1.Final",
       "connector": "mysql",
       "name": "ecommerce",
       "ts_ms": 1710943320000,
@@ -407,8 +407,8 @@ sequenceDiagram
 | `initial_only` | Take a snapshot and then stop (no streaming) |
 | `when_needed` | Snapshot if offsets are missing or binlog position is unavailable |
 | `never` | Skip snapshot entirely; start streaming from current binlog position |
-| `schema_only` | Capture table schemas but not the data; then stream |
-| `schema_only_recovery` | Re-read schemas without re-snapshotting data; for recovery after schema history loss |
+| `no_data` (was `schema_only`) | Capture table schemas but not the data; then stream |
+| `recovery` (was `schema_only_recovery`) | Re-read schemas without re-snapshotting data; for recovery after schema history loss |
 
 ---
 
@@ -499,7 +499,7 @@ graph TD
 ### Prerequisites
 
 - Docker Desktop running with at least 8 GB RAM allocated
-- Python 3.9+ with a virtual environment
+- Python 3.12 with a virtual environment (`uv venv --python 3.12`)
 
 ### Quick Start
 
@@ -508,9 +508,9 @@ graph TD
 cd module-05-cdc-debezium
 
 # 2. Create and activate virtual environment
-python3 -m venv .venv
+uv venv --python 3.12
 source .venv/bin/activate
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 
 # 3. Start the infrastructure
 docker compose up -d
@@ -560,10 +560,36 @@ Check your solutions against `solutions/`.
 
 | Item | Version | Note |
 |------|---------|------|
-| Debezium | 2.4 (`debezium/connect:2.4`, `debezium/example-mysql:2.4`) | Config names in this module are for 2.4. |
-| Confluent Platform | 7.5.0 (with ZooKeeper) | Kafka 4.0 removed ZooKeeper. This course still uses it. |
+| Debezium | 3.7.1.Final (`quay.io/debezium/connect:3.7.1.Final`) | The Docker Hub copies of the Debezium images are old. Use `quay.io`. It runs Kafka Connect 4.3.1. |
+| Confluent Platform | 8.4.1 (KRaft, no ZooKeeper) | Kafka, Schema Registry and Kafka UI (`kafbat/kafka-ui:v1.5.0`). |
+| MySQL | 8.4 (`mysql:8.4`, LTS) | Not the Debezium example image. That image ships with a ready database. It ignores `MYSQL_ROOT_PASSWORD` and our `init-sql` script. The 3.7.1 example image is MySQL 8.2. |
+| Converter | `JsonConverter` with schemas enabled | The Debezium Connect image sets this in `docker-compose.yml` (`KEY_CONVERTER`, `VALUE_CONVERTER`, `*_SCHEMAS_ENABLE=true`). The connector JSON sets it again. Every message has `schema` and `payload`, which is what `src/` and the solutions expect. |
 
-Debezium 3.x renamed some snapshot modes ([docs](https://debezium.io/documentation/reference/stable/connectors/mysql.html)): `schema_only` is now `no_data`, and `schema_only_recovery` is now `recovery`. The old names still work in 2.4, which this module uses.
+What changed in Debezium 3.x and MySQL 8.4 ([Debezium MySQL docs](https://debezium.io/documentation/reference/stable/connectors/mysql.html)):
+
+- `snapshot.mode`: `schema_only` is now `no_data`. `schema_only_recovery` is now `recovery`. The old names are deprecated.
+- `topic.prefix` replaces `database.server.name`. `schema.history.internal.*` replaces `database.history.*`. This module already uses the new names.
+- Do not set an empty `column.include.list`. We removed it from the connector JSON.
+- MySQL 8.4 removed `SHOW MASTER STATUS`. Use `SHOW BINARY LOG STATUS`. It also disables `mysql_native_password` by default. MySQL 8.4 users use `caching_sha2_password`. The connector worked with it in our test.
+
+### Signals (optional)
+
+Signals let you control a running connector, for example to start an incremental snapshot. Create a signal table, then set `signal.data.collection` and `signal.enabled.channels` (`source` reads the table):
+
+```json
+{
+  "signal.data.collection": "ecommerce.debezium_signal",
+  "signal.enabled.channels": "source"
+}
+```
+
+```sql
+CREATE TABLE ecommerce.debezium_signal (id VARCHAR(42) PRIMARY KEY, type VARCHAR(32) NOT NULL, data VARCHAR(2048) NULL);
+INSERT INTO ecommerce.debezium_signal VALUES ('s1', 'execute-snapshot',
+  '{"data-collections": ["ecommerce.products"], "type": "incremental"}');
+```
+
+Add the signal table to `table.include.list`. In our test the connector started its `SignalProcessor` with this config.
 
 ---
 

@@ -8,38 +8,84 @@
 
 | Part | Version | Note |
 |---|---|---|
-| Flink cluster | `flink:1.17-scala_2.12-java11` | Set in `docker-compose.yml` |
-| PyFlink | `apache-flink==1.17.2` | Must match the cluster (1.17.x) |
-| Python for PyFlink | **3.8, 3.10** (3.7 to 3.10 allowed) | PyFlink 1.17 has no wheels for Python 3.11 or newer. [Docs](https://nightlies.apache.org/flink/flink-docs-release-1.17/docs/dev/python/installation/) |
-| Connector JARs | Kafka 1.17.2, JDBC 3.1.1-1.17, MySQL CDC 2.4.2 | Downloaded by the `sql-client` container |
+| Flink cluster | `flink:2.2.1-scala_2.12-java17` | Built in `Dockerfile`, used by `docker-compose.yml`. Java 17. |
+| PyFlink | `apache-flink>=2.2.1,<2.3` | Must match the cluster (2.2.x). |
+| Python for PyFlink | **3.12** (3.9 to 3.12 allowed) | [PyPI](https://pypi.org/project/apache-flink/) |
+| Java on your laptop | 11 or 17 | PyFlink starts a local Flink JVM. Java 8 does not work. |
+| Kafka connector | `flink-sql-connector-kafka` `5.0.0-2.2` | [Maven Central](https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka/5.0.0-2.2/) |
+| MySQL CDC connector | `flink-sql-connector-mysql-cdc` `3.7.0-2.2` | Group `org.apache.flink` (the old `com.ververica` 2.x line is gone). [Maven Central](https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-mysql-cdc/3.7.0-2.2/) |
+| Kafka | `confluentinc/cp-kafka:8.4.1`, KRaft mode | No ZooKeeper. |
+| MySQL | `quay.io/debezium/example-mysql:3.7.1.Final` | Binlog is on. The image runs MySQL 8.2. |
+| MySQL JDBC driver | `mysql-connector-j` `9.7.0` | The CDC connector does not include it. The `Dockerfile` adds it. |
 
-- Use a separate venv with Python 3.10 for this module: `python3.10 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`.
-- On Python 3.11+, `pip install apache-flink==1.17.2` fails or builds from source. Do not use it. Newer PyFlink (2.x) supports newer Python, but it needs a newer Flink cluster.
-- The `jobmanager` image has no Python. Run the PyFlink scripts on your laptop (local mini cluster), not with `flink run -py` in the container.
+Flink 2.3 exists, but it has no Kafka or CDC connector build yet. So this module stays on 2.2.
+
+### What changed from Flink 1.x to 2.x
+
+| Area | Flink 1.17 | Flink 2.x |
+|---|---|---|
+| DataSet API | Deprecated | **Removed.** Use DataStream (batch mode) or Table API / SQL. |
+| Config file | `flink-conf.yaml` | **`config.yaml`** only. Standard YAML. `flink-conf.yaml` is not read. |
+| Config keys | `state.backend: hashmap`, `state.checkpoints.dir` | `state.backend.type: hashmap`, `execution.checkpointing.dir` |
+| Window SQL | `GROUP BY TUMBLE(...)` and `TUMBLE_START` | Window table-valued functions (see [Windows](#windows)) |
+| `SinkFunction` / `add_sink` | Deprecated | **Removed.** Use `sink_to` with the new Sink API. |
+| Java | 8 or 11 | Java 8 removed. 11 is the minimum. 17 is the default. |
+| Kafka connector | `flink-sql-connector-kafka-1.17.2` | `flink-sql-connector-kafka-5.0.0-2.2` (own version line) |
+| Flink CDC | `com.ververica` 2.4.x | `org.apache.flink` 3.x |
+
+Sources: [Flink 2.0 release notes](https://nightlies.apache.org/flink/flink-docs-release-2.2/release-notes/flink-2.0/), [Flink 2.2 docs](https://nightlies.apache.org/flink/flink-docs-release-2.2/).
 
 ### Run the module
 
 ```bash
-./src/setup_flink.sh                 # start stack, create topics, create Kafka tables
+cd module-08-flink
+docker compose up -d --build         # Kafka, Flink, MySQL, Kafka UI (first build downloads the connector JARs)
+uv venv --python 3.12 && source .venv/bin/activate
+uv pip install -r requirements.txt   # see the Apple Silicon note below
 python src/seed_data.py              # keep it running (Kafka + MySQL data)
-docker exec -it flink-sql-client /opt/flink/bin/sql-client.sh   # SQL exercises
+docker compose run --rm sql-client   # opens the Flink SQL client
 ```
 
-`seed_data.py` replaces the sample `customers`, `products` and `orders` tables in the MySQL `inventory` database with the module schema.
+- Flink UI: http://localhost:8081. Kafka UI: http://localhost:8080.
+- The `sql-client` service is in the `client` profile. `docker compose up` does not start it. `docker compose run` does.
+- Or use `./src/setup_flink.sh`. It does the same start steps and creates the topics.
+- In the SQL client, run the files from `sql/` with `SOURCE '/opt/flink/sql-scripts/01-create-kafka-tables.sql';`.
+- MySQL users: `debezium` / `dbz` is the CDC user (binlog rights, read only on tables). `mysqluser` / `mysqlpw` can change the `inventory` tables. `seed_data.py` uses it. `root` only works inside the MySQL container.
+- `seed_data.py` replaces the sample `customers`, `products` and `orders` tables in the MySQL `inventory` database with the module schema.
 
-To run a PyFlink script on your laptop, give it the connector JARs and local addresses:
+**Apple Silicon note:** `apache-flink` 2.2 needs `apache-beam<=2.61.0`. That version has no macOS arm64 wheel for Python 3.12, so pip builds it from source. The build fails in an isolated environment. This works:
 
 ```bash
-mkdir -p jars && cd jars
-curl -fLO https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka/1.17.2/flink-sql-connector-kafka-1.17.2.jar
-curl -fLO https://repo1.maven.org/maven2/com/ververica/flink-sql-connector-mysql-cdc/2.4.2/flink-sql-connector-mysql-cdc-2.4.2.jar
-cd ..
-export FLINK_JARS="file://$PWD/jars/flink-sql-connector-kafka-1.17.2.jar;file://$PWD/jars/flink-sql-connector-mysql-cdc-2.4.2.jar"
-export KAFKA_BOOTSTRAP_SERVERS=localhost:9092 MYSQL_HOST=localhost
-python src/pyflink_wordcount.py
+uv pip install "setuptools<70" wheel "cython>=3.0,<3.1" numpy grpcio-tools mypy-protobuf
+uv pip install --no-build-isolation -r requirements.txt
 ```
 
-The files: `sql/01..05-*.sql` (SQL Client scripts), `src/pyflink_*.py` (PyFlink jobs), `src/seed_data.py` (data generator), `src/setup_flink.sh` (start and stop; `--down` stops it).
+On Linux and Intel macOS, a plain `uv pip install -r requirements.txt` works.
+
+### Run PyFlink on your laptop
+
+The PyFlink scripts run in a local mini cluster on your laptop. They need Java 17, the connector JARs, and local addresses:
+
+```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)   # macOS. Or any Java 11/17.
+mkdir -p jars
+M=https://repo1.maven.org/maven2/org/apache/flink
+curl -fL -o jars/flink-sql-connector-kafka-5.0.0-2.2.jar $M/flink-sql-connector-kafka/5.0.0-2.2/flink-sql-connector-kafka-5.0.0-2.2.jar
+curl -fL -o jars/flink-sql-connector-mysql-cdc-3.7.0-2.2.jar $M/flink-sql-connector-mysql-cdc/3.7.0-2.2/flink-sql-connector-mysql-cdc-3.7.0-2.2.jar
+# The CDC connector does not include the MySQL JDBC driver. Download it too.
+curl -fL -o jars/mysql-connector-j-9.7.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.7.0/mysql-connector-j-9.7.0.jar
+export FLINK_JARS="file://$PWD/jars/flink-sql-connector-kafka-5.0.0-2.2.jar;file://$PWD/jars/flink-sql-connector-mysql-cdc-3.7.0-2.2.jar;file://$PWD/jars/mysql-connector-j-9.7.0.jar"
+export KAFKA_BOOTSTRAP_SERVERS=localhost:9092 MYSQL_HOST=localhost
+python src/pyflink_windowed_aggregation.py
+```
+
+Notes:
+- After `TableEnvironment.create`, PyFlink lowers the Python log level, so only the first `INFO` line of a script shows. The job still runs. Check the Kafka topics or the stdout of the print sink.
+- Session windows (`02-aggregations.sql`, query 4) only emit a row after a customer is quiet for 5 minutes. With the seed data, wait 5 minutes or stop the seed script.
+- Hourly windows (CDC exercises) only emit when the hour ends and the watermark passes it.
+- The seed data writes ISO-8601 timestamps. The Kafka tables set `'json.timestamp-format.standard' = 'ISO-8601'`. If you forget it, `json.ignore-parse-errors` turns `order_time` into NULL and no window fires.
+
+The files: `sql/01..05-*.sql` (SQL client scripts), `src/pyflink_*.py` (PyFlink jobs), `src/seed_data.py` (data generator), `src/setup_flink.sh` (start and stop; `--down` stops it).
 
 ## Overview
 
@@ -256,7 +302,7 @@ Window Operators:
 
 Sink Operators:
   stream.sink_to(kafka_sink)       -- Write to Kafka
-  stream.add_sink(jdbc_sink)       -- Write to database
+  stream.sink_to(jdbc_sink)        -- Write to database (Sink V2; add_sink was removed in 2.0)
   stream.print()                   -- Print to stdout
 ```
 
@@ -301,16 +347,18 @@ CREATE TABLE orders (
 
 ### Querying Streams
 
-> **Note:** `TUMBLE(...)` / `HOP(...)` / `SESSION(...)` in `GROUP BY` are the older "group window" syntax. They work in Flink 1.17 and are used in this module. Newer Flink docs prefer window table-valued functions: `FROM TABLE(TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE))`.
+> **Note:** This module uses **window table-valued functions** (window TVFs): `FROM TABLE(TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE))`. The function adds `window_start`, `window_end` and `window_time` columns. You `GROUP BY` them. The old `GROUP BY TUMBLE(...)` syntax with `TUMBLE_START` is not used here (see the Windows section).
 
 ```sql
 -- Continuous query: orders per minute
 SELECT
-    TUMBLE_START(order_time, INTERVAL '1' MINUTE) AS window_start,
+    window_start,
+    window_end,
     COUNT(*) AS order_count,
     SUM(amount) AS total_revenue
-FROM orders
-GROUP BY TUMBLE(order_time, INTERVAL '1' MINUTE);
+FROM TABLE(
+    TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE))
+GROUP BY window_start, window_end;
 ```
 
 ### Flink SQL Connectors
@@ -438,12 +486,12 @@ on ALL input channels, it snapshots its state.
 ### Configuration
 
 ```yaml
-# In flink-conf.yaml or via API
-execution.checkpointing.interval: 60000          # Every 60 seconds
+# In config.yaml (Flink 2.x), or via API. The key names below are the 2.x names.
+execution.checkpointing.interval: 60s            # Every 60 seconds
 execution.checkpointing.mode: EXACTLY_ONCE        # or AT_LEAST_ONCE
-execution.checkpointing.timeout: 600000           # 10 minute timeout
-execution.checkpointing.min-pause: 500            # Min pause between checkpoints
-state.checkpoints.num-retained: 3                 # Keep last 3 checkpoints
+execution.checkpointing.timeout: 10min           # 10 minute timeout
+execution.checkpointing.min-pause: 500ms        # Min pause between checkpoints
+execution.checkpointing.num-retained: 3         # Keep last 3 checkpoints
 execution.checkpointing.unaligned.enabled: true   # Unaligned checkpoints
 ```
 
@@ -561,6 +609,10 @@ watermark_strategy = WatermarkStrategy \
 
 Windows group elements of a stream into finite buckets for aggregation. Flink supports several window types.
 
+> **Syntax in Flink 2.2:** Use window table-valued functions (`TUMBLE`, `HOP`, `CUMULATE`, `SESSION` inside `FROM TABLE(...)`). They give you `window_start`, `window_end` and `window_time`. They also work for joins and Top-N per window. The old `GROUP BY TUMBLE(...)` / `TUMBLE_START(...)` syntax is **not removed** in 2.2. We checked: it still plans. But new work should use the TVF form. This module uses TVFs everywhere. ([Window TVF docs](https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/window-tvf/))
+> Two TVF rules: `HOP(TABLE t, DESCRIPTOR(col), SLIDE, SIZE)` takes the slide first. `SESSION(TABLE t PARTITION BY key, DESCRIPTOR(col), GAP)` needs `PARTITION BY` for per-key sessions.
+> A regular join drops the time attribute. So window first, then join (see `sql/04-joins-and-enrichment.sql`).
+
 ### Window Types
 
 ```mermaid
@@ -594,12 +646,10 @@ Non-overlapping, fixed-size windows. Every element belongs to exactly one window
 
 ```sql
 -- Flink SQL: tumbling window
-SELECT
-    TUMBLE_START(order_time, INTERVAL '1' MINUTE) AS window_start,
-    TUMBLE_END(order_time, INTERVAL '1' MINUTE) AS window_end,
-    COUNT(*) AS order_count
-FROM orders
-GROUP BY TUMBLE(order_time, INTERVAL '1' MINUTE);
+SELECT window_start, window_end, COUNT(*) AS order_count
+FROM TABLE(
+    TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE))
+GROUP BY window_start, window_end;
 ```
 
 ### Sliding Windows
@@ -608,12 +658,11 @@ Overlapping windows. An element can belong to multiple windows.
 
 ```sql
 -- Flink SQL: sliding (hopping) window -- 10-minute window, sliding every 1 minute
-SELECT
-    HOP_START(order_time, INTERVAL '1' MINUTE, INTERVAL '10' MINUTE) AS window_start,
-    HOP_END(order_time, INTERVAL '1' MINUTE, INTERVAL '10' MINUTE) AS window_end,
-    COUNT(*) AS order_count
-FROM orders
-GROUP BY HOP(order_time, INTERVAL '1' MINUTE, INTERVAL '10' MINUTE);
+-- HOP(TABLE t, DESCRIPTOR(time_col), SLIDE, SIZE): the slide comes first.
+SELECT window_start, window_end, COUNT(*) AS order_count
+FROM TABLE(
+    HOP(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE, INTERVAL '10' MINUTE))
+GROUP BY window_start, window_end;
 ```
 
 ### Session Windows
@@ -623,12 +672,13 @@ Dynamic windows that close after a period of inactivity (gap).
 ```sql
 -- Flink SQL: session window with 5-minute gap
 SELECT
-    SESSION_START(order_time, INTERVAL '5' MINUTE) AS session_start,
-    SESSION_END(order_time, INTERVAL '5' MINUTE) AS session_end,
+    window_start AS session_start,
+    window_end AS session_end,
     customer_id,
     COUNT(*) AS event_count
-FROM orders
-GROUP BY SESSION(order_time, INTERVAL '5' MINUTE), customer_id;
+FROM TABLE(
+    SESSION(TABLE orders PARTITION BY customer_id, DESCRIPTOR(order_time), INTERVAL '5' MINUTE))
+GROUP BY window_start, window_end, customer_id;
 ```
 
 ### Global Windows
@@ -698,19 +748,19 @@ Flink operators can maintain **state** -- information that persists across event
 ### Configuration
 
 ```yaml
-# flink-conf.yaml
-state.backend: rocksdb
+# config.yaml (Flink 2.x)
+state.backend.type: rocksdb
 state.backend.rocksdb.localdir: /tmp/flink-rocksdb
-state.backend.incremental: true
-state.checkpoints.dir: s3://my-bucket/flink/checkpoints
-state.savepoints.dir: s3://my-bucket/flink/savepoints
+execution.checkpointing.incremental: true
+execution.checkpointing.dir: s3://my-bucket/flink/checkpoints
+execution.checkpointing.savepoint-dir: s3://my-bucket/flink/savepoints
 ```
 
 ---
 
 ## CDC with Flink
 
-Flink has **native CDC (Change Data Capture) support** through the Flink CDC project (`flink-cdc-connectors`, now an Apache Flink sub-project). This module uses `flink-sql-connector-mysql-cdc` 2.4.2, the `com.ververica` release that works with Flink 1.17. This allows Flink to directly consume database changelogs without needing Kafka Connect or Debezium as a separate service.
+Flink has **native CDC (Change Data Capture) support** through the Flink CDC project (`flink-cdc-connectors`, now an Apache Flink sub-project). This module uses `flink-sql-connector-mysql-cdc` 3.7.0-2.2 (group `org.apache.flink`), built for Flink 2.2. This allows Flink to directly consume database changelogs without needing Kafka Connect or Debezium as a separate service.
 
 ### Flink CDC Architecture
 
@@ -775,8 +825,8 @@ CREATE TABLE mysql_orders (
     'connector' = 'mysql-cdc',
     'hostname' = 'mysql',
     'port' = '3306',
-    'username' = 'root',
-    'password' = 'debezium',
+    'username' = 'debezium',
+    'password' = 'dbz',
     'database-name' = 'inventory',
     'table-name' = 'orders'
 );

@@ -70,6 +70,8 @@ Multiple stream-table joins chain naturally. The output stream contains
 columns from all three sources. The underlying Kafka topic is auto-created
 with the stream name in uppercase.
 
+The SELECT must include a join key column (`o.product_id`). Without it ksqlDB 8.4 fails with `Key missing from projection`.
+
 Creating a materialized view on top of the enriched stream enables pull
 queries -- point-in-time lookups that behave like a traditional database
 query. This pattern (stream -> enrich -> aggregate -> materialize) is the

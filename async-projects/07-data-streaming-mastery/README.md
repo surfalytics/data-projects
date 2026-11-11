@@ -42,7 +42,7 @@ You learn data streaming from Kafka basics to a production-grade real-time pipel
 
 | Tool | Used for | Free option |
 |---|---|---|
-| Apache Kafka | Event streaming backbone | yes |
+| Apache Kafka (KRaft mode, no ZooKeeper) | Event streaming backbone | yes |
 | Confluent Schema Registry | Schema management (Avro, JSON Schema, Protobuf) | yes |
 | Kafka Connect | Source and sink connectors, SMTs | yes |
 | Debezium | Change Data Capture from MySQL | yes |
@@ -52,7 +52,7 @@ You learn data streaming from Kafka basics to a production-grade real-time pipel
 | MySQL, PostgreSQL | Source and analytics databases | yes |
 | Kafka UI | Inspect topics and consumers | yes |
 | Prometheus, Grafana | Metrics and dashboards | yes |
-| Docker, Python 3.10 | Run all services and scripts locally | yes |
+| Docker, Python 3.12 | Run all services and scripts locally | yes |
 
 ## Architecture
 
@@ -126,10 +126,10 @@ Modules 06, 07 and 08 are three ways to process streams. You can do them in any 
 ## Prerequisites
 
 - Docker Desktop v4.20+ with Docker Compose v2.
-- Python 3.10 with `pip` and `venv`. Module 07 (Faust) needs 3.10 or newer. Module 08 (PyFlink 1.17) needs 3.10 or older. Python 3.10 works for every module.
+- Python 3.12 with `venv` (or `uv`). PyFlink 2.x (module 08) supports 3.9 to 3.12. Faust, `fastavro` and `pydantic` need 3.10 or newer. Python 3.12 works for every module.
 - Basic SQL: `SELECT`, `JOIN`, `GROUP BY`, window functions.
 - Command line basics (bash or zsh).
-- 16 GB RAM recommended (8 GB minimum). 20 GB free disk space.
+- 16 GB RAM recommended (8 GB minimum). 20 GB free disk space. The capstone uses about 4.5 GiB for its 9 containers (measured with `docker stats --no-stream`). A single Kafka module uses about 1.5 to 2 GiB.
 - Full install steps and troubleshooting: [SETUP.md](SETUP.md).
 - New to Git, CLI or Docker? Start with [Surfalytics Module 0](https://www.youtube.com/watch?v=LJIiCLu2gr8&list=PLNCDg7zJiXhP5Z_-TXUdorz2n7sjYHHKE&index=1).
 
@@ -141,9 +141,8 @@ git clone <repo-url>  # then open async-projects/07-data-streaming-mastery
 cd 07-data-streaming-mastery
 
 # 2. Create a Python virtual environment
-python3 -m venv .venv
+uv venv --python 3.12 .venv      # or: python3.12 -m venv .venv
 source .venv/bin/activate
-pip install --upgrade pip
 
 # 3. Start Module 01
 cd module-01-fundamentals
@@ -158,11 +157,15 @@ cd module-09-capstone
 
 | Component | Version | Note |
 |---|---|---|
-| Confluent Platform (Kafka, Schema Registry, Connect, ksqlDB) | 7.5.0 | Runs Kafka with **ZooKeeper**. Kafka 4.0 removed ZooKeeper (KRaft only). The course keeps ZooKeeper so that every module uses the same stack. |
-| Debezium | 2.4 (module 05), 2.5.4 plugin (module 09) | Debezium 3.x renamed some options, see module 05 |
-| Flink / PyFlink | 1.17 | PyFlink 1.17 needs Python 3.10 or older |
-| Prometheus / Grafana | 2.47 / 10.1 | |
-| Python | 3.10 | See prerequisites |
+| Confluent Platform (Kafka, Schema Registry, Connect, ksqlDB) | 8.4.1 | Kafka 4.x runs in **KRaft** mode (broker and controller in one node). There is no ZooKeeper. The ksqlDB CLI image is `cp-ksqldb-cli:8.0.9` (no 8.4 tag exists). |
+| Debezium | 3.7.1.Final | Module 05 uses `quay.io/debezium/connect`. Module 09 adds the plugin to `cp-kafka-connect`. |
+| Apache Flink / PyFlink | 2.2.1 | Kafka connector 5.0.0-2.2, MySQL CDC connector 3.7.0-2.2 |
+| MySQL / PostgreSQL | 8.4 LTS / 18 | |
+| Prometheus / Grafana | 3.16.0 / 13.2.6 | JMX exporter agent 1.0.1 |
+| Kafka UI | kafbat/kafka-ui v1.5.0 | |
+| Python | 3.12 | confluent-kafka 2.16, faust-streaming 0.15 |
+
+ksqlDB is in maintenance mode. It still works and the course teaches it. For new stream processing work, look at Flink SQL (module 08).
 
 Each module has its own `exercises/` and `solutions/` folders. Do the exercises first. Then check your work against the solutions.
 
@@ -482,18 +485,17 @@ Module folder: [`module-09-capstone/`](module-09-capstone/)
 **Steps:**
 
 1. Read the [module README](module-09-capstone/README.md).
-2. Free these ports: 2181, 3000, 3306, 5432, 8080, 8081, 8083, 8088, 9090, 9092, 29092. Give Docker 8 GB RAM.
+2. Free these ports: 3000, 3306, 5432, 8080, 8081, 8083, 8088, 9090, 9092. Give Docker 8 GB RAM.
 3. Run the setup:
 
    ```bash
    cd module-09-capstone
-   pip install sqlalchemy pymysql confluent-kafka requests psycopg2-binary
    chmod +x setup.sh teardown.sh
    ./setup.sh
    open http://localhost:3000   # Grafana, login admin / admin
    ```
 
-   The script starts all containers, registers the Debezium source and JDBC sink connectors, submits ksqlDB queries and starts the simulator.
+   The script creates a Python 3.12 `.venv`, starts all containers, registers the Debezium source and the JDBC sink connectors, submits ksqlDB queries and starts the simulator.
 4. Verify the pipeline:
 
    ```bash
@@ -539,7 +541,7 @@ Module folder: [`module-10-production/`](module-10-production/)
    - Grafana: http://localhost:3000
    - Prometheus: http://localhost:9090
    - Kafka UI: http://localhost:8080
-3. Try the scripts in `src/`: `consumer_lag_monitor.py`, `performance_test.py`, `ssl_producer.py`, `sasl_producer.py`. TLS setup is in `config/ssl-setup.sh`.
+3. Try the scripts in `src/`: `consumer_lag_monitor.py`, `performance_test.py`, `ssl_producer.py`, `sasl_producer.py`. TLS setup is in `config/ssl-setup.sh`. The secure KRaft broker (TLS, SASL, ACLs) is in `docker-compose.secure.yml`.
 4. Do the exercises:
    - `exercises/01-monitoring.md`
    - `exercises/02-security.md`

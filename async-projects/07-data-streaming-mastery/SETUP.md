@@ -11,7 +11,7 @@ This document walks you through every dependency you need for the **Data Streami
 | CPU cores | 4 | 8 |
 | OS | macOS 12+, Windows 10/11, Ubuntu 20.04+ | macOS 14+, Ubuntu 22.04+ |
 
-> The capstone module runs about 12 containers at the same time. If you only have 8 GB RAM, close other applications and allocate at least 8 GB to Docker.
+> The capstone module runs 9 containers at the same time. We measured about 4.5 GiB for them with `docker stats --no-stream` while the simulator ran (Kafka 1.7 GiB, Connect 0.6, ksqlDB 0.6, MySQL 0.45, Kafka UI 0.43, Schema Registry 0.3, Grafana 0.3). Other modules use 1 to 2 GiB. If you only have 8 GB RAM, close other applications and allocate at least 6 GB to Docker.
 
 ---
 
@@ -28,7 +28,7 @@ brew install --cask docker
 ```
 
 After installation, open Docker Desktop and go to **Settings > Resources**:
-- Memory: **8 GB** (minimum), **12 GB** recommended
+- Memory: **6 GB** (minimum for the capstone), **8 GB** recommended
 - CPUs: **4** minimum
 - Disk image size: **60 GB**
 
@@ -74,26 +74,35 @@ newgrp docker
 
 ---
 
-## 2. Python 3.10
+## 2. Python 3.12
+
+The course uses **Python 3.12**. PyFlink 2.x (module 08) supports 3.9 to 3.12. Faust, `fastavro` and `pydantic` need 3.10 or newer. Python 3.13 is too new for PyFlink, so use 3.12.
 
 ### macOS
 
 ```bash
-# Homebrew
-brew install python@3.10
+# Option A: uv (recommended). uv downloads Python 3.12 for you.
+brew install uv
 
-# Verify
-python3 --version   # Should print 3.10.x
+# Option B: Homebrew
+brew install python@3.12
+
+# Verify (Option B)
+python3.12 --version   # Should print 3.12.x
 ```
 
 ### Windows
 
-Download the installer from [python.org](https://www.python.org/downloads/). During installation, check **Add Python to PATH**.
+Install uv (`winget install astral-sh.uv`), or download Python 3.12 from [python.org](https://www.python.org/downloads/release/python-3120/). During installation, check **Add Python to PATH**.
 
 ### Linux
 
 ```bash
-sudo apt-get install -y python3 python3-pip python3-venv
+# Option A: uv (recommended)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Option B: apt (Ubuntu 24.04 has Python 3.12)
+sudo apt-get install -y python3.12 python3.12-venv
 ```
 
 ### Virtual Environment
@@ -102,26 +111,31 @@ Create a dedicated virtual environment for the course:
 
 ```bash
 cd 07-data-streaming-mastery
-python3 -m venv .venv
+
+# With uv
+uv venv --python 3.12 .venv
 source .venv/bin/activate    # macOS / Linux
 # .venv\Scripts\activate     # Windows PowerShell
 
-pip install --upgrade pip setuptools wheel
+# Or without uv
+# python3.12 -m venv .venv && source .venv/bin/activate && pip install --upgrade pip
 ```
 
-Install common course dependencies:
+Install common course dependencies (use `uv pip install` or `pip install`):
 
 ```bash
-pip install \
-  confluent-kafka==2.3.0 \
-  fastavro==1.9.3 \
-  requests==2.31.0 \
-  faust-streaming>=0.11.0 \
-  httpx==0.25.2 \
-  psycopg2-binary==2.9.9 \
-  mysql-connector-python==8.2.0 \
-  pydantic==2.5.3
+uv pip install \
+  "confluent-kafka>=2.14" \
+  "fastavro>=1.12" \
+  "requests>=2.32" \
+  "faust-streaming>=0.11" \
+  "httpx>=0.28" \
+  "psycopg2-binary>=2.9.10" \
+  "mysql-connector-python>=9.0" \
+  "pydantic>=2.10"
 ```
+
+Each module has its own `requirements.txt` with the exact packages it needs.
 
 ---
 
@@ -132,20 +146,20 @@ Run each command and confirm the output matches (versions may differ slightly):
 ```bash
 # Docker
 docker --version
-# Docker version 24.x or higher
+# Docker version 27.x or higher
 
 docker compose version
 # Docker Compose version v2.x
 
-# Python
-python3 --version
-# Python 3.10
+# Python (inside the activated .venv)
+python --version
+# Python 3.12.x
 
 # Test Docker can pull and run images
 docker run --rm hello-world
 
-# Test Docker Compose with the course stack (quick smoke test)
-cd 07-data-streaming-mastery
+# Test Docker Compose with a course stack (quick smoke test)
+cd 07-data-streaming-mastery/module-02-kafka-core
 docker compose config --quiet && echo "Compose file is valid"
 ```
 
@@ -210,7 +224,7 @@ Recommended Docker memory settings for this course:
 
 | Modules 01-08 (individual) | Capstone (Module 09) |
 |---|---|
-| 4 GB | 8-12 GB |
+| 4 GB | 6-8 GB |
 
 ### Port Conflicts
 
@@ -218,7 +232,6 @@ The course uses these ports. Make sure nothing else is listening on them:
 
 | Port | Service |
 |------|---------|
-| 2181 | ZooKeeper |
 | 9092 | Kafka broker |
 | 8081 | Schema Registry |
 | 8083 | Kafka Connect REST API |
@@ -233,7 +246,7 @@ Check for conflicts:
 
 ```bash
 # macOS / Linux
-for port in 2181 9092 8081 8083 8088 3306 5432 8080 3000 9090; do
+for port in 9092 8081 8083 8088 3306 5432 8080 3000 9090; do
   lsof -i :$port 2>/dev/null && echo "^^^ Port $port is in use"
 done
 ```
@@ -263,11 +276,8 @@ docker compose up -d
 If producers or consumers fail to connect immediately after `docker compose up`:
 
 ```bash
-# Wait for Kafka to be fully ready
-docker compose exec kafka cub kafka-ready -b kafka:29092 1 60
-
-# Or use a retry loop
-until docker compose exec kafka kafka-topics --bootstrap-server kafka:29092 --list 2>/dev/null; do
+# Wait for Kafka to be ready (KRaft starts in about 10 seconds). The `cub` tool is gone in Confluent 8.
+until docker compose exec kafka kafka-broker-api-versions --bootstrap-server kafka:29092 > /dev/null 2>&1; do
   echo "Waiting for Kafka..."
   sleep 5
 done
@@ -294,7 +304,7 @@ If `pip install` installs packages globally or `import` fails:
 ```bash
 # Make sure you see (.venv) in your shell prompt
 which python3
-# Should show: /path/to/data-streaming-mastery/.venv/bin/python3
+# Should show: /path/to/07-data-streaming-mastery/.venv/bin/python3
 
 # If not, activate it
 source .venv/bin/activate

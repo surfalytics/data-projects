@@ -23,7 +23,7 @@ Usage:
     python consumer_group.py --group-id another-group --consumer-id consumer-3
 
 Prerequisites:
-    - Kafka broker running on localhost:9092 (use docker-compose up)
+    - Kafka broker running on localhost:9092 (use docker compose up)
     - Messages in the 'user-events' topic (run producer_advanced.py first)
     - pip install confluent-kafka
 """

@@ -1,7 +1,6 @@
 -- =============================================================================
 -- Solutions for Exercise 3: Joins
 -- =============================================================================
-
 -- ---------------------------------------------------------------------------
 -- Exercise 3.1: Stream-Table Join -- Enrich Orders
 --
@@ -17,21 +16,19 @@
 -- is updated after an order was enriched, the already-emitted enriched
 -- order does NOT change. Only future orders use the updated customer data.
 -- ---------------------------------------------------------------------------
-
 -- Push query version:
-SELECT
+select
     o.order_id,
     o.customer_id,
-    c.name                      AS customer_name,
-    c.region                    AS customer_region,
+    c.name as customer_name,
+    c.region as customer_region,
     o.product_id,
     o.quantity,
     o.price,
-    (o.price * o.quantity)      AS order_total
-FROM orders_stream o
-LEFT JOIN customers_table c
-    ON o.customer_id = c.customer_id
-EMIT CHANGES;
+    (o.price * o.quantity) as order_total
+from orders_stream o
+left join customers_table c on o.customer_id = c.customer_id emit changes
+;
 
 -- Persistent stream version:
 CREATE STREAM IF NOT EXISTS enriched_orders_ex AS
@@ -50,14 +47,11 @@ LEFT JOIN customers_table c
 EMIT CHANGES;
 
 -- Revenue by region (windowed aggregation on enriched stream):
-SELECT
-    customer_region,
-    COUNT(*)                    AS order_count,
-    SUM(order_total)            AS total_revenue
-FROM enriched_orders_ex
-WINDOW TUMBLING (SIZE 5 MINUTES)
-GROUP BY customer_region
-EMIT CHANGES;
+select customer_region, count(*) as order_count, sum(order_total) as total_revenue
+from enriched_orders_ex
+window tumbling(size 5 minutes)
+group by customer_region emit changes
+;
 
 -- ---------------------------------------------------------------------------
 -- Exercise 3.2: Double Join -- Fully Enriched Orders
@@ -70,11 +64,11 @@ EMIT CHANGES;
 -- The underlying topic is auto-named based on the stream name
 -- (e.g., FULLY_ENRICHED_ORDERS).
 -- ---------------------------------------------------------------------------
-
 -- Persistent stream: fully enriched orders
 CREATE STREAM IF NOT EXISTS fully_enriched_orders AS
 SELECT
     o.order_id                  AS order_id,
+    o.product_id                AS product_id,
     c.name                      AS customer_name,
     c.region                    AS customer_region,
     p.name                      AS product_name,
@@ -90,14 +84,12 @@ LEFT JOIN products_table p
 EMIT CHANGES;
 
 -- Orders by product category (windowed):
-SELECT
-    product_category,
-    COUNT(*)                    AS category_orders,
-    SUM(order_total)            AS category_revenue
-FROM fully_enriched_orders
-WINDOW TUMBLING (SIZE 5 MINUTES)
-GROUP BY product_category
-EMIT CHANGES;
+select
+    product_category, count(*) as category_orders, sum(order_total) as category_revenue
+from fully_enriched_orders
+window tumbling(size 5 minutes)
+group by product_category emit changes
+;
 
 -- Materialized view for pull queries:
 CREATE TABLE IF NOT EXISTS category_order_counts AS

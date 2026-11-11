@@ -1,0 +1,25 @@
+{
+  "name": "postgres-sink-revenue-per-minute",
+  "config": {
+    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+    "tasks.max": "1",
+    "connection.url": "jdbc:postgresql://postgres:5432/analytics?stringtype=unspecified",
+    "connection.user": "postgres",
+    "connection.password": "postgres",
+    "auto.create": "false",
+    "auto.evolve": "false",
+    "insert.mode": "upsert",
+    "pk.mode": "record_value",
+    "quote.sql.identifiers": "never",
+    "key.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081",
+    "batch.size": "100",
+    "errors.tolerance": "none",
+    "errors.log.enable": "true",
+    "errors.log.include.messages": "true",
+    "topics": "REVENUE_PER_MINUTE",
+    "table.name.format": "revenue_per_minute",
+    "pk.fields": "WINDOW_START,WINDOW_END"
+  }
+}

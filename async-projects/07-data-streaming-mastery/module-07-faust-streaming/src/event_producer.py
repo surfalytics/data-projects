@@ -11,7 +11,7 @@ It produces events to the following Kafka topics:
 - products      : Product reference data (for order_enrichment.py table)
 
 Usage:
-    # Make sure Kafka is running (docker-compose up -d), then:
+    # Make sure Kafka is running (docker compose up -d), then:
     python -m src.event_producer
 
     # Or with options:

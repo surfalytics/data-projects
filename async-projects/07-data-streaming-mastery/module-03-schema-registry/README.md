@@ -403,6 +403,24 @@ Subject: events-com.ecommerce.Order
 
 ---
 
+## Data Contracts
+
+A schema says what the fields are. A **data contract** adds more rules around the schema. ([docs](https://docs.confluent.io/platform/current/schema-registry/fundamentals/data-contracts.html))
+
+| Part | What it does |
+|------|--------------|
+| **Tags** | Mark a schema or field, for example `PII` |
+| **Metadata** | Key-value properties, for example owner and contact |
+| **Domain rules** | Check data when writing or reading (for example a field must not be empty) |
+| **Migration rules** | Change data between schema versions (for example rename a field) |
+
+- Works with Avro, Protobuf and JSON Schema.
+- Tags and metadata are part of the schema API (`metadata` in the register request).
+- Rules need Confluent **Enterprise** license. They are not in the Community edition. Rules work from Confluent Platform 7.4 and need a `resource.extension.class` setting.
+- The lab stack is the Community image, so we only talk about contracts here. We do not run rules.
+
+---
+
 ## Hands-On Exercises
 
 ### Prerequisites
@@ -411,8 +429,9 @@ Subject: events-com.ecommerce.Order
 # Start the infrastructure
 docker compose up -d
 
-# Install Python dependencies
-pip install -r requirements.txt
+# Install Python dependencies (Python 3.12)
+uv venv --python 3.12 && source .venv/bin/activate
+uv pip install -r requirements.txt
 
 # Wait for Schema Registry to be ready
 curl -s http://localhost:8081/subjects
@@ -437,9 +456,11 @@ curl -s http://localhost:8081/subjects
 
 ## Versions Used in This Module
 
-- Confluent Platform 7.5.0 (Schema Registry 7.5, with ZooKeeper). This is for the lab only.
-- Default compatibility is `BACKWARD`. It checks only the latest version. Use `BACKWARD_TRANSITIVE` to check all versions.
-- Python: `confluent-kafka[avro]` (Avro support needs `fastavro` and `requests`).
+- Confluent Platform 8.4.1: Schema Registry 8.4.1 on a KRaft Kafka broker. No ZooKeeper. Kafka UI: `kafbat/kafka-ui:v1.5.0`.
+- Schema Registry stores schemas in the `_schemas` topic in Kafka. It needs only a Kafka bootstrap address. ([docs](https://docs.confluent.io/platform/current/schema-registry/fundamentals/index.html))
+- Default compatibility is `BACKWARD`. It checks only the latest version. Use `BACKWARD_TRANSITIVE` to check all versions. ([docs](https://docs.confluent.io/platform/current/schema-registry/fundamentals/schema-evolution.html))
+- Schema types: Avro, Protobuf, JSON Schema. In the REST API the `schemaType` values are `AVRO`, `PROTOBUF`, `JSON`.
+- Python 3.12: `confluent-kafka[avro,json,schemaregistry]` 2.12 or later (Avro support needs `fastavro` and `requests`).
 
 ---
 

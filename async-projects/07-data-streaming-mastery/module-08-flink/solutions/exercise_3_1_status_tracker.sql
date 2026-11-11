@@ -4,7 +4,6 @@
 -- Uses Flink CDC to read MySQL orders and customers, joins them, and publishes
 -- an enriched status feed to a Kafka upsert topic.
 -- =============================================================================
-
 -- Step 1: Create MySQL CDC source for orders
 CREATE TABLE mysql_orders (
     order_id    INT,
@@ -20,8 +19,8 @@ CREATE TABLE mysql_orders (
     'connector' = 'mysql-cdc',
     'hostname' = 'mysql',
     'port' = '3306',
-    'username' = 'root',
-    'password' = 'debezium',
+    'username' = 'debezium',
+    'password' = 'dbz',
     'database-name' = 'inventory',
     'table-name' = 'orders',
     'server-time-zone' = 'UTC'
@@ -42,8 +41,8 @@ CREATE TABLE mysql_customers (
     'connector' = 'mysql-cdc',
     'hostname' = 'mysql',
     'port' = '3306',
-    'username' = 'root',
-    'password' = 'debezium',
+    'username' = 'debezium',
+    'password' = 'dbz',
     'database-name' = 'inventory',
     'table-name' = 'customers',
     'server-time-zone' = 'UTC'

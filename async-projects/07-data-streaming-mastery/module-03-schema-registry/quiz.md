@@ -11,7 +11,7 @@ What is the primary purpose of the Schema Registry in a Kafka ecosystem?
 
 A) To compress messages for smaller storage
 B) To centralize schema management and enforce compatibility rules
-C) To replace Zookeeper for broker coordination
+C) To replace the KRaft controller for broker coordination
 D) To provide a UI for monitoring Kafka topics
 
 ---

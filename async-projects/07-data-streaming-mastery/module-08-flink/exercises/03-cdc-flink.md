@@ -4,7 +4,7 @@
 
 1. Start the Flink stack: `./src/setup_flink.sh`
 2. Seed data: `python src/seed_data.py` (let it run in the background -- it also generates MySQL updates)
-3. Open the Flink SQL Client: `docker exec -it flink-sql-client /opt/flink/bin/sql-client.sh`
+3. Open the Flink SQL Client: `docker compose run --rm sql-client`
 
 ---
 

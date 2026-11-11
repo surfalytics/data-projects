@@ -54,7 +54,8 @@ def main() -> None:
             'properties.group.id' = 'pyflink-ex-2-2',
             'scan.startup.mode' = 'earliest-offset',
             'format' = 'json',
-            'json.ignore-parse-errors' = 'true'
+            'json.ignore-parse-errors' = 'true',
+            'json.timestamp-format.standard' = 'ISO-8601'
         )
     """)
 
@@ -83,16 +84,15 @@ def main() -> None:
         INSERT INTO customer_order_stats_sink
         SELECT
             customer_id,
-            TUMBLE_START(order_time, INTERVAL '2' MINUTE)     AS window_start,
-            TUMBLE_END(order_time, INTERVAL '2' MINUTE)       AS window_end,
+            window_start,
+            window_end,
             COUNT(*)                                           AS order_count,
             SUM(amount)                                        AS total_amount,
             CAST(AVG(amount) AS DECIMAL(10, 2))                AS avg_order_value,
             MAX(amount)                                        AS max_order_value
-        FROM orders
-        GROUP BY
-            TUMBLE(order_time, INTERVAL '2' MINUTE),
-            customer_id
+        FROM TABLE(
+            TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '2' MINUTE))
+        GROUP BY window_start, window_end, customer_id
     """)
 
     logger.info("Pipeline submitted. Waiting for results (Ctrl+C to cancel)...")

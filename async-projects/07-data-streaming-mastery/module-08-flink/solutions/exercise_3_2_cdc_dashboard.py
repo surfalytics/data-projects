@@ -22,8 +22,8 @@ from pyflink.table import EnvironmentSettings, TableEnvironment
 KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "kafka:29092")
 MYSQL_HOST = os.environ.get("MYSQL_HOST", "mysql")
 MYSQL_PORT = os.environ.get("MYSQL_PORT", "3306")
-MYSQL_USER = os.environ.get("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "debezium")
+MYSQL_USER = os.environ.get("MYSQL_USER", "debezium")
+MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "dbz")
 MYSQL_DATABASE = os.environ.get("MYSQL_DATABASE", "inventory")
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -89,7 +89,8 @@ def main() -> None:
             amount      DECIMAL(10, 2),
             status      VARCHAR(50),
             created_at  TIMESTAMP(3),
-            updated_at  TIMESTAMP(3)
+            updated_at  TIMESTAMP(3),
+            WATERMARK FOR created_at AS created_at - INTERVAL '5' SECOND
         """,
         "order_id",
     )
@@ -214,12 +215,13 @@ def main() -> None:
     result = t_env.execute_sql("""
         INSERT INTO hourly_order_trend_sink
         SELECT
-            TUMBLE_START(created_at, INTERVAL '1' HOUR) AS window_start,
-            TUMBLE_END(created_at, INTERVAL '1' HOUR)   AS window_end,
+            window_start,
+            window_end,
             COUNT(*)                                     AS order_count,
             SUM(amount)                                  AS total_revenue
-        FROM cdc_orders
-        GROUP BY TUMBLE(created_at, INTERVAL '1' HOUR)
+        FROM TABLE(
+            TUMBLE(TABLE cdc_orders, DESCRIPTOR(created_at), INTERVAL '1' HOUR))
+        GROUP BY window_start, window_end
     """)
 
     logger.info("All three dashboard views running. Waiting (Ctrl+C to cancel)...")

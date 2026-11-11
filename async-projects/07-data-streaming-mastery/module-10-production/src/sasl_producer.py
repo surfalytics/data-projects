@@ -7,14 +7,16 @@ always combine SASL with SSL (use SASL_SSL instead of SASL_PLAINTEXT) to encrypt
 the credentials in transit.
 
 Prerequisites:
-    Configure Kafka broker with SASL_PLAINTEXT listener and create user credentials.
-    See README.md for broker configuration details.
+    Start the secure KRaft broker (it has a SASL_PLAINTEXT listener on port 9094):
+        bash config/ssl-setup.sh
+        docker compose -f docker-compose.secure.yml up -d
+    Users: producer / producer-secret. It also needs an ACL to write (see README.md).
 
 Usage:
     python src/sasl_producer.py
 
     # Custom configuration:
-    KAFKA_BOOTSTRAP_SERVERS=localhost:9092 \
+    KAFKA_BOOTSTRAP_SERVERS=localhost:9094 \
     SASL_USERNAME=producer \
     SASL_PASSWORD=producer-secret \
     TOPIC=sasl-demo \
@@ -34,7 +36,7 @@ from confluent_kafka import Producer
 # Configuration
 # ---------------------------------------------------------------------------
 
-KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
+KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9094")
 TOPIC = os.getenv("TOPIC", "sasl-demo")
 NUM_MESSAGES = int(os.getenv("NUM_MESSAGES", "20"))
 
@@ -156,7 +158,7 @@ def run_sasl_producer():
         logger.error("  1. Broker is not configured with SASL listener")
         logger.error("  2. Username/password is incorrect")
         logger.error("  3. SASL mechanism mismatch between client and broker")
-        logger.error("  4. For SCRAM: user credentials not created in ZooKeeper")
+        logger.error("  4. For SCRAM: user credentials not created (kafka-configs --alter --add-config 'SCRAM-SHA-512=[...]')")
         sys.exit(1)
 
     logger.info("")

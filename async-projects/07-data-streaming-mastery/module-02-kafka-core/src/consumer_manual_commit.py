@@ -18,7 +18,7 @@ Usage:
     python consumer_manual_commit.py --topic user-events --batch-size 5
 
 Prerequisites:
-    - Kafka broker running on localhost:9092 (use docker-compose up)
+    - Kafka broker running on localhost:9092 (use docker compose up)
     - Messages in the target topic (run a producer first)
     - pip install confluent-kafka
 """

@@ -102,7 +102,8 @@ def run_pull_query(query: str) -> list[dict]:
     Returns:
         List of result rows as dicts.
     """
-    payload = {"sql": query}
+    # The /query endpoint takes "ksql" (the /query-stream endpoint takes "sql").
+    payload = {"ksql": query}
     response = requests.post(
         f"{KSQLDB_URL}/query",
         headers=HEADERS,
@@ -127,7 +128,7 @@ def run_push_query(query: str, timeout_seconds: int = 10) -> Generator[dict, Non
     Yields:
         dict: Each result row from the push query.
     """
-    payload = {"sql": query, "properties": {"auto.offset.reset": "earliest"}}
+    payload = {"ksql": query, "streamsProperties": {"ksql.streams.auto.offset.reset": "earliest"}}
 
     with requests.post(
         f"{KSQLDB_URL}/query",
@@ -140,10 +141,11 @@ def run_push_query(query: str, timeout_seconds: int = 10) -> Generator[dict, Non
         timeout=timeout_seconds,
     ) as response:
         response.raise_for_status()
-        for line in response.iter_lines(decode_unicode=True):
+        for raw in response.iter_lines():
+            line = raw.decode("utf-8").strip().lstrip("[").rstrip(",]")
             if line:
                 try:
-                    row = json.loads(line.rstrip(","))
+                    row = json.loads(line)
                     yield row
                 except json.JSONDecodeError:
                     continue

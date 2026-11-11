@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Kafka running locally (`docker-compose up -d` from the module root)
+- Kafka running locally (`docker compose up -d` from the module root)
 - `faust-streaming` installed (`pip install -r requirements.txt`)
 - Completed Exercise 01 or familiarity with Faust agents
 

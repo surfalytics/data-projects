@@ -29,8 +29,8 @@ FLINK_REST_URL="http://localhost:8081"
 KAFKA_BOOTSTRAP="localhost:9092"
 MYSQL_HOST="localhost"
 MYSQL_PORT="3306"
-MYSQL_USER="root"
-MYSQL_PASSWORD="debezium"
+MYSQL_USER="debezium"
+MYSQL_PASSWORD="dbz"
 
 MAX_RETRIES=60
 RETRY_INTERVAL=5
@@ -94,17 +94,10 @@ start_stack() {
     log_info "Starting Flink module Docker Compose stack..."
     log_info "Compose file: ${COMPOSE_FILE}"
 
-    # Pull images first
-    log_info "Pulling Docker images..."
-    docker compose -f "$COMPOSE_FILE" pull
-
-    # Start all services
-    log_info "Starting services..."
-    docker compose -f "$COMPOSE_FILE" up -d zookeeper kafka mysql jobmanager taskmanager kafka-ui
-
-    # Wait for Zookeeper
-    wait_for_service "Zookeeper" \
-        "docker exec flink-zookeeper bash -c 'echo ruok | nc localhost 2181 | grep imok'"
+    # Build the Flink image (downloads the connector JARs) and start services.
+    # Kafka runs in KRaft mode. There is no ZooKeeper.
+    log_info "Building Flink image and starting services..."
+    docker compose -f "$COMPOSE_FILE" up -d --build kafka mysql jobmanager taskmanager kafka-ui
 
     # Wait for Kafka
     wait_for_service "Kafka" \
@@ -166,27 +159,13 @@ create_kafka_topics() {
 # ---------------------------------------------------------------------------
 
 submit_sql() {
-    log_info "Submitting SQL statements to Flink SQL Client..."
-
-    # Start the sql-client container (it downloads JARs on first run)
-    log_info "Starting SQL Client container (downloading connector JARs)..."
-    docker compose -f "$COMPOSE_FILE" up -d sql-client
-
-    # Wait for the SQL client container to be ready
-    log_info "Waiting for SQL Client to download JARs and start..."
-    sleep 30
-
-    # Submit each SQL file
-    for sql_file in "${SQL_DIR}"/01-create-kafka-tables.sql; do
-        if [ -f "$sql_file" ]; then
-            log_info "Submitting: $(basename "$sql_file")"
-            docker exec -i flink-sql-client \
-                /opt/flink/bin/sql-client.sh -f "/opt/flink/sql-scripts/$(basename "$sql_file")" \
-                2>&1 || {
-                    log_error "Failed to submit $(basename "$sql_file") -- this is expected if JARs are still downloading"
-                }
-        fi
-    done
+    log_info "Creating the Kafka tables with the Flink SQL client..."
+    # The SQL client runs in the same image as the cluster, so it has the connector JARs.
+    # Note: tables created with -f live only for that session. Use SOURCE in an
+    # interactive session to keep them (see the README).
+    docker compose -f "$COMPOSE_FILE" run --rm -T sql-client \
+        /opt/flink/bin/sql-client.sh -f /opt/flink/sql-scripts/01-create-kafka-tables.sql \
+        2>&1 || log_error "SQL submission failed"
 
     log_success "SQL submission complete"
 }
@@ -219,7 +198,7 @@ main() {
             log_info "     python src/seed_data.py"
             log_info ""
             log_info "  2. Open the Flink SQL Client:"
-            log_info "     docker exec -it flink-sql-client /opt/flink/bin/sql-client.sh"
+            log_info "     docker compose run --rm sql-client"
             log_info ""
             log_info "  3. Try the exercises in the exercises/ directory"
             log_info ""

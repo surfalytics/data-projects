@@ -16,7 +16,7 @@ Usage:
     python producer_advanced.py --topic custom-topic --linger-ms 200
 
 Prerequisites:
-    - Kafka broker running on localhost:9092 (use docker-compose up)
+    - Kafka broker running on localhost:9092 (use docker compose up)
     - pip install confluent-kafka faker
 """
 

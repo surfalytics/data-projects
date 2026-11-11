@@ -145,7 +145,7 @@ def run_wordcount() -> None:
         2. Register a Kafka source table (reads raw text lines).
         3. Register a print sink table (outputs word counts).
         4. Run a SQL query that:
-           a. Splits each line into individual words using UNNEST.
+           a. Splits each line into individual words using SPLIT and UNNEST.
            b. Groups words into 1-minute tumbling windows.
            c. Counts occurrences of each word per window.
         5. Inserts results into the sink, triggering continuous execution.
@@ -186,30 +186,32 @@ def run_wordcount() -> None:
     # Step 4 & 5: Run the word count query and insert into the sink
     #
     # The query uses:
-    # - UNNEST with a CROSS JOIN to split each line into words
-    # - TUMBLE window for 1-minute aggregation
+    # - SPLIT + UNNEST with a CROSS JOIN to split each line into words
+    #   (STRING_SPLIT does not exist in Flink 2.2)
+    # - TUMBLE window function (table-valued) for 1-minute aggregation
     # - Processing time (proctime) since raw Kafka messages don't have
     #   embedded event timestamps
+    # View that splits each line into words. It keeps the proctime column.
+    t_env.execute_sql("""
+        CREATE TEMPORARY VIEW words_split AS
+        SELECT word, proctime
+        FROM words_source
+        CROSS JOIN UNNEST(SPLIT(LOWER(TRIM(line)), ' ')) AS T(word)
+        WHERE TRIM(word) <> ''
+    """)
+
     logger.info("Submitting word count query")
 
     wordcount_query = """
         INSERT INTO wordcount_sink
         SELECT
             word,
-            TUMBLE_START(proctime, INTERVAL '1' MINUTE) AS window_start,
-            TUMBLE_END(proctime, INTERVAL '1' MINUTE)   AS window_end,
-            COUNT(*)                                     AS word_count
-        FROM (
-            -- Split each line into individual words
-            -- REGEXP_SPLIT_TO_TABLE is not available, so we use a lateral table
-            SELECT word, proctime
-            FROM words_source,
-                 LATERAL TABLE(STRING_SPLIT(LOWER(TRIM(line)), ' ')) AS T(word)
-            WHERE TRIM(word) <> ''
-        )
-        GROUP BY
-            TUMBLE(proctime, INTERVAL '1' MINUTE),
-            word
+            window_start,
+            window_end,
+            COUNT(*) AS word_count
+        FROM TABLE(
+            TUMBLE(TABLE words_split, DESCRIPTOR(proctime), INTERVAL '1' MINUTE))
+        GROUP BY window_start, window_end, word
     """
 
     # Execute the query -- this submits the job to the Flink cluster

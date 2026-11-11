@@ -1,9 +1,11 @@
 """
 Solution for Exercise 3.2: Topic Routing Verification
 
-Deploys connectors with TimestampRouter and RegexRouter SMTs, then
-verifies that topics are created with the expected names and contain
-the correct data.
+Deploys a RegexRouter source connector and a TimestampRouter sink connector,
+then verifies the routed topic and the date-named MySQL table.
+
+Note: TimestampRouter needs a record timestamp. JDBC source records have none
+("Timestamp missing on record"), so TimestampRouter runs on a sink connector.
 
 Usage:
     python solutions/03-verify-routing.py
@@ -183,21 +185,38 @@ def main():
     ts_connector = "smt-routing-timestamp"
     connector_names.append(ts_connector)
 
-    ts_config = {
-        "name": ts_connector,
+    jdbc = {
+        "tasks.max": "1",
+        "connection.url": "jdbc:mysql://mysql:3306/company",
+        "connection.user": "connect_user",
+        "connection.password": "connect_pass",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "value.converter.schemas.enable": "true",
+    }
+    src_connector = "smt-routing-source"
+    connector_names.append(src_connector)
+    src_config = {
+        "name": src_connector,
         "config": {
+            **jdbc,
             "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-            "tasks.max": "1",
-            "connection.url": "jdbc:mysql://mysql:3306/company",
-            "connection.user": "connect_user",
-            "connection.password": "connect_pass",
             "mode": "bulk",
             "topic.prefix": "mysql-",
             "table.whitelist": "projects",
             "poll.interval.ms": "60000",
-            "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-            "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-            "value.converter.schemas.enable": "false",
+        },
+    }
+    ts_config = {
+        "name": ts_connector,
+        "config": {
+            **jdbc,
+            "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+            "topics": "mysql-projects",
+            "auto.create": "true",
+            "insert.mode": "insert",
+            "pk.mode": "none",
+            "table.name.format": "${topic}",
             "transforms": "routeByDate",
             "transforms.routeByDate.type": "org.apache.kafka.connect.transforms.TimestampRouter",
             "transforms.routeByDate.topic.format": "${topic}-${timestamp}",
@@ -205,14 +224,11 @@ def main():
         },
     }
 
-    if not deploy_connector(ts_config):
-        cleanup(connector_names)
-        sys.exit(1)
-
-    if not wait_for_running(ts_connector):
-        print(f"  ERROR: '{ts_connector}' did not start.")
-        cleanup(connector_names)
-        sys.exit(1)
+    for cfg in (src_config, ts_config):
+        if not deploy_connector(cfg) or not wait_for_running(cfg["name"]):
+            print(f"  ERROR: '{cfg['name']}' did not start.")
+            cleanup(connector_names)
+            sys.exit(1)
 
     # ----------------------------------------------------------------
     # 2. RegexRouter connector
@@ -267,21 +283,28 @@ def main():
         if not t.startswith("_"):
             print(f"    {t}")
 
-    # Check TimestampRouter topic
-    expected_ts_topic = f"mysql-projects-{today}"
-    ts_topic_found = expected_ts_topic in topics
-    ts_date_topics = [t for t in topics if re.match(r"mysql-projects-\d{4}-\d{2}-\d{2}", t)]
+    # Check TimestampRouter result: a MySQL table named with today's date
+    import mysql.connector
 
-    print(f"\n  TimestampRouter check:")
-    print(f"    Expected topic: {expected_ts_topic}")
+    expected_ts_table = f"mysql-projects-{today}"
+    conn = mysql.connector.connect(
+        host="localhost", port=3306, user="connect_user", password="connect_pass", database="company"
+    )
+    cur = conn.cursor()
+    cur.execute("SHOW TABLES")
+    tables = [r[0] for r in cur.fetchall()]
+    ts_topic_found = expected_ts_table in tables
+    ts_date_topics = [t for t in tables if re.match(r"mysql-projects-\d{4}-\d{2}-\d{2}", t)]
+    ts_count = 0
+    if ts_topic_found:
+        cur.execute(f"SELECT COUNT(*) FROM `{expected_ts_table}`")
+        ts_count = cur.fetchone()[0]
+    conn.close()
+
+    print(f"\n  TimestampRouter check (sink writes to a date-named table):")
+    print(f"    Expected table: {expected_ts_table}")
     print(f"    Found: {ts_topic_found}")
-    if ts_date_topics:
-        print(f"    Date-partitioned topics: {ts_date_topics}")
-        ts_count = count_messages(ts_date_topics[0], timeout=10)
-        print(f"    Message count in {ts_date_topics[0]}: {ts_count}")
-    else:
-        ts_count = 0
-        print("    No date-partitioned topics found.")
+    print(f"    Row count: {ts_count}")
 
     # Check RegexRouter topic
     expected_regex_topic = "company-departments-data"
@@ -305,8 +328,8 @@ def main():
     print(f"{'=' * 60}")
 
     checks = {
-        "TimestampRouter topic created": ts_topic_found or len(ts_date_topics) > 0,
-        "TimestampRouter has messages": ts_count > 0,
+        "TimestampRouter table created": ts_topic_found or len(ts_date_topics) > 0,
+        "TimestampRouter table has rows": ts_count > 0,
         "RegexRouter topic created": regex_topic_found,
         "RegexRouter has messages": regex_count > 0,
     }

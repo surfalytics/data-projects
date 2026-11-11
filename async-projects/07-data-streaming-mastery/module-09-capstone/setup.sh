@@ -74,6 +74,28 @@ wait_for_mysql() {
 }
 
 # ---------------------------------------------------------------------------
+# Step 0: Python 3.12 virtual environment for the helper scripts
+# ---------------------------------------------------------------------------
+echo -e "${BLUE}Step 0: Preparing the Python 3.12 environment (.venv)...${NC}"
+if [ ! -x .venv/bin/python ]; then
+    if command -v uv > /dev/null 2>&1; then
+        uv venv --python 3.12 .venv
+    elif command -v python3.12 > /dev/null 2>&1; then
+        python3.12 -m venv .venv
+    else
+        echo -e "${RED}  Python 3.12 not found. Install uv (brew install uv) or python@3.12. See ../SETUP.md.${NC}"
+        exit 1
+    fi
+fi
+if command -v uv > /dev/null 2>&1; then
+    uv pip install -q --python .venv/bin/python -r requirements.txt
+else
+    .venv/bin/python -m pip install -q -r requirements.txt
+fi
+PY="$SCRIPT_DIR/.venv/bin/python"
+echo -e "${GREEN}  Python environment is ready.${NC}"
+
+# ---------------------------------------------------------------------------
 # Step 1: Start Docker Compose
 # ---------------------------------------------------------------------------
 echo -e "${GREEN}=============================================================${NC}"
@@ -158,7 +180,7 @@ echo "  Waiting 15 seconds for initial CDC snapshot..."
 sleep 15
 
 cd "$SCRIPT_DIR/src"
-python3 setup_ksqldb.py || {
+"$PY" setup_ksqldb.py || {
     echo -e "${YELLOW}  WARNING: Some ksqlDB queries may have failed. Check logs above.${NC}"
 }
 cd "$SCRIPT_DIR"
@@ -167,26 +189,30 @@ cd "$SCRIPT_DIR"
 # Step 6: Register PostgreSQL JDBC sink connector (optional)
 # ---------------------------------------------------------------------------
 echo ""
-echo -e "${BLUE}Step 6: Registering PostgreSQL JDBC sink connector...${NC}"
+echo -e "${BLUE}Step 6: Registering PostgreSQL JDBC sink connectors (one per table)...${NC}"
 
-SINK_EXISTS=$(curl -sf http://localhost:8083/connectors/postgres-sink-connector 2>/dev/null && echo "yes" || echo "no")
+# One sink connector per table, because each table has a different primary key.
+SINK_FAILED=""
+for cfg in config/postgres-sink-*.json; do
+    name=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['name'])" "$cfg")
+    if curl -sf "http://localhost:8083/connectors/$name" > /dev/null 2>&1; then
+        echo -e "${YELLOW}  $name already exists. Skipping.${NC}"
+    elif curl -sf -X POST http://localhost:8083/connectors \
+            -H "Content-Type: application/json" -d @"$cfg" > /dev/null; then
+        echo -e "${GREEN}  $name registered.${NC}"
+    else
+        echo -e "${RED}  Failed to register $name.${NC}"
+        SINK_FAILED="yes"
+    fi
+done
 
-if [ "$SINK_EXISTS" = "yes" ]; then
-    echo -e "${YELLOW}  Sink connector already exists. Skipping.${NC}"
-else
-    curl -sf -X POST http://localhost:8083/connectors \
-        -H "Content-Type: application/json" \
-        -d @config/postgres-sink-connector.json 2>/dev/null && {
-        echo -e "${GREEN}  Sink connector registered.${NC}"
-    } || {
-        echo -e "${YELLOW}  JDBC Sink connector registration failed (plugin may not be available).${NC}"
-        echo -e "${YELLOW}  Starting Python sink consumer as alternative...${NC}"
-        cd "$SCRIPT_DIR/src"
-        python3 sink_consumer.py &
-        SINK_PID=$!
-        cd "$SCRIPT_DIR"
-        echo -e "${GREEN}  Python sink consumer started (PID: $SINK_PID).${NC}"
-    }
+if [ -n "$SINK_FAILED" ]; then
+    echo -e "${YELLOW}  Some sink connectors failed. Starting the Python sink consumer as an alternative...${NC}"
+    cd "$SCRIPT_DIR/src"
+    "$PY" sink_consumer.py &
+    SINK_PID=$!
+    cd "$SCRIPT_DIR"
+    echo -e "${GREEN}  Python sink consumer started (PID: $SINK_PID).${NC}"
 fi
 
 # ---------------------------------------------------------------------------
@@ -196,7 +222,7 @@ echo ""
 echo -e "${BLUE}Step 7: Starting e-commerce simulator...${NC}"
 
 cd "$SCRIPT_DIR/src"
-python3 ecommerce_simulator.py --speed 2 --duration 3600 &
+"$PY" ecommerce_simulator.py --speed 2 --duration 3600 &
 SIMULATOR_PID=$!
 cd "$SCRIPT_DIR"
 

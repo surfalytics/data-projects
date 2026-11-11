@@ -1,0 +1,7 @@
+# Python 3.12
+confluent-kafka[avro,schemaregistry]>=2.14
+sqlalchemy>=2.0
+pymysql>=1.1
+cryptography>=43   # pymysql needs it for MySQL 8.4 (caching_sha2_password)
+psycopg2-binary>=2.9.10
+requests>=2.32

@@ -17,7 +17,7 @@ Architecture:
     MySQL (binlog) --> Flink CDC Source --> Aggregation --> Kafka Sink
 
 Prerequisites:
-    - MySQL container running with binlog enabled (debezium/example-mysql:2.4)
+    - MySQL container running with binlog enabled (quay.io/debezium/example-mysql:3.7.1.Final)
     - Kafka broker running at kafka:29092
     - The 'inventory' database with 'orders' and 'products' tables seeded
     - Flink CDC and Kafka connector JARs in the classpath
@@ -42,8 +42,8 @@ from pyflink.table import EnvironmentSettings, TableEnvironment
 KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "kafka:29092")
 MYSQL_HOST = os.environ.get("MYSQL_HOST", "mysql")
 MYSQL_PORT = os.environ.get("MYSQL_PORT", "3306")
-MYSQL_USER = os.environ.get("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "debezium")
+MYSQL_USER = os.environ.get("MYSQL_USER", "debezium")
+MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "dbz")
 MYSQL_DATABASE = os.environ.get("MYSQL_DATABASE", "inventory")
 
 # Logging
@@ -75,6 +75,9 @@ def create_mysql_orders_cdc_source() -> str:
             status      VARCHAR(50),
             created_at  TIMESTAMP(3),
             updated_at  TIMESTAMP(3),
+            -- Event time for the window query. The CDC source is a changelog
+            -- (updates and deletes), and Flink 2.x windows can read it.
+            WATERMARK FOR created_at AS created_at - INTERVAL '5' SECOND,
             PRIMARY KEY (order_id) NOT ENFORCED
         ) WITH (
             'connector'       = 'mysql-cdc',
@@ -213,7 +216,7 @@ def run_cdc_analytics() -> None:
            a. Revenue per hour (tumbling window on created_at)
            b. Top products by total revenue (running aggregation)
            c. Order status summary (running aggregation)
-        5. All queries run concurrently as separate Flink jobs.
+        5. All queries run in one statement set (one Flink job).
     """
     logger.info("Starting PyFlink CDC Analytics Pipeline")
 
@@ -262,15 +265,17 @@ def run_cdc_analytics() -> None:
     revenue_query = """
         INSERT INTO revenue_per_hour_sink
         SELECT
-            TUMBLE_START(created_at, INTERVAL '1' HOUR)     AS window_start,
-            TUMBLE_END(created_at, INTERVAL '1' HOUR)       AS window_end,
+            window_start,
+            window_end,
             COUNT(*)                                         AS order_count,
             SUM(amount)                                      AS total_revenue,
             CAST(AVG(amount) AS DECIMAL(10, 2))              AS avg_order_value
-        FROM mysql_orders
-        GROUP BY TUMBLE(created_at, INTERVAL '1' HOUR)
+        FROM TABLE(
+            TUMBLE(TABLE mysql_orders, DESCRIPTOR(created_at), INTERVAL '1' HOUR))
+        GROUP BY window_start, window_end
     """
-    t_env.execute_sql(revenue_query)
+    stmt_set = t_env.create_statement_set()
+    stmt_set.add_insert_sql(revenue_query)
     logger.info("Revenue-per-hour job submitted")
 
     # -----------------------------------------------------------------------
@@ -295,7 +300,7 @@ def run_cdc_analytics() -> None:
             ON o.product_id = p.product_id
         GROUP BY p.product_id, p.product_name, p.category
     """
-    t_env.execute_sql(top_products_query)
+    stmt_set.add_insert_sql(top_products_query)
     logger.info("Top-products job submitted")
 
     # -----------------------------------------------------------------------
@@ -314,7 +319,9 @@ def run_cdc_analytics() -> None:
         FROM mysql_orders
         GROUP BY status
     """
-    result = t_env.execute_sql(status_query)
+    stmt_set.add_insert_sql(status_query)
+    # One statement set = one Flink job. The CDC source is read once and shared.
+    result = stmt_set.execute()
     logger.info("Order-status-summary job submitted")
 
     # Wait on the last job (all three run concurrently)
