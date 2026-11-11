@@ -338,7 +338,7 @@ listener.name.sasl.plain.sasl.jaas.config=\
   user_consumer="consumer-secret";
 ```
 
-In the Confluent image you set these as environment variables: `KAFKA_LISTENER_NAME_SASL_PLAIN_SASL_JAAS_CONFIG`. A double underscore in the name becomes a dash, so `SCRAM__SHA__512` becomes `SCRAM-SHA-512`.
+In the Confluent image you set these as environment variables: `KAFKA_LISTENER_NAME_SASL_PLAIN_SASL_JAAS_CONFIG`. In an env var name, `_` becomes `.`, `__` becomes `_` and `___` becomes `-`. So `SCRAM___SHA___512` becomes `scram-sha-512`.
 
 #### SASL/SCRAM Broker Configuration
 

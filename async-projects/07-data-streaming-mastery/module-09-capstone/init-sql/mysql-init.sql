@@ -3,9 +3,9 @@
 -- This script initializes the transactional database that
 -- Debezium will capture changes from via CDC.
 -- =============================================================
-
 CREATE DATABASE IF NOT EXISTS ecommerce;
-USE ecommerce;
+use ecommerce
+;
 
 -- ----- Customers -----
 CREATE TABLE IF NOT EXISTS customers (
@@ -66,7 +66,6 @@ CREATE TABLE IF NOT EXISTS inventory_log (
 -- =============================================================
 -- Seed Data: 20 Products across 5 Categories
 -- =============================================================
-
 INSERT INTO products (name, description, sku, price, category, stock_quantity) VALUES
 -- Electronics (4 products)
 ('Wireless Bluetooth Headphones', 'Premium noise-cancelling over-ear headphones with 30-hour battery life', 'ELEC-HP-001', 149.99, 'Electronics', 200),
@@ -101,7 +100,6 @@ INSERT INTO products (name, description, sku, price, category, stock_quantity) V
 -- =============================================================
 -- Seed Data: 10 Initial Customers
 -- =============================================================
-
 INSERT INTO customers (email, first_name, last_name, phone) VALUES
 ('alice.johnson@example.com', 'Alice', 'Johnson', '+1-555-0101'),
 ('bob.smith@example.com', 'Bob', 'Smith', '+1-555-0102'),
@@ -113,3 +111,12 @@ INSERT INTO customers (email, first_name, last_name, phone) VALUES
 ('henry.moore@example.com', 'Henry', 'Moore', '+1-555-0108'),
 ('irene.taylor@example.com', 'Irene', 'Taylor', '+1-555-0109'),
 ('jack.anderson@example.com', 'Jack', 'Anderson', '+1-555-0110');
+
+-- =============================================================
+-- Seed Data: 1 delivered order
+-- Debezium snapshots these rows and registers the Avro schema of the orders and
+-- order_items topics BEFORE ksqlDB creates its streams. Without a first row,
+-- ksqlDB registers its own (incompatible) schema first and the connector fails.
+-- =============================================================
+INSERT INTO orders (customer_id, status, total_amount) VALUES (1, 'delivered', 149.99);
+INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal) VALUES (1, 1, 1, 149.99, 149.99);

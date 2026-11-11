@@ -15,7 +15,8 @@
 | Kafka connector | `flink-sql-connector-kafka` `5.0.0-2.2` | [Maven Central](https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka/5.0.0-2.2/) |
 | MySQL CDC connector | `flink-sql-connector-mysql-cdc` `3.7.0-2.2` | Group `org.apache.flink` (the old `com.ververica` 2.x line is gone). [Maven Central](https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-mysql-cdc/3.7.0-2.2/) |
 | Kafka | `confluentinc/cp-kafka:8.4.1`, KRaft mode | No ZooKeeper. |
-| MySQL | `quay.io/debezium/example-mysql:3.7.1.Final` | Binlog is on. |
+| MySQL | `quay.io/debezium/example-mysql:3.7.1.Final` | Binlog is on. The image runs MySQL 8.2. |
+| MySQL JDBC driver | `mysql-connector-j` `9.7.0` | The CDC connector does not include it. The `Dockerfile` adds it. |
 
 Flink 2.3 exists, but it has no Kafka or CDC connector build yet. So this module stays on 2.2.
 
@@ -49,6 +50,7 @@ docker compose run --rm sql-client   # opens the Flink SQL client
 - The `sql-client` service is in the `client` profile. `docker compose up` does not start it. `docker compose run` does.
 - Or use `./src/setup_flink.sh`. It does the same start steps and creates the topics.
 - In the SQL client, run the files from `sql/` with `SOURCE '/opt/flink/sql-scripts/01-create-kafka-tables.sql';`.
+- MySQL users: `debezium` / `dbz` is the CDC user (binlog rights, read only on tables). `mysqluser` / `mysqlpw` can change the `inventory` tables. `seed_data.py` uses it. `root` only works inside the MySQL container.
 - `seed_data.py` replaces the sample `customers`, `products` and `orders` tables in the MySQL `inventory` database with the module schema.
 
 **Apple Silicon note:** `apache-flink` 2.2 needs `apache-beam<=2.61.0`. That version has no macOS arm64 wheel for Python 3.12, so pip builds it from source. The build fails in an isolated environment. This works:
@@ -70,10 +72,18 @@ mkdir -p jars
 M=https://repo1.maven.org/maven2/org/apache/flink
 curl -fL -o jars/flink-sql-connector-kafka-5.0.0-2.2.jar $M/flink-sql-connector-kafka/5.0.0-2.2/flink-sql-connector-kafka-5.0.0-2.2.jar
 curl -fL -o jars/flink-sql-connector-mysql-cdc-3.7.0-2.2.jar $M/flink-sql-connector-mysql-cdc/3.7.0-2.2/flink-sql-connector-mysql-cdc-3.7.0-2.2.jar
-export FLINK_JARS="file://$PWD/jars/flink-sql-connector-kafka-5.0.0-2.2.jar;file://$PWD/jars/flink-sql-connector-mysql-cdc-3.7.0-2.2.jar"
+# The CDC connector does not include the MySQL JDBC driver. Download it too.
+curl -fL -o jars/mysql-connector-j-9.7.0.jar https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.7.0/mysql-connector-j-9.7.0.jar
+export FLINK_JARS="file://$PWD/jars/flink-sql-connector-kafka-5.0.0-2.2.jar;file://$PWD/jars/flink-sql-connector-mysql-cdc-3.7.0-2.2.jar;file://$PWD/jars/mysql-connector-j-9.7.0.jar"
 export KAFKA_BOOTSTRAP_SERVERS=localhost:9092 MYSQL_HOST=localhost
 python src/pyflink_windowed_aggregation.py
 ```
+
+Notes:
+- After `TableEnvironment.create`, PyFlink lowers the Python log level, so only the first `INFO` line of a script shows. The job still runs. Check the Kafka topics or the stdout of the print sink.
+- Session windows (`02-aggregations.sql`, query 4) only emit a row after a customer is quiet for 5 minutes. With the seed data, wait 5 minutes or stop the seed script.
+- Hourly windows (CDC exercises) only emit when the hour ends and the watermark passes it.
+- The seed data writes ISO-8601 timestamps. The Kafka tables set `'json.timestamp-format.standard' = 'ISO-8601'`. If you forget it, `json.ignore-parse-errors` turns `order_time` into NULL and no window fires.
 
 The files: `sql/01..05-*.sql` (SQL client scripts), `src/pyflink_*.py` (PyFlink jobs), `src/seed_data.py` (data generator), `src/setup_flink.sh` (start and stop; `--down` stops it).
 
@@ -599,6 +609,10 @@ watermark_strategy = WatermarkStrategy \
 
 Windows group elements of a stream into finite buckets for aggregation. Flink supports several window types.
 
+> **Syntax in Flink 2.2:** Use window table-valued functions (`TUMBLE`, `HOP`, `CUMULATE`, `SESSION` inside `FROM TABLE(...)`). They give you `window_start`, `window_end` and `window_time`. They also work for joins and Top-N per window. The old `GROUP BY TUMBLE(...)` / `TUMBLE_START(...)` syntax is **not removed** in 2.2. We checked: it still plans. But new work should use the TVF form. This module uses TVFs everywhere. ([Window TVF docs](https://nightlies.apache.org/flink/flink-docs-release-2.2/docs/dev/table/sql/queries/window-tvf/))
+> Two TVF rules: `HOP(TABLE t, DESCRIPTOR(col), SLIDE, SIZE)` takes the slide first. `SESSION(TABLE t PARTITION BY key, DESCRIPTOR(col), GAP)` needs `PARTITION BY` for per-key sessions.
+> A regular join drops the time attribute. So window first, then join (see `sql/04-joins-and-enrichment.sql`).
+
 ### Window Types
 
 ```mermaid
@@ -811,8 +825,8 @@ CREATE TABLE mysql_orders (
     'connector' = 'mysql-cdc',
     'hostname' = 'mysql',
     'port' = '3306',
-    'username' = 'root',
-    'password' = 'debezium',
+    'username' = 'debezium',
+    'password' = 'dbz',
     'database-name' = 'inventory',
     'table-name' = 'orders'
 );

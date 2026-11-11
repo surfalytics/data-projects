@@ -125,19 +125,6 @@ echo ""
 echo -e "${GREEN}All services are running.${NC}"
 
 # ---------------------------------------------------------------------------
-# Step 2b: Create the CDC topics
-# Debezium only creates a topic when the first change event for that table arrives.
-# The ksqlDB streams in Step 5 need the topics to exist, so we create them first.
-# ---------------------------------------------------------------------------
-echo ""
-echo -e "${BLUE}Creating CDC topics...${NC}"
-for table in customers products orders order_items inventory_log; do
-    docker exec module-09-kafka kafka-topics --bootstrap-server kafka:29092 \
-        --create --if-not-exists --topic "ecommerce.ecommerce.${table}" --partitions 1 --replication-factor 1 > /dev/null
-done
-echo -e "${GREEN}  Topics are ready.${NC}"
-
-# ---------------------------------------------------------------------------
 # Step 3: Register Debezium MySQL source connector
 # ---------------------------------------------------------------------------
 echo ""
@@ -202,26 +189,30 @@ cd "$SCRIPT_DIR"
 # Step 6: Register PostgreSQL JDBC sink connector (optional)
 # ---------------------------------------------------------------------------
 echo ""
-echo -e "${BLUE}Step 6: Registering PostgreSQL JDBC sink connector...${NC}"
+echo -e "${BLUE}Step 6: Registering PostgreSQL JDBC sink connectors (one per table)...${NC}"
 
-SINK_EXISTS=$(curl -sf http://localhost:8083/connectors/postgres-sink-connector 2>/dev/null && echo "yes" || echo "no")
+# One sink connector per table, because each table has a different primary key.
+SINK_FAILED=""
+for cfg in config/postgres-sink-*.json; do
+    name=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['name'])" "$cfg")
+    if curl -sf "http://localhost:8083/connectors/$name" > /dev/null 2>&1; then
+        echo -e "${YELLOW}  $name already exists. Skipping.${NC}"
+    elif curl -sf -X POST http://localhost:8083/connectors \
+            -H "Content-Type: application/json" -d @"$cfg" > /dev/null; then
+        echo -e "${GREEN}  $name registered.${NC}"
+    else
+        echo -e "${RED}  Failed to register $name.${NC}"
+        SINK_FAILED="yes"
+    fi
+done
 
-if [ "$SINK_EXISTS" = "yes" ]; then
-    echo -e "${YELLOW}  Sink connector already exists. Skipping.${NC}"
-else
-    curl -sf -X POST http://localhost:8083/connectors \
-        -H "Content-Type: application/json" \
-        -d @config/postgres-sink-connector.json 2>/dev/null && {
-        echo -e "${GREEN}  Sink connector registered.${NC}"
-    } || {
-        echo -e "${YELLOW}  JDBC Sink connector registration failed (plugin may not be available).${NC}"
-        echo -e "${YELLOW}  Starting Python sink consumer as alternative...${NC}"
-        cd "$SCRIPT_DIR/src"
-        "$PY" sink_consumer.py &
-        SINK_PID=$!
-        cd "$SCRIPT_DIR"
-        echo -e "${GREEN}  Python sink consumer started (PID: $SINK_PID).${NC}"
-    }
+if [ -n "$SINK_FAILED" ]; then
+    echo -e "${YELLOW}  Some sink connectors failed. Starting the Python sink consumer as an alternative...${NC}"
+    cd "$SCRIPT_DIR/src"
+    "$PY" sink_consumer.py &
+    SINK_PID=$!
+    cd "$SCRIPT_DIR"
+    echo -e "${GREEN}  Python sink consumer started (PID: $SINK_PID).${NC}"
 fi
 
 # ---------------------------------------------------------------------------

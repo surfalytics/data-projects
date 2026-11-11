@@ -28,10 +28,19 @@ CONNECTORS = [
         "name": "mysql-source-connector",
         "config_file": f"{CONFIG_DIR}/mysql-source-connector.json",
     },
+] + [
+    # One sink connector per table, because each table has a different primary key.
     {
-        "name": "postgres-sink-connector",
-        "config_file": f"{CONFIG_DIR}/postgres-sink-connector.json",
-    },
+        "name": f"postgres-sink-{table}",
+        "config_file": f"{CONFIG_DIR}/postgres-sink-{table}.json",
+    }
+    for table in (
+        "orders-enriched",
+        "revenue-per-minute",
+        "revenue-per-category",
+        "top-customers",
+        "order-status-counts",
+    )
 ]
 
 MAX_WAIT_SECONDS = 120
@@ -179,7 +188,7 @@ def main():
                 f"Skipping connector '{name}'."
             )
             # Sink connector is optional if using Python consumer
-            if name == "postgres-sink-connector":
+            if name.startswith("postgres-sink-"):
                 logger.info(
                     "Sink connector is optional. "
                     "You can use sink_consumer.py instead."

@@ -26,8 +26,8 @@ Environment Variables:
     KAFKA_BOOTSTRAP_SERVERS  -- Kafka broker (default: localhost:9092)
     MYSQL_HOST               -- MySQL host (default: localhost)
     MYSQL_PORT               -- MySQL port (default: 3306)
-    MYSQL_USER               -- MySQL user (default: root)
-    MYSQL_PASSWORD           -- MySQL password (default: debezium)
+    MYSQL_USER               -- MySQL user (default: mysqluser)
+    MYSQL_PASSWORD           -- MySQL password (default: mysqlpw)
     MYSQL_DATABASE           -- MySQL database (default: inventory)
 """
 
@@ -53,8 +53,8 @@ import mysql.connector
 KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 MYSQL_HOST = os.environ.get("MYSQL_HOST", "localhost")
 MYSQL_PORT = int(os.environ.get("MYSQL_PORT", "3306"))
-MYSQL_USER = os.environ.get("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "debezium")
+MYSQL_USER = os.environ.get("MYSQL_USER", "mysqluser")
+MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "mysqlpw")
 MYSQL_DATABASE = os.environ.get("MYSQL_DATABASE", "inventory")
 
 # Data generation parameters
@@ -196,7 +196,7 @@ def setup_mysql_tables(conn: mysql.connector.MySQLConnection) -> None:
     if cursor.fetchone()[0] == 0:
         logger.warning("Replacing the sample inventory tables with the module schema")
         cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
-        for table in ("products_on_hand", "orders", "products", "customers"):
+        for table in ("addresses", "products_on_hand", "orders", "products", "customers"):
             cursor.execute(f"DROP TABLE IF EXISTS {table}")
         cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
 

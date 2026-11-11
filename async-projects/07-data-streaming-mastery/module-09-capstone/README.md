@@ -57,7 +57,7 @@ flowchart LR
 |---|---|---|
 | MySQL | 3306 | Transactional e-commerce database (source of truth) |
 | Kafka Connect | 8083 | Runs the Debezium source and the JDBC sink connectors |
-| Apache Kafka (KRaft: broker + controller in one node) | 9092 (host), 29092 (Docker network, not published), 7071 (JMX metrics) | Central event streaming backbone |
+| Apache Kafka (KRaft: broker + controller in one node) | 9092 (host). Inside Docker: 29092 (clients), 29093 (controller), 7071 (JMX metrics for Prometheus) | Central event streaming backbone |
 | Schema Registry | 8081 | Avro schema management |
 | ksqlDB | 8088 | Real-time stream processing (enrichment, aggregation) |
 | PostgreSQL | 5432 | Analytics sink database |
@@ -101,7 +101,7 @@ Containers: `module-09-kafka`, `-schema-registry`, `-kafka-connect`, `-ksqldb-se
    - Computes **top customers by spend** (10-minute tumbling window)
    - Maintains an **order status distribution** table
 
-4. **JDBC Sink Connector** (or Python consumer) writes the aggregated results to PostgreSQL analytics tables.
+4. **JDBC Sink Connectors** (one per table; or the Python consumer) write the results to PostgreSQL analytics tables.
 
 5. **Grafana** queries PostgreSQL every 5 seconds to display live dashboards.
 
@@ -111,9 +111,9 @@ Containers: `module-09-kafka`, `-schema-registry`, `-kafka-connect`, `-ksqldb-se
 
 - Docker and Docker Compose (v2+)
 - Python 3.12 (`setup.sh` creates `.venv` with `uv` or `python3.12`)
-- RAM_PLACEHOLDER
+- 8 GB RAM for Docker. We measured the 9 containers at about **4.5 GiB** while the simulator ran (Kafka 1.7 GiB, Connect 0.6, ksqlDB 0.6, MySQL 0.45, Kafka UI 0.43, Schema Registry 0.3, Grafana 0.3, Prometheus and Postgres under 0.1). `docker stats --no-stream` shows the numbers on your machine.
 - Internet access on first start (downloads connector plugins and the JMX agent)
-- Ports 3000, 3306, 5432, 7071, 8080, 8081, 8083, 8088, 9090, 9092, 29092 available
+- Ports 3000, 3306, 5432, 8080, 8081, 8083, 8088, 9090, 9092 available
 
 ---
 
@@ -135,7 +135,7 @@ The setup script will:
 - Wait for MySQL, Schema Registry, Kafka Connect, ksqlDB, PostgreSQL and Grafana
 - Register the Debezium source connector (`config/mysql-source-connector.json`)
 - Wait 15 seconds, then submit the ksqlDB queries (`src/setup_ksqldb.py`, from `config/ksqldb-queries.sql`)
-- Register the JDBC sink connector (`config/postgres-sink-connector.json`). If this fails, start `src/sink_consumer.py` instead
+- Register the five JDBC sink connectors (`config/postgres-sink-*.json`, one per table). If one fails, start `src/sink_consumer.py` instead
 - Start the e-commerce simulator in the background (`src/ecommerce_simulator.py`)
 
 `src/register_connectors.py` can register both connectors by hand.
@@ -186,12 +186,24 @@ Navigate to [http://localhost:3000](http://localhost:3000) (admin/admin). The **
 
 ---
 
+## Design Notes (what changed for Debezium 3.x and ksqlDB 8.x)
+
+- **Seed order.** `mysql-init.sql` inserts one order and one item. Debezium snapshots them and registers the Avro schemas first. If ksqlDB creates a stream on an empty topic first, it registers its own schema, and Debezium then fails with "Schema being registered is incompatible".
+- **Plain INT keys.** The source connector writes the row `id` as a plain integer key (`IntegerConverter` and `ExtractField$Key`). ksqlDB reads it as `id INT KEY`. This is why `include.schema.changes` is `false` and the heartbeat is off: those topics have no `id` key.
+- **Key columns are not in the value.** ksqlDB stores key columns in the message key. The JDBC sink reads the primary key from the value, so the queries copy keys with `AS_VALUE()`.
+- **One sink per table.** Each table has a different primary key, and `pk.fields` is one setting per connector. The keys of windowed tables cannot be read as Avro, so the sinks ignore the key (`ByteArrayConverter`, `pk.mode=record_value`).
+- **Names.** ksqlDB upper-cases names (`ORDER_ID`). `quote.sql.identifiers=never` lets PostgreSQL match them to the lower-case columns.
+- **Timestamps.** `FROM_UNIXTIME(WINDOWSTART)` gives a real `TIMESTAMP`. MySQL `TIMESTAMP` columns arrive as ISO strings, so the sink URL has `stringtype=unspecified` and PostgreSQL converts them.
+- **No curl in the images.** The Confluent 8.x images have no `curl`, `wget` or `tar`. Healthchecks use `python3`, and the Debezium plugin is unpacked with Python in the `Dockerfile`.
+
+---
+
 ## Troubleshooting
 
 | Problem | Solution |
 |---|---|
 | Containers won't start | Ensure Docker has at least 8 GB RAM. Run `docker compose down -v` and start again. |
-| Debezium connector fails | Check MySQL is healthy: `docker logs module-09-mysql`. Ensure binlog is enabled. |
+| Debezium connector fails | Check `curl -s http://localhost:8083/connectors/mysql-source-connector/status`. If it says "Schema being registered is incompatible", the schema was registered by ksqlDB first: run `./teardown.sh` and start again. |
 | No data in Kafka topics | Verify the simulator is running: `ps aux \| grep ecommerce_simulator`. Check connector status. |
 | ksqlDB queries fail | Ensure Schema Registry is up. Check ksqlDB logs: `docker logs module-09-ksqldb-server`. |
 | Grafana shows "No data" | Verify PostgreSQL has data. Check the JDBC sink connector status or run the Python sink consumer manually. |

@@ -12,20 +12,18 @@ WITH (
     PARTITIONS = 1
 ) AS
 SELECT
-    1 AS dummy_key,
-    WINDOWSTART AS window_start,
-    WINDOWEND AS window_end,
+    1 AS bucket,
+    FROM_UNIXTIME(WINDOWSTART) AS window_start,
+    FROM_UNIXTIME(WINDOWEND) AS window_end,
     SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) AS delivered_count,
     SUM(CASE WHEN status = 'returned' THEN 1 ELSE 0 END) AS returned_count,
     CASE
         WHEN (SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) +
               SUM(CASE WHEN status = 'returned' THEN 1 ELSE 0 END)) > 0
-        THEN CAST(
-            SUM(CASE WHEN status = 'returned' THEN 1 ELSE 0 END) * 100.0 /
-            (SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) +
-             SUM(CASE WHEN status = 'returned' THEN 1 ELSE 0 END))
-            AS DOUBLE)
-        ELSE 0.0
+        THEN CAST(SUM(CASE WHEN status = 'returned' THEN 1 ELSE 0 END) AS DOUBLE) * 100 /
+             CAST(SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) +
+                  SUM(CASE WHEN status = 'returned' THEN 1 ELSE 0 END) AS DOUBLE)
+        ELSE CAST(0 AS DOUBLE)
     END AS returns_rate_pct
 FROM orders_stream
 WINDOW TUMBLING (SIZE 15 MINUTES)
@@ -39,7 +37,9 @@ EMIT CHANGES;
 - `CASE WHEN` expressions count each status separately.
 - The returns rate is `returned / (delivered + returned) * 100`.
 - A `CASE` expression guards against division by zero.
-- `1 AS dummy_key` is used because ksqlDB requires a GROUP BY key.
+- The division is done on `DOUBLE` values. With a decimal literal such as `100.0`, ksqlDB 8.x returns `NULL` when the decimal result does not fit (we saw this with 14 returns out of 119 orders).
+- `GROUP BY 1` gives one group per window. ksqlDB requires the group key in the SELECT list, so we select `1 AS bucket`. The key is stored in the message key, not in the value, so it does not reach PostgreSQL.
+- `FROM_UNIXTIME(WINDOWSTART)` turns the window start (epoch milliseconds) into a `TIMESTAMP`. The JDBC sink can then write it to a PostgreSQL `TIMESTAMP` column.
 
 ## 2. PostgreSQL Table
 
@@ -54,9 +54,45 @@ CREATE TABLE IF NOT EXISTS returns_rate (
 );
 ```
 
-## 3. Extend sink_consumer.py
+## 3. Sink the Data
 
-Add this method to the `PostgresWriter` class:
+Option A (used in this stack): add one more JDBC sink connector. Save it as `config/postgres-sink-returns-rate.json`:
+
+```json
+{
+  "name": "postgres-sink-returns-rate",
+  "config": {
+    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+    "tasks.max": "1",
+    "connection.url": "jdbc:postgresql://postgres:5432/analytics?stringtype=unspecified",
+    "connection.user": "postgres",
+    "connection.password": "postgres",
+    "topics": "RETURNS_RATE",
+    "table.name.format": "returns_rate",
+    "auto.create": "false",
+    "auto.evolve": "false",
+    "insert.mode": "upsert",
+    "pk.mode": "record_value",
+    "pk.fields": "WINDOW_START,WINDOW_END",
+    "quote.sql.identifiers": "never",
+    "key.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081"
+  }
+}
+```
+
+```bash
+curl -s -X POST http://localhost:8083/connectors -H "Content-Type: application/json" \
+  -d @config/postgres-sink-returns-rate.json
+```
+
+Why these settings:
+- One connector per table, because each table has its own primary key (`pk.fields`).
+- `pk.fields` uses upper case because ksqlDB upper-cases column names. `quote.sql.identifiers=never` lets PostgreSQL match them to the lower-case columns.
+- `pk.mode=record_value`: the window start and end are in the value. The key of a windowed table cannot be read by the Avro converter, so the connector ignores it (`ByteArrayConverter`).
+
+Option B: extend `sink_consumer.py` (the Python fallback). Add this method to the `PostgresWriter` class:
 
 ```python
 def upsert_returns_rate(self, records):

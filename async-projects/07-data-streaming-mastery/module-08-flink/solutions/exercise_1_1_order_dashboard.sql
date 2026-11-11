@@ -6,7 +6,6 @@
 --
 -- Run the table creation from sql/01-create-kafka-tables.sql first.
 -- =============================================================================
-
 -- Step 1: Create the sink table for the dashboard
 CREATE TABLE order_dashboard_5min_sink (
     window_start      TIMESTAMP(3),

@@ -5,15 +5,13 @@
 -- This is the "sink" side of a streaming pipeline: source -> transform -> sink.
 --
 -- Flink supports two Kafka sink modes:
---   1. 'kafka' connector       -- Append-only sink (for INSERT-only results)
---   2. 'upsert-kafka' connector -- Upsert sink (for results with updates/deletes)
+-- 1. 'kafka' connector       -- Append-only sink (for INSERT-only results)
+-- 2. 'upsert-kafka' connector -- Upsert sink (for results with updates/deletes)
 --
 -- Prerequisites:
---   - Tables from 01-create-kafka-tables.sql must exist.
---   - Sample data must be flowing into the source topics.
+-- - Tables from 01-create-kafka-tables.sql must exist.
+-- - Sample data must be flowing into the source topics.
 -- =============================================================================
-
-
 -- =============================================================================
 -- Sink 1: Enriched orders to Kafka (Append-Only)
 -- =============================================================================
@@ -21,7 +19,6 @@
 -- Uses the standard 'kafka' connector for append-only writes.
 -- Each enriched order is written once as a new record.
 -- =============================================================================
-
 CREATE TABLE enriched_orders_sink (
     order_id        STRING,
     customer_name   STRING,
@@ -33,11 +30,11 @@ CREATE TABLE enriched_orders_sink (
     order_status    STRING,
     order_time      TIMESTAMP(3)
 ) WITH (
-    'connector' = 'kafka',                            -- Standard Kafka connector
-    'topic' = 'enriched-orders',                      -- Output topic
-    'properties.bootstrap.servers' = 'kafka:29092',   -- Kafka broker
-    'format' = 'json',                                -- Output format
-    'json.timestamp-format.standard' = 'ISO-8601'     -- Timestamp format
+    'connector' = 'kafka',  -- Standard Kafka connector
+    'topic' = 'enriched-orders',  -- Output topic
+    'properties.bootstrap.servers' = 'kafka:29092',  -- Kafka broker
+    'format' = 'json',  -- Output format
+    'json.timestamp-format.standard' = 'ISO-8601'  -- Timestamp format
 );
 
 -- Insert enriched orders into the sink
@@ -71,21 +68,20 @@ INNER JOIN products AS p
 -- The PRIMARY KEY defines the upsert key: records with the same key are
 -- treated as updates (overwrites), and null-value records are deletes.
 -- =============================================================================
-
 CREATE TABLE order_metrics_per_minute_sink (
-    window_start    TIMESTAMP(3),        -- Start of the 1-minute window
-    window_end      TIMESTAMP(3),        -- End of the 1-minute window
-    order_count     BIGINT,              -- Number of orders in the window
-    total_revenue   DECIMAL(10, 2),      -- Sum of order amounts
-    avg_order_value DECIMAL(10, 2),      -- Average order value
+    window_start    TIMESTAMP(3),  -- Start of the 1-minute window
+    window_end      TIMESTAMP(3),  -- End of the 1-minute window
+    order_count     BIGINT,  -- Number of orders in the window
+    total_revenue   DECIMAL(10, 2),  -- Sum of order amounts
+    avg_order_value DECIMAL(10, 2),  -- Average order value
     -- Primary key for upsert semantics
     PRIMARY KEY (window_start) NOT ENFORCED
 ) WITH (
-    'connector' = 'upsert-kafka',                     -- Upsert Kafka connector
-    'topic' = 'order-metrics-per-minute',             -- Output topic
-    'properties.bootstrap.servers' = 'kafka:29092',   -- Kafka broker
-    'key.format' = 'json',                            -- Key serialization format
-    'value.format' = 'json'                           -- Value serialization format
+    'connector' = 'upsert-kafka',  -- Upsert Kafka connector
+    'topic' = 'order-metrics-per-minute',  -- Output topic
+    'properties.bootstrap.servers' = 'kafka:29092',  -- Kafka broker
+    'key.format' = 'json',  -- Key serialization format
+    'value.format' = 'json'  -- Value serialization format
 );
 
 -- Insert windowed metrics into the sink
@@ -108,12 +104,11 @@ GROUP BY window_start, window_end;
 -- Uses upsert-kafka because this is a non-windowed aggregation that
 -- continuously updates as new orders arrive.
 -- =============================================================================
-
 CREATE TABLE revenue_by_category_sink (
-    category        STRING,              -- Product category
-    order_count     BIGINT,              -- Running order count
-    total_revenue   DECIMAL(10, 2),      -- Running total revenue
-    avg_order_value DECIMAL(10, 2),      -- Running average order value
+    category        STRING,  -- Product category
+    order_count     BIGINT,  -- Running order count
+    total_revenue   DECIMAL(10, 2),  -- Running total revenue
+    avg_order_value DECIMAL(10, 2),  -- Running average order value
     PRIMARY KEY (category) NOT ENFORCED
 ) WITH (
     'connector' = 'upsert-kafka',
@@ -141,7 +136,6 @@ GROUP BY p.category;
 -- Forwards the raw order stream filtered to specific statuses.
 -- This is a simple filter-and-forward pattern.
 -- =============================================================================
-
 CREATE TABLE high_value_orders_sink (
     order_id        STRING,
     customer_id     STRING,

@@ -27,7 +27,11 @@ services:
       KAFKA_DEFAULT_REPLICATION_FACTOR: 1
       KAFKA_LOG_RETENTION_HOURS: 1
     healthcheck:
-      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092"]
+      test:
+        [
+          "CMD-SHELL",
+          "kafka-broker-api-versions --bootstrap-server localhost:9092",
+        ]
       interval: 15s
       timeout: 10s
       retries: 10
@@ -47,7 +51,13 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:29092
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081/subjects')"]
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8081/subjects')",
+        ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -86,7 +96,13 @@ services:
     volumes:
       - ./data:/tmp/connect-demo
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8083/connectors')"]
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8083/connectors')",
+        ]
       interval: 15s
       timeout: 10s
       retries: 15

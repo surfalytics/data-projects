@@ -10,7 +10,7 @@ The agent reads raw messages from an input topic, transforms them (uppercases
 the content and counts words), and writes the result to an output topic.
 
 Usage:
-    # Start Kafka (docker-compose up -d), then run:
+    # Start Kafka (docker compose up -d), then run:
     faust -A src.app_basic worker -l info
 
 Uses faust-streaming (the maintained community fork), NOT robinhood/faust.

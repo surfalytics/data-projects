@@ -6,7 +6,6 @@
 --
 -- Run the table creation from sql/01-create-kafka-tables.sql first.
 -- =============================================================================
-
 -- Step 1: Create the Kafka sink table
 CREATE TABLE revenue_by_category_per_minute_sink (
     window_start     TIMESTAMP(3),

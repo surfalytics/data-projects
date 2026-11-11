@@ -112,7 +112,11 @@ services:
       KAFKA_CLUSTERS_0_NAME: module10-cluster
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider --quiet http://localhost:8080/api/clusters || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget --spider --quiet http://localhost:8080/api/clusters || exit 1",
+        ]
       interval: 15s
       timeout: 5s
       retries: 5

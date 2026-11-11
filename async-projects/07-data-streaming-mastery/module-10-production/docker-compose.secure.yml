@@ -40,14 +40,14 @@ services:
         user_controller="controller-secret";
 
       # --- SASL listener for clients ---
-      # "__" in an env var name becomes "-" in the property name.
+      # In an env var name: "_" becomes ".", "__" becomes "_" and "___" becomes "-".
       KAFKA_LISTENER_NAME_SASL_SASL_ENABLED_MECHANISMS: PLAIN,SCRAM-SHA-512
       KAFKA_LISTENER_NAME_SASL_PLAIN_SASL_JAAS_CONFIG: >-
         org.apache.kafka.common.security.plain.PlainLoginModule required
         user_admin="admin-secret"
         user_producer="producer-secret"
         user_consumer="consumer-secret";
-      KAFKA_LISTENER_NAME_SASL_SCRAM__SHA__512_SASL_JAAS_CONFIG: >-
+      KAFKA_LISTENER_NAME_SASL_SCRAM___SHA___512_SASL_JAAS_CONFIG: >-
         org.apache.kafka.common.security.scram.ScramLoginModule required;
 
       # --- TLS (PKCS12 stores made by config/ssl-setup.sh) ---
@@ -78,7 +78,11 @@ services:
       - ./config/admin-sasl.properties:/etc/kafka/admin-sasl.properties:ro
       - ./config/admin-ssl.properties:/etc/kafka/admin-ssl.properties:ro
     healthcheck:
-      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server kafka:29092 --command-config /etc/kafka/admin-ssl.properties"]
+      test:
+        [
+          "CMD-SHELL",
+          "kafka-broker-api-versions --bootstrap-server kafka:29092 --command-config /etc/kafka/admin-ssl.properties",
+        ]
       interval: 15s
       timeout: 15s
       retries: 10

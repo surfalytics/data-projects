@@ -11,7 +11,7 @@ Usage:
     python producer_basic.py
 
 Prerequisites:
-    - Kafka broker running on localhost:9092 (use docker-compose up)
+    - Kafka broker running on localhost:9092 (use docker compose up)
     - pip install confluent-kafka
 """
 

@@ -11,7 +11,7 @@ Usage:
     python consumer_basic.py --topic my-topic --from-beginning
 
 Prerequisites:
-    - Kafka broker running on localhost:9092 (use docker-compose up)
+    - Kafka broker running on localhost:9092 (use docker compose up)
     - Messages in the target topic (run producer_basic.py first)
     - pip install confluent-kafka
 """

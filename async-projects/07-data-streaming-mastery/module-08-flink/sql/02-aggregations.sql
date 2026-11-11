@@ -5,23 +5,21 @@
 -- These queries produce real-time analytics by grouping events into time windows.
 --
 -- Prerequisites:
---   - Tables from 01-create-kafka-tables.sql must exist.
---   - Sample data must be flowing into the 'orders' Kafka topic.
+-- - Tables from 01-create-kafka-tables.sql must exist.
+-- - Sample data must be flowing into the 'orders' Kafka topic.
 --
 -- Window Types Demonstrated:
---   1. TUMBLE  -- Non-overlapping fixed-size windows
---   2. HOP     -- Overlapping (sliding) windows
---   3. SESSION -- Activity-based windows that close after a gap
+-- 1. TUMBLE  -- Non-overlapping fixed-size windows
+-- 2. HOP     -- Overlapping (sliding) windows
+-- 3. SESSION -- Activity-based windows that close after a gap
 --
 -- Syntax: these use the window table-valued functions (window TVFs).
---   FROM TABLE(TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE))
+-- FROM TABLE(TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE))
 -- The function adds window_start, window_end and window_time columns.
 -- Then you GROUP BY window_start, window_end.
--- The old group window syntax (GROUP BY TUMBLE(...) with TUMBLE_START) is
--- not used in this module. See the README for the Flink 2.x status.
+-- The old group window syntax (GROUP BY TUMBLE(...) with TUMBLE_START) still
+-- plans in Flink 2.2, but it is not used in this module.
 -- =============================================================================
-
-
 -- =============================================================================
 -- Query 1: Orders per minute (Tumbling Window)
 -- =============================================================================
@@ -29,18 +27,17 @@
 -- TUMBLE creates non-overlapping windows: [00:00, 00:01), [00:01, 00:02), ...
 -- Each order belongs to exactly one window.
 -- =============================================================================
-
-SELECT
+select
     window_start,
     window_end,
-    COUNT(*)                                         AS order_count,
-    SUM(amount)                                      AS total_revenue,
-    AVG(amount)                                      AS avg_order_value,
-    MIN(amount)                                      AS min_order_value,
-    MAX(amount)                                      AS max_order_value
-FROM TABLE(
-    TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE))
-GROUP BY window_start, window_end;
+    count(*) as order_count,
+    sum(amount) as total_revenue,
+    avg(amount) as avg_order_value,
+    min(amount) as min_order_value,
+    max(amount) as max_order_value
+from table(tumble(table orders, descriptor(order_time), interval '1' minute))
+group by window_start, window_end
+;
 
 
 -- =============================================================================
@@ -49,17 +46,16 @@ GROUP BY window_start, window_end;
 -- Groups orders by order status and computes revenue metrics.
 -- (For revenue by product category, see 04-joins-and-enrichment.sql.)
 -- =============================================================================
-
-SELECT
+select
     window_start,
     window_end,
-    order_status                                      AS status,
-    COUNT(*)                                          AS order_count,
-    SUM(amount)                                       AS total_revenue,
-    AVG(amount)                                       AS avg_order_value
-FROM TABLE(
-    TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '5' MINUTE))
-GROUP BY window_start, window_end, order_status;
+    order_status as status,
+    count(*) as order_count,
+    sum(amount) as total_revenue,
+    avg(amount) as avg_order_value
+from table(tumble(table orders, descriptor(order_time), interval '5' minute))
+group by window_start, window_end, order_status
+;
 
 
 -- =============================================================================
@@ -70,19 +66,25 @@ GROUP BY window_start, window_end, order_status;
 -- the total orders from the past 10 minutes.
 --
 -- An order placed at 10:05:30 will appear in windows:
---   [09:56, 10:06), [09:57, 10:07), ..., [10:05, 10:15)
+-- [09:56, 10:06), [09:57, 10:07), ..., [10:05, 10:15)
 -- =============================================================================
-
 -- HOP(TABLE t, DESCRIPTOR(time_col), SLIDE, SIZE): the slide comes first.
-
-SELECT
+select
     window_start,
     window_end,
-    COUNT(*)                                                          AS rolling_order_count,
-    SUM(amount)                                                       AS rolling_revenue
-FROM TABLE(
-    HOP(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE, INTERVAL '10' MINUTE))
-GROUP BY window_start, window_end;
+    count(*) as rolling_order_count,
+    sum(amount) as rolling_revenue
+from
+    table(
+        hop(
+            table orders,
+            descriptor(order_time),
+            interval '1' minute,
+            interval '10' minute
+        )
+    )
+group by window_start, window_end
+;
 
 
 -- =============================================================================
@@ -92,19 +94,23 @@ GROUP BY window_start, window_end;
 -- together in time. A session closes after 5 minutes of inactivity for
 -- that customer. Useful for analyzing user engagement patterns.
 -- =============================================================================
-
 -- SESSION needs PARTITION BY to give one session per key.
-
-SELECT
-    window_start                                    AS session_start,
-    window_end                                      AS session_end,
+select
+    window_start as session_start,
+    window_end as session_end,
     customer_id,
-    COUNT(*)                                        AS orders_in_session,
-    SUM(amount)                                     AS session_revenue,
-    TIMESTAMPDIFF(SECOND, MIN(order_time), MAX(order_time)) AS session_seconds
-FROM TABLE(
-    SESSION(TABLE orders PARTITION BY customer_id, DESCRIPTOR(order_time), INTERVAL '5' MINUTE))
-GROUP BY window_start, window_end, customer_id;
+    count(*) as orders_in_session,
+    sum(amount) as session_revenue,
+    timestampdiff(second, min(order_time), max(order_time)) as session_seconds
+from
+    table(
+        session(
+            table orders
+            partition by customer_id, descriptor(order_time), interval '5' minute
+        )
+    )
+group by window_start, window_end, customer_id
+;
 
 
 -- =============================================================================
@@ -113,15 +119,11 @@ GROUP BY window_start, window_end, customer_id;
 -- Counts orders grouped by status within each 1-minute tumbling window.
 -- Useful for monitoring order pipeline health in real time.
 -- =============================================================================
-
-SELECT
-    window_start,
-    order_status,
-    COUNT(*)                                       AS status_count,
-    SUM(amount)                                    AS status_revenue
-FROM TABLE(
-    TUMBLE(TABLE orders, DESCRIPTOR(order_time), INTERVAL '1' MINUTE))
-GROUP BY window_start, window_end, order_status;
+select
+    window_start, order_status, count(*) as status_count, sum(amount) as status_revenue
+from table(tumble(table orders, descriptor(order_time), interval '1' minute))
+group by window_start, window_end, order_status
+;
 
 
 -- =============================================================================
@@ -131,9 +133,9 @@ GROUP BY window_start, window_end, order_status;
 -- Flink continuously updates this result as new events arrive.
 -- Note: This produces an updating (changelog) stream, not an append-only stream.
 -- =============================================================================
-
-SELECT
-    COUNT(*)    AS total_orders,
-    SUM(amount) AS total_revenue,
-    AVG(amount) AS avg_order_value
-FROM orders;
+select
+    count(*) as total_orders,
+    sum(amount) as total_revenue,
+    avg(amount) as avg_order_value
+from orders
+;

@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS returns_rate (
 ### 3. Sink the Data
 
 Either:
-- Add the new topic to the JDBC Sink Connector configuration, OR
+- Add a new JDBC sink connector for the new topic (use one connector per table, see `config/postgres-sink-*.json`), OR
 - Extend `sink_consumer.py` to consume from the `RETURNS_RATE` topic
 
 ### 4. Grafana Panel

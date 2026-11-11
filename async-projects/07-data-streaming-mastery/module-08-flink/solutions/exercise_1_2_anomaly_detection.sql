@@ -6,7 +6,6 @@
 --
 -- Run the table creation from sql/01-create-kafka-tables.sql first.
 -- =============================================================================
-
 -- Step 1: Create a print sink for observing anomalies
 CREATE TABLE anomaly_print_sink (
     window_start    TIMESTAMP(3),

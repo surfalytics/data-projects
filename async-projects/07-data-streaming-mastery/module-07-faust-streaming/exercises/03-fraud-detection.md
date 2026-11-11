@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Kafka running locally (`docker-compose up -d` from the module root)
+- Kafka running locally (`docker compose up -d` from the module root)
 - `faust-streaming` installed (`pip install -r requirements.txt`)
 - Review `src/fraud_detection.py` to understand the existing fraud detection agent
 

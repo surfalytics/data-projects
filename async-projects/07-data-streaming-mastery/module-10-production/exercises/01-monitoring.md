@@ -8,7 +8,7 @@
 
 1. Start the monitoring stack using Docker Compose:
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 2. Wait for all services to be healthy, then create the monitoring topic:

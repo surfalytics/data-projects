@@ -563,9 +563,13 @@ docker compose up -d
 |------|---------|------|
 | Confluent Platform | 8.4.1 (KRaft, no ZooKeeper) | Kafka runs as one node: broker and controller. |
 | ksqlDB server | `cp-ksqldb-server:8.4.1` | Same ksqlDB engine line as in Confluent Platform 8.x. |
-| ksqlDB CLI | `cp-ksqldb-cli:8.0.9` | No 8.4 tag exists for the CLI. The server image has no `ksql` command. The 8.0.9 CLI works against the 8.4.1 server. |
+| ksqlDB CLI | `cp-ksqldb-cli:8.0.9` | No 8.4 tag exists for the CLI. The server image has no `ksql` command. The 8.0.9 CLI works against the 8.4.1 server (we ran queries with it). |
 
 > **ksqlDB is in maintenance mode.** The ksqlDB GitHub project no longer accepts community contributions ([README](https://github.com/confluentinc/ksql)). Confluent points users to Flink for new, complex stream processing ([docs](https://docs.confluent.io/platform/8.1/ksqldb/operate-and-deploy/index.html)). Use ksqlDB to learn streaming SQL ideas and for small jobs. For new projects, use Flink SQL. Module 8 covers it.
+
+Syntax has not changed since ksqlDB 0.29: the project changelog on GitHub still ends at 0.29.0 ([CHANGELOG](https://github.com/confluentinc/ksql/blob/master/CHANGELOG.md)). Every query in `queries/` and `solutions/` ran on the 8.4.1 server. One rule to know: a stream-table join in a `CREATE ... AS SELECT` must put a join key column in the SELECT list (see `solutions/03-joins-solutions.sql`).
+
+The 8.4 images have no `curl` or `wget`. The health checks use `python3`.
 
 ### Exercises
 

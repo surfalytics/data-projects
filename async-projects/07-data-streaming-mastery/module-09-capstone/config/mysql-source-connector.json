@@ -13,19 +13,19 @@
     "table.include.list": "ecommerce.customers,ecommerce.products,ecommerce.orders,ecommerce.order_items,ecommerce.inventory_log",
     "schema.history.internal.kafka.bootstrap.servers": "kafka:29092",
     "schema.history.internal.kafka.topic": "schema-changes.ecommerce",
-    "include.schema.changes": "true",
-    "key.converter": "io.confluent.connect.avro.AvroConverter",
-    "key.converter.schema.registry.url": "http://schema-registry:8081",
+    "include.schema.changes": "false",
+    "key.converter": "org.apache.kafka.connect.converters.IntegerConverter",
     "value.converter": "io.confluent.connect.avro.AvroConverter",
     "value.converter.schema.registry.url": "http://schema-registry:8081",
-    "transforms": "unwrap",
+    "transforms": "unwrap,extractKey",
     "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
     "transforms.unwrap.delete.tombstone.handling.mode": "rewrite-with-tombstone",
     "transforms.unwrap.add.fields": "op,table,source.ts_ms",
+    "transforms.extractKey.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+    "transforms.extractKey.field": "id",
     "decimal.handling.mode": "double",
     "time.precision.mode": "connect",
     "snapshot.mode": "initial",
-    "poll.interval.ms": "500",
-    "heartbeat.interval.ms": "10000"
+    "poll.interval.ms": "500"
   }
 }

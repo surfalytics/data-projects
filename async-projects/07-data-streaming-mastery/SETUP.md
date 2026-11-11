@@ -11,7 +11,7 @@ This document walks you through every dependency you need for the **Data Streami
 | CPU cores | 4 | 8 |
 | OS | macOS 12+, Windows 10/11, Ubuntu 20.04+ | macOS 14+, Ubuntu 22.04+ |
 
-> The capstone module runs about 12 containers at the same time. If you only have 8 GB RAM, close other applications and allocate at least 8 GB to Docker.
+> The capstone module runs 9 containers at the same time. We measured about 4.5 GiB for them with `docker stats --no-stream` while the simulator ran (Kafka 1.7 GiB, Connect 0.6, ksqlDB 0.6, MySQL 0.45, Kafka UI 0.43, Schema Registry 0.3, Grafana 0.3). Other modules use 1 to 2 GiB. If you only have 8 GB RAM, close other applications and allocate at least 6 GB to Docker.
 
 ---
 
@@ -28,7 +28,7 @@ brew install --cask docker
 ```
 
 After installation, open Docker Desktop and go to **Settings > Resources**:
-- Memory: **8 GB** (minimum), **12 GB** recommended
+- Memory: **6 GB** (minimum for the capstone), **8 GB** recommended
 - CPUs: **4** minimum
 - Disk image size: **60 GB**
 
@@ -224,7 +224,7 @@ Recommended Docker memory settings for this course:
 
 | Modules 01-08 (individual) | Capstone (Module 09) |
 |---|---|
-| 4 GB | 8-12 GB |
+| 4 GB | 6-8 GB |
 
 ### Port Conflicts
 
@@ -276,11 +276,8 @@ docker compose up -d
 If producers or consumers fail to connect immediately after `docker compose up`:
 
 ```bash
-# Wait for Kafka to be fully ready
-docker compose exec kafka cub kafka-ready -b kafka:29092 1 60
-
-# Or use a retry loop
-until docker compose exec kafka kafka-topics --bootstrap-server kafka:29092 --list 2>/dev/null; do
+# Wait for Kafka to be ready (KRaft starts in about 10 seconds). The `cub` tool is gone in Confluent 8.
+until docker compose exec kafka kafka-broker-api-versions --bootstrap-server kafka:29092 > /dev/null 2>&1; do
   echo "Waiting for Kafka..."
   sleep 5
 done

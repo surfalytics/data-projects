@@ -8,7 +8,7 @@
 
 1. Ensure the Kafka cluster is running:
    ```bash
-   docker-compose up -d kafka
+   docker compose up -d kafka
    ```
 
 2. Run the performance benchmark:

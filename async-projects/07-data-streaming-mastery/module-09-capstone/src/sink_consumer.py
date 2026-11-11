@@ -117,10 +117,11 @@ class PostgresWriter:
         self._ensure_connected()
         sql = """
             INSERT INTO orders_enriched
-                (order_id, customer_name, customer_email, status, total_amount, created_at, updated_at)
-            VALUES (%(order_id)s, %(customer_name)s, %(customer_email)s, %(status)s,
+                (order_id, customer_id, customer_name, customer_email, status, total_amount, created_at, updated_at)
+            VALUES (%(order_id)s, %(customer_id)s, %(customer_name)s, %(customer_email)s, %(status)s,
                     %(total_amount)s, %(created_at)s, %(updated_at)s)
             ON CONFLICT (order_id) DO UPDATE SET
+                customer_id = EXCLUDED.customer_id,
                 customer_name = EXCLUDED.customer_name,
                 customer_email = EXCLUDED.customer_email,
                 status = EXCLUDED.status,
@@ -131,6 +132,7 @@ class PostgresWriter:
             for r in records:
                 params = {
                     "order_id": r.get("ORDER_ID") or r.get("order_id"),
+                    "customer_id": r.get("CUSTOMER_ID") or r.get("customer_id"),
                     "customer_name": r.get("CUSTOMER_NAME") or r.get("customer_name"),
                     "customer_email": r.get("CUSTOMER_EMAIL") or r.get("customer_email"),
                     "status": r.get("STATUS") or r.get("status"),
