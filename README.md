@@ -48,6 +48,7 @@ Build dashboards and semantic models. Run a BI server.
 | Base | [Open Source BI with Metabase](async-projects/03-Open-Source-BI-with-Metabase/) | Metabase, PostgreSQL, Docker, ... | Free | In progress |
 | Middle | [BI Admin with Tableau Server](async-projects/02-BI-admin-with-Tableau/) | Tableau Desktop, Tableau Server, Tableau Public, ... | Free trial | Ready |
 | Middle | [KPI Dashboard with Looker and Snowflake](bi-projects/02_looker_snowflake/) | Looker, LookML, Snowflake, ... | Free trial | Ready |
+| Middle | [Modern Data Stack in a Box with Evidence](bi-projects/03_evidence_mds_in_a_box/) | Evidence, DuckDB, dbt Core, ... | Free | Draft |
 
 ## 2. Analytics Engineer
 
@@ -58,6 +59,8 @@ Model data with dbt and SQLMesh. Add tests, documentation and CI. Prepare for th
 | Base | [dbt Fundamentals with Postgres and GitHub Actions](de-projects/18_dbt_intro/) | dbt Core, PostgreSQL, Neon, ... | Free | Ready |
 | Base | [Getting Started with SQLMesh](de-projects/19_sqlmesh_intro/) | SQLMesh, DuckDB, Python | Free | In progress |
 | Middle | [Analytics Engineering Mock Interview](ae-projects/01_mock_ae_interview/) | SQL, DuckDB, dbt, ... | Free | Ready |
+| Middle | [dbt on DuckDB with Olist E-commerce](ae-projects/02_olist_dbt_duckdb/) | dbt Core, dbt-duckdb, DuckDB, ... | Free | Draft |
+| Middle | [Day Trade Detection with dbt, Airflow and Jupyter](ae-projects/03_day_trades_dbt_airflow/) | dbt Core, PostgreSQL, Apache Airflow, ... | Free | Draft |
 | Middle | [End-to-End Analytics with dbt and Looker](async-projects/01-end-to-end-analytics-with-dbt-and-looker/) | Neon Postgres, Docker, DBeaver, ... | Free | Ready |
 | Middle | [dbt Core, Snowflake and Docker Pipelines](de-projects/02_dbt_core_snowflake/) | dbt Core, Snowflake, Docker, ... | Free trial | Draft |
 
@@ -71,6 +74,9 @@ Build and run data platforms. Pick a focus area, or do the end-to-end projects t
 |---|---|---|---|---|
 | Middle | [Data Warehouse on Azure and Snowflake](async-projects/04-azure-data-warehouse/) | Azure Data Factory, Azure SQL Database, Azure Cosmos DB, ... | Free trial | Ready |
 | Middle | [End-to-End ETL Pipeline with AWS](de-projects/11_end_to_end_de_project_with_aws/) | Python, Adzuna API, AWS Lambda, ... | Free trial | Draft |
+| Middle | [Capstone: GH Archive to Dashboard on GCP](de-projects/31_gharchive_gcp_capstone/) | Terraform, GCS, BigQuery, ... | Free trial | Draft |
+| Base | [Data Platform with Bruin: Taxi Pipeline](de-projects/36_bruin_taxi_platform/) | Bruin, DuckDB, Python, ... | Free | Draft |
+| Middle | [Software Version Tracking on a Lakehouse](de-projects/32_software_version_lakehouse/) | Databricks Free Edition, PySpark, Delta Lake, ... | Free | Draft |
 
 ### Ingestion
 
@@ -78,6 +84,8 @@ Build and run data platforms. Pick a focus area, or do the end-to-end projects t
 |---|---|---|---|---|
 | Base | [Move Data Between PostgreSQL and Snowflake with Python and pandas](de-projects/08_db_to_db_python/) | Python, pandas, SQLAlchemy, ... | Free trial | Ready |
 | Base | [Getting Started with Airbyte and Data Ingestion](de-projects/14_airbyte_data_ingestion/) | Airbyte, abctl, Docker, ... | Free | Draft |
+| Base | [Incremental API Pipeline with dlt](de-projects/28_dlt_incremental_api/) | Python, dlt, DuckDB, ... | Free | Draft |
+| Middle | [Sports API to Lakehouse Tables](de-projects/33_sports_api_lakehouse/) | Python, PySpark, Delta Lake, ... | Free | Draft |
 | Middle | [Data Ingestion Patterns: From API to Snowflake](async-projects/06-data-ingestion-patterns/) | Python, Docker, AWS S3, ... | Free trial | Ready |
 | Middle | [Snowflake Data Loading: Azure Blob with COPY INTO and Snowpipe](de-projects/27_snowflake_data_loading/) | Snowflake, Azure Blob Storage, Azure Event Grid, ... | Free trial | In progress |
 
@@ -88,9 +96,11 @@ Build and run data platforms. Pick a focus area, or do the end-to-end projects t
 | Base | [Spark ML Logs Transformer with Unit Tests](de-projects/10_spark_transformations_with_tests_framework/) | Python, PySpark, pytest, ... | Free | Ready |
 | Base | [Apache Spark Basics with PySpark and Docker](de-projects/06_spark_projects/) | Apache Spark, PySpark, Python, ... | Free | In progress |
 | Base | [Getting Started with Polars](de-projects/17_polars_intro/) | Python, Polars, PyArrow, ... | Free | In progress |
+| Base | [Data Engineering Practice Lab](de-projects/40_data_engineering_practice_lab/) | Python, pytest, PySpark, ... | Free | Draft |
 | Base | [Introduction to PyArrow](de-projects/13_pyarrow_intro/) | Python, PyArrow, pandas, ... | Free | In progress |
 | Base | [Trino 101: Distributed SQL Query Engine](de-projects/05_trinodb/) | Trino, Docker, Java, ... | Free | In progress |
 | Middle | [Databricks Job with a Python Wheel Task](de-projects/20_wheel_in_databricks/) | Databricks, PySpark, Python, ... | Free trial | In progress |
+| Middle | [Batch Processing with Spark: Taxi Data](de-projects/37_spark_taxi_batch/) | Apache Spark, PySpark, Dataproc, ... | Free trial | Draft |
 
 ### Warehouse and lakehouse
 
@@ -101,18 +111,22 @@ Build and run data platforms. Pick a focus area, or do the end-to-end projects t
 | Base | [Snowflake Data Warehouse and Hex Notebooks](de-projects/03_snowflake_hex/) | Snowflake, Snowflake CLI, SnowSQL, ... | Free trial | Draft |
 | Middle | [Getting Started with Apache Iceberg](de-projects/15_apache_iceberg_intro/) | Apache Iceberg, Dremio Cloud, AWS S3, ... | Free trial | Draft |
 | Middle | [Getting Started with Snowflake and Apache Iceberg](de-projects/16_snowflake_and_iceberg_lakehouse/) | Snowflake, Apache Iceberg, AWS S3, ... | Free trial | Draft |
+| Middle | [Analytics at Scale: ClickHouse vs PostgreSQL](de-projects/39_clickhouse_vs_postgres/) | ClickHouse, PostgreSQL, Docker Compose, ... | Free | Draft |
 
 ### Orchestration
 
 | Level | Project | Main tools | Cost | Status |
 |---|---|---|---|---|
 | Base | [Getting Started with Apache Airflow](de-projects/22_airflow_intro/) | Apache Airflow, Docker, Python, ... | Free | Draft |
+| Middle | [Orchestration with Kestra: Taxi Data to Postgres and BigQuery](de-projects/35_kestra_taxi_pipelines/) | Kestra, PostgreSQL, BigQuery, ... | Free trial | Draft |
 | Middle | [Airflow ETL: Adzuna API to Databricks Delta](de-projects/26_airflow_docker_databricks_etl/) | Apache Airflow 3, Docker, Databricks Free Edition, ... | Free | Ready |
 
 ### Streaming
 
 | Level | Project | Main tools | Cost | Status |
 |---|---|---|---|---|
+| Middle | [Streaming Attribution with Flink and Kafka](de-projects/29_flink_kafka_attribution/) | Apache Flink, Apache Kafka, PostgreSQL, ... | Free | Draft |
+| Middle | [Webhook Ingestion and Geofence Events on AWS](de-projects/34_webhook_ingestion_aws/) | Python, Flask, DuckDB, ... | Free | Draft |
 | Senior | [Data Streaming Mastery](async-projects/07-data-streaming-mastery/) | Apache Kafka, Schema Registry, Kafka Connect, ... | Free | Ready |
 
 ### Data quality
@@ -121,6 +135,8 @@ Build and run data platforms. Pick a focus area, or do the end-to-end projects t
 |---|---|---|---|---|
 | Base | [Data Quality Checks with Soda Core and Snowflake](de-projects/07_soda_core_snowflake/) | Soda Core, SodaCL, Python, ... | Free trial | Ready |
 | Middle | [Data Quality Checks with Databricks DQX](de-projects/24_databricks_dqx_demo/) | Databricks Free Edition, Databricks DQX, PySpark, ... | Free | Ready |
+| Middle | [CI-Enforced Data Contracts](de-projects/30_data_contracts_ci/) | datacontract-cli, dbt Core, PostgreSQL, ... | Free | Draft |
+| Middle | [Data Lineage with OpenLineage and Marquez](de-projects/38_openlineage_marquez/) | OpenLineage, Marquez, Airflow, ... | Free | Draft |
 | Middle | [dbt Observability with Elementary](de-projects/09_elementary_dbt/) | dbt Core, Elementary, Snowflake, ... | Free trial | In progress |
 
 ### Infrastructure

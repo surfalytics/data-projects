@@ -13,3 +13,4 @@ To see these projects in learning order, use the [roadmap](../README.md#roadmap)
 |---|---|---|---|---|---|
 | 01 | [End-to-End Power BI Dashboard with Microsoft Fabric](01_bi_dashboard_with_microsoft_fabric/) | BI / Data Analyst | Base | Free trial | Ready |
 | 02 | [KPI Dashboard with Looker and Snowflake](02_looker_snowflake/) | BI / Data Analyst | Middle | Free trial | Ready |
+| 03 | [Modern Data Stack in a Box with Evidence](03_evidence_mds_in_a_box/) | BI / Data Analyst | Middle | Free | Draft |

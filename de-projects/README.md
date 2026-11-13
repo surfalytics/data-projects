@@ -35,3 +35,16 @@ To see these projects in learning order, use the [roadmap](../README.md#roadmap)
 | 24 | [Data Quality Checks with Databricks DQX](24_databricks_dqx_demo/) | Data Engineer · Data quality | Middle | Free | Ready |
 | 26 | [Airflow ETL: Adzuna API to Databricks Delta](26_airflow_docker_databricks_etl/) | Data Engineer · Orchestration | Middle | Free | Ready |
 | 27 | [Snowflake Data Loading: Azure Blob with COPY INTO and Snowpipe](27_snowflake_data_loading/) | Data Engineer · Ingestion | Middle | Free trial | In progress |
+| 28 | [Incremental API Pipeline with dlt](28_dlt_incremental_api/) | Data Engineer · Ingestion | Base | Free | Draft |
+| 29 | [Streaming Attribution with Flink and Kafka](29_flink_kafka_attribution/) | Data Engineer · Streaming | Middle | Free | Draft |
+| 30 | [CI-Enforced Data Contracts](30_data_contracts_ci/) | Data Engineer · Data quality | Middle | Free | Draft |
+| 31 | [Capstone: GH Archive to Dashboard on GCP](31_gharchive_gcp_capstone/) | Data Engineer · End-to-end | Middle | Free trial | Draft |
+| 32 | [Software Version Tracking on a Lakehouse](32_software_version_lakehouse/) | Data Engineer · Warehouse and lakehouse | Middle | Free | Draft |
+| 33 | [Sports API to Lakehouse Tables](33_sports_api_lakehouse/) | Data Engineer · Ingestion | Middle | Free | Draft |
+| 34 | [Webhook Ingestion and Geofence Events on AWS](34_webhook_ingestion_aws/) | Data Engineer · Streaming | Middle | Free | Draft |
+| 35 | [Orchestration with Kestra: Taxi Data to Postgres and BigQuery](35_kestra_taxi_pipelines/) | Data Engineer · Orchestration | Middle | Free trial | Draft |
+| 36 | [Data Platform with Bruin: Taxi Pipeline](36_bruin_taxi_platform/) | Data Engineer · End-to-end | Base | Free | Draft |
+| 37 | [Batch Processing with Spark: Taxi Data](37_spark_taxi_batch/) | Data Engineer · Processing | Middle | Free trial | Draft |
+| 38 | [Data Lineage with OpenLineage and Marquez](38_openlineage_marquez/) | Data Engineer · Data quality | Middle | Free | Draft |
+| 39 | [Analytics at Scale: ClickHouse vs PostgreSQL](39_clickhouse_vs_postgres/) | Data Engineer · Warehouse and lakehouse | Middle | Free | Draft |
+| 40 | [Data Engineering Practice Lab](40_data_engineering_practice_lab/) | Data Engineer · Processing | Base | Free | Draft |
