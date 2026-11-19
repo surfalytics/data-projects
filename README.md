@@ -101,6 +101,7 @@ Build and run data platforms. Pick a focus area, or do the end-to-end projects t
 | Base | [Trino 101: Distributed SQL Query Engine](de-projects/05_trinodb/) | Trino, Docker, Java, ... | Free | In progress |
 | Middle | [Databricks Job with a Python Wheel Task](de-projects/20_wheel_in_databricks/) | Databricks, PySpark, Python, ... | Free trial | In progress |
 | Middle | [Batch Processing with Spark: Taxi Data](de-projects/37_spark_taxi_batch/) | Apache Spark, PySpark, Dataproc, ... | Free trial | Draft |
+| Senior | [Do You Need Spark? DuckDB vs Glue and EMR Serverless on AWS](de-projects/41_emr_glue_duckdb_benchmark/) | AWS Glue, Amazon EMR Serverless, DuckDB, ... | Paid (~$10) | Draft |
 
 ### Warehouse and lakehouse
 

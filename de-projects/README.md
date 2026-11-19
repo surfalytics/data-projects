@@ -48,3 +48,4 @@ To see these projects in learning order, use the [roadmap](../README.md#roadmap)
 | 38 | [Data Lineage with OpenLineage and Marquez](38_openlineage_marquez/) | Data Engineer · Data quality | Middle | Free | Draft |
 | 39 | [Analytics at Scale: ClickHouse vs PostgreSQL](39_clickhouse_vs_postgres/) | Data Engineer · Warehouse and lakehouse | Middle | Free | Draft |
 | 40 | [Data Engineering Practice Lab](40_data_engineering_practice_lab/) | Data Engineer · Processing | Base | Free | Draft |
+| 41 | [Do You Need Spark? DuckDB vs Glue and EMR Serverless on AWS](41_emr_glue_duckdb_benchmark/) | Data Engineer · Processing | Senior | Paid (~$10) | Draft |
